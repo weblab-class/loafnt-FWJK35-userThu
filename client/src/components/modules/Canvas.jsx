@@ -7,8 +7,7 @@ const Canvas = () => {
 
     useEffect(()=> {
         drawCanvas(null, canvasRef);
-    });
-
+    }, []);
 
     return (
         <div className="canvasContainer">

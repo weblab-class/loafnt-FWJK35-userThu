@@ -10,18 +10,23 @@ const LoginPage = () => {
   const { userId, handleLogin, handleLogout } = useContext(UserContext);
   return (
     <>
-      {userId ? (
-        <button
-          onClick={() => {
-            googleLogout();
-            handleLogout();
-          }}
-        >
-          Logout
-        </button>
-      ) : (
-        <GoogleLogin onSuccess={handleLogin} onError={(err) => console.log(err)} />
-      )}
+      <div className="login-page-background">
+        <div className="login-button">
+          {userId ? (
+            <button
+              className="logout-button"
+              onClick={() => {
+                googleLogout();
+                handleLogout();
+              }}
+            >
+              Logout
+            </button>
+          ) : (
+            <GoogleLogin onSuccess={handleLogin} onError={(err) => console.log(err)} />
+          )}
+        </div>
+      </div>
     </>
   );
 };

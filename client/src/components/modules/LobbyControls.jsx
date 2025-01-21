@@ -13,7 +13,16 @@ const CreateLobby = () => {
 
   return (
     <>
-      <button className="create-lobby" onClick={createLobby()}>
+      <button
+        className="create-lobby"
+        onClick={() => {
+          post("/api/newlobby").then((lobby) => {
+            console.log(window.location.href + "lobby/" + lobby.code);
+            console.log(lobby.code);
+            window.location.replace(window.location.href + "lobby/" + lobby.code);
+          });
+        }}
+      >
         Create Lobby
       </button>
     </>

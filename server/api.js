@@ -20,6 +20,7 @@ const router = express.Router();
 
 //initialize socket
 const socketManager = require("./server-socket");
+const { createNewLobby } = require("./lobby-manager");
 
 router.post("/login", auth.login);
 router.post("/logout", auth.logout);
@@ -60,6 +61,13 @@ router.post("/storeuser", (req, res) => {
         });
       }
     });
+  }
+});
+
+router.post("/newlobby", (req, res) => {
+  if (req.user) {
+    const thislobby = createNewLobby(req.user);
+    res.send(thislobby);
   }
 });
 

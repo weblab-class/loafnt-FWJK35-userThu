@@ -6,8 +6,12 @@
   background-size: cover;
   background-position: 50%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+.lobby-controls {
+  display: flex;
 }
 
 .login-button {

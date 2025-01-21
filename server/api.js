@@ -43,6 +43,26 @@ router.post("/initsocket", (req, res) => {
 // | write your API methods below!|
 // |------------------------------|
 
+router.post("/storeuser", (req, res) => {
+  if (req.user) {
+    User.find({ googleid: req.user.googleid }).then((foundUsers) => {
+      //user exists
+      if (foundUsers.length > 0) {
+        thisuser = foundUsers[0];
+        res.send(thisuser);
+      } else {
+        const newUser = new User({
+          name: req.user.name,
+          googleid: req.user.googleid,
+        });
+        newUser.save().then((user) => {
+          res.send(user);
+        });
+      }
+    });
+  }
+});
+
 // anything else falls to this "not found" case
 router.all("*", (req, res) => {
   console.log(`API route not found: ${req.method} ${req.url}`);

@@ -1,0 +1,19 @@
+.login-page-background {
+  height: 100vh;
+  background-color: #ccba7d;
+  background-image: url("../../assets/maze-background.jpg");
+  background-blend-mode: normal;
+  background-size: cover;
+  background-position: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-button {
+  width: min-content;
+  background-color: transparent;
+}
+.logout-button {
+  background-color: orange;
+}

@@ -23,9 +23,6 @@ const Game = () => {
     return (
         <div className="overall">
             <Canvas gameID={gameID}/>
-            <button type="button" onClick={() => {
-                runGame(gameID)
-            }}>Start Game</button>
         </div>
     )
 };

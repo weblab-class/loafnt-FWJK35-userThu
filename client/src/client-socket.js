@@ -5,3 +5,7 @@ export const socket = socketIOClient(endpoint);
 socket.on("connect", () => {
   post("/api/initsocket", { socketid: socket.id });
 });
+
+export const runGame = (gameId) => {
+  socket.emit("rungame", gameId);
+};

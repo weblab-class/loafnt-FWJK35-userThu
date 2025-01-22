@@ -34,9 +34,8 @@ const sendGameState = (gameId) => {
   io.emit(`update/${gameId}`, gameMap[gameId]);
 };
 
-// Called when server API receives a request
+// Called when server socket receives a request
 const runGame = (gameId) => {
-  const game = gameMap[gameId];
   setInterval(() => {
     sendGameState(gameId);
   }, 1000 / 60);
@@ -54,7 +53,8 @@ module.exports = {
       });
       // Server receives request from client to run game
       socket.on("rungame", (gameId) => {
-        // Add logic for new/existing games
+        console.log(gameId + " server");
+        if (gameMap[gameId] === undefined) gameMap[gameId] = new Game.Game();
         runGame(gameId);
       });
     });

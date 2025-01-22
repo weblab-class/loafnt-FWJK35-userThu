@@ -6,6 +6,7 @@ socket.on("connect", () => {
   post("/api/initsocket", { socketid: socket.id });
 });
 
-export const runGame = (gameId) => {
-  socket.emit("rungame", gameId);
+export const runGame = (gameID) => {
+  socket.emit("rungame", gameID);
+  console.log(gameID + " client");
 };

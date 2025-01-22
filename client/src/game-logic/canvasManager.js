@@ -5,18 +5,18 @@ let spriteX = 0;
 let spriteY = 0;
 
 // Path is relative to 'dist' folder
-const characters = {
-    witch_cat: "../src/public/assets/calicoKitty_walk.png"
-};
+let assetsMap = {
+    avatars: {witch_cat: "../src/public/assets/calicoKitty_walk.png"}
+}
 
-const dummyPlayer1 = {
-    position: {x: 0, y: 0},
-    char_id: 'witch_cat'
-};
+// const dummyPlayer1 = {
+//     position: {x: 0, y: 0},
+//     avatar_id: 'witch_cat'
+// };
 
-const dummyCanvasState = {
-    players: [dummyPlayer1]
-};
+// const dummyCanvasState = {
+//     players: [dummyPlayer1]
+// };
 
 // Params:
 // playerState: {
@@ -24,23 +24,53 @@ const dummyCanvasState = {
 //  character: id
 // }
 // ctx: context                                     -- Game Canvas context
-const drawPlayer = (playerState, ctx) => {
-    const playerSprite = new Image(64,64);
-    const x = playerState.position.x;
-    const y = playerState.position.y;
-    playerSprite.onload = () => {
-        ctx.drawImage(playerSprite,
-            spriteX * blockSize, spriteY * blockSize, spriteSize, spriteSize,
-            x * blockSize, y * blockSize, spriteSize, spriteSize);
+const drawPlayer = (player, ctx) => {
+    const x = player.position.x;
+    const y = player.position.y;
+    ctx.drawImage(player.sprite_sheet,
+        spriteX * blockSize, spriteY * blockSize, spriteSize, spriteSize,
+        x * blockSize, y * blockSize, spriteSize, spriteSize);
+};
+
+const convertGameToCanvasState = (game) => {
+    return {
+        // players: [list of player Objects]
+        players: Object.values(game.players)
     }
-    playerSprite.src = characters[playerState.char_id];
+};
+
+const loadAsset = (asset) => {
+    return new Promise((resolve, reject) => {
+        const assetImage = new Image(asset.size, asset.size);
+        assetImage.src = assetsMap[asset.id];
+        assetImage.onload(resolve);
+        assetImage.onerror(reject);
+    });
 }
+
+const loadAssets = async (canvasState) => {
+    // load players
+    const loadedImages = await Promises.all(canvasState.players.map(loadAsset))
+    
+    canvasState.players.forEach((player) => {
+        const playerSprite = new Image(64, 64);
+        playerSprite.src = characters[player.avatar_id];
+        playerSprite.onload = () => {
+            player.sprite_sheet = playerSprite;
+        };
+        
+    });
+}
+// create promise move on
+
+// create promises (loading image)
+// Promise.all(those promises) to 
 
 // Params
 // canvasState: {
 //  players: []                                     -- List of active players the game should render (Later on perform checks to see if a player is in screen, compare absolute positions to player positions)
 // }
-export const drawCanvas = (canvasState, canvasRef) => {
+export const drawCanvas = (game, canvasRef) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const context = canvas.getContext("2d");
@@ -48,7 +78,10 @@ export const drawCanvas = (canvasState, canvasRef) => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    dummyCanvasState.players.forEach((player) => {
+    const canvasState = convertGameToCanvasState(game);
+    loadAssets(canvasState);
+
+    canvasState.players.forEach((player) => {
         drawPlayer(player, context)
     })
 };

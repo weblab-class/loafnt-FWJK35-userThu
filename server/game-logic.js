@@ -3,9 +3,16 @@ const screenBorder = {
   height: 11,
 };
 
+const dummyPlayer1 = {
+    position: {x: 0, y: 0},
+    avatar_id: 'witch_cat',
+    sprite_sheet: null
+};
+
 class Game {
   constructor() {
-    this.players = {};
+    // players = {user_id: player_obj}
+    this.players = {"TEST_PLAYER": dummyPlayer1};
     this.map = { trees: [] };
   }
 

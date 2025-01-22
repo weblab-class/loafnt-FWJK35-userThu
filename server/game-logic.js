@@ -29,7 +29,6 @@ class Game {
     //[["TEST_PLAYER", dummyPlayer1]]
     this.players = new Map();
     if (lobby) {
-      console.log("lobby", lobby.players.values());
       Array.from(lobby.players.values()).forEach((user) => {
         this.players.set(user._id, { data: dummyPlayer1, user: user });
         this.spawnPlayer(user);
@@ -273,8 +272,6 @@ class Game {
     const topSeed = this.seed + chunk.x + "|" + (chunk.y - 1) + "b";
     const topRandom = seedrandom(topSeed);
     const topCon = Math.floor(topRandom() * chunkSize) * 2 + 1;
-
-    console.log(leftCon, rightCon, topCon, botCon);
 
     mz([0, leftCon], 0);
     mz([chunkSize * 2, rightCon], 0);

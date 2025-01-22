@@ -45,15 +45,6 @@ const sendGameState = (gameId) => {
 
 // Called when server socket receives a request
 const runGame = (gameId) => {
-  console.log(
-    gameMap[gameId]
-      .getMazeFromChunk({ x: 0, y: 0 })
-      .map((row) => {
-        return row.join(" ");
-      })
-      .join("\n")
-  );
-  console.log(gameMap[gameId].players.values());
   Array.from(gameMap[gameId].players.values()).forEach((player) => {
     getSocketFromUserID(player.user._id).emit("launchgame");
   });
@@ -83,7 +74,9 @@ module.exports = {
       });
 
       socket.on("move", (input) => {
-        gameMap[input.gameID].movePlayer(input.user_id, input.dir);
+        if (gameMap[input.gameID]) {
+          gameMap[input.gameID].movePlayer(input.user_id, input.dir);
+        }
       });
     });
   },

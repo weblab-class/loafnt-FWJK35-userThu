@@ -17,6 +17,7 @@ const Canvas = (props) => {
   }, []);
 
   const processGame = (gamePacket) => {
+    console.log("drawCanvas");
     drawCanvas(gamePacket, canvasRef);
   };
 

@@ -41,8 +41,8 @@ let assetsMap = {
 // }
 // ctx: context                                     -- Game Canvas context
 const drawPlayer = (player, ctx) => {
-  const x = player.position.data.x;
-  const y = player.position.data.y;
+  const x = player.position.x;
+  const y = player.position.y;
   ctx.drawImage(
     assetsMap.avatars[player.avatar_id].imgObj,
     spriteX * blockSize,
@@ -56,12 +56,17 @@ const drawPlayer = (player, ctx) => {
   );
 };
 
+// gamePacket:
+// {
+//   game: gameObj
+// }
 const convertGameToCanvasState = (gamePacket) => {
-  //   console.log(gamePacket);
-  return {
-    // players: [list of player Objects]
-    players: Object.values(gamePacket.game.players),
-  };
+    return {
+        // players: {
+        //  user._id: {data: playerObj, user: userObj}
+        // }
+        players: gamePacket.game.playersObj,
+    };
 };
 
 const loadAsset = (asset) => {
@@ -75,9 +80,14 @@ const loadAsset = (asset) => {
 
 const loadAssets = async () => {
     // load players
-    const loaded = await Promise.all(Object.values(assetsMap.avatars).map(loadAsset));
-    loaded.forEach((asset) => {
+    const loadedPlayers = await Promise.all(Object.values(assetsMap.avatars).map(loadAsset));
+    loadedPlayers.forEach((asset) => {
         assetsMap.avatars[asset.id].imgObj = asset.imgObj;
+    });
+    // load terrain
+    const loadedTerrain = await Promise.all(Object.values(assetsMap.terrain).map(loadAsset));
+    loadedTerrain.forEach((asset) => {
+        assetsMap.terrain[asset.id].imgObj = asset.imgObj;
     });
 }
 
@@ -88,7 +98,7 @@ loadAssets();
 // canvasState: {
 //  players: []                                     -- List of active players the game should render (Later on perform checks to see if a player is in screen, compare absolute positions to player positions)
 // }
-export const drawCanvas = (game, canvasRef) => {
+export const drawCanvas = (gamePacket, canvasRef) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const context = canvas.getContext("2d");
@@ -96,9 +106,9 @@ export const drawCanvas = (game, canvasRef) => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-  const canvasState = convertGameToCanvasState(gamePacket);
+    const canvasState = convertGameToCanvasState(gamePacket);
 
-  canvasState.players.forEach((player) => {
-    drawPlayer(player, context);
-  });
+    Object.values(canvasState.players).forEach((playerObj) => {
+        drawPlayer(playerObj.data, context);
+    });
 };

@@ -16,6 +16,9 @@ const dummyPlayer1 = {
 
 class Game {
   seed;
+  // players (Map/Dict): {
+  //    user._id: {data: playerObj, user: userObj}
+  // }
   players;
   playersObj;
   map;

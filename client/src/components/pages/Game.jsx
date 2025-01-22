@@ -1,8 +1,10 @@
 import Canvas from "../modules/Canvas";
 import {runGame} from "../../client-socket";
-import {useState, useEffect} from "react";
+import { UserContext } from "../App";
+import {useState, useEffect, useContext} from "react";
 import { handleInput } from "../../../../server/input";
 import "./Game.css";
+import {get} from "../../utilities";
 
 const Game = () => {
     const [gameID, setGameID] = useState("");
@@ -14,8 +16,8 @@ const Game = () => {
     };
 
     useEffect(() => {
-        get("/api/mylobbycode").then((lobbycode) => {
-            setGameID(lobbycode);
+        get("/api/mylobbycode").then((result) => {
+            setGameID(result.code);
         });
     }, []);
 

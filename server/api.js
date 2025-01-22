@@ -101,7 +101,7 @@ router.get("/lobby", (req, res) => {
 router.get("/mylobbycode", (req, res) => {
   const lobby = lobbyManager.findLobbyOfPlayer(req.user.googleid);
   if (lobby) {
-    res.send(lobby.code);
+    res.send({code: lobby.code});
   } else {
     res.status(500).send("Player not in lobby");
   }

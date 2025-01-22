@@ -32,9 +32,14 @@ const LobbyPage = () => {
         return newLobbyPlayers;
       });
     };
+    const launchGame = () => {
+      window.location.assign(window.location.protocol + "//" + window.location.host + "/game");
+    };
     socket.on("joinedlobby", addNewPlayer);
+    socket.on("launchgame", launchGame);
     return () => {
       socket.off("joinedlobby", addNewPlayer);
+      socket.off("launchgame", launchGame);
     };
   }, []);
 

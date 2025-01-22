@@ -10,20 +10,22 @@ import { CreateLobby, JoinLobby } from "../modules/LobbyControls";
 import LobbyInput from "../modules/LobbyInput";
 
 const LoginPage = () => {
-  const { userId, handleLogin, handleLogout } = useContext(UserContext);
+  const { user, handleLogin, handleLogout } = useContext(UserContext);
 
   const [joiningLobby, setJoiningLobby] = useState(false);
 
   const attemptJoinLobby = (lobbycode) => {
     post("/api/joinlobby", { lobbycode: lobbycode }).then((lobby) => {
-      window.location.replace(window.location.href + "lobby/" + lobby.code);
+      window.location.assign(
+        window.location.protocol + "//" + window.location.host + "/lobby/" + lobby.code
+      );
     });
   };
 
   return (
     <>
       <div className="login-page-background">
-        {userId ? (
+        {user ? (
           <div className="lobby-controls">
             {joiningLobby ? (
               <LobbyInput
@@ -47,7 +49,7 @@ const LoginPage = () => {
           <></>
         )}
         <div className="login-button">
-          {userId ? (
+          {user ? (
             <button
               className="logout-button"
               onClick={() => {

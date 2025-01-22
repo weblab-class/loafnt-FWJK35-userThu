@@ -98,6 +98,15 @@ router.get("/lobby", (req, res) => {
   }
 });
 
+router.get("/mylobby", (req, res) => {
+  const lobby = lobbyManager.findLobbyOfPlayer(req.user.googleid);
+  if (lobby) {
+    res.send(lobby.code);
+  } else {
+    res.status(500).send("Player not in lobby");
+  }
+});
+
 // anything else falls to this "not found" case
 router.all("*", (req, res) => {
   console.log(`API route not found: ${req.method} ${req.url}`);

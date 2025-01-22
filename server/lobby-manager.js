@@ -53,6 +53,10 @@ const findLobbyByCode = (code) => {
   return lobbies.get(code);
 };
 
+const findLobbyOfPlayer = (googleid) => {
+  return findLobbyByCode(allPlayers.get(googleid));
+};
+
 const getLobbies = () => {
   return lobbies;
 };
@@ -61,5 +65,6 @@ module.exports = {
   Lobby,
   getLobbies,
   findLobbyByCode,
+  findLobbyOfPlayer,
   createNewLobby,
 };

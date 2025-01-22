@@ -71,8 +71,8 @@ export const drawCanvas = (game, canvasRef) => {
     if (!canvas) return;
     const context = canvas.getContext("2d");
     // Purposefully give dimensions so Canvas does not upscale inner images
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = 1280;
+    canvas.height = 704;
 
     const canvasState = convertGameToCanvasState(game);
     

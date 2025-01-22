@@ -8,6 +8,7 @@
 .canvas {
     border: 1px black solid;
     position: fixed;
-    width: 80%;
-    height: 80%;
+    padding: 0;
+    width: 1280px;
+    height: 704px;
 }

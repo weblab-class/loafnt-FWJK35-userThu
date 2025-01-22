@@ -8,5 +8,9 @@ socket.on("connect", () => {
 
 export const runGame = (gameID) => {
   socket.emit("rungame", gameID);
-  console.log(gameID + " client");
 };
+
+export const move = (gameID, user_id, dir) => {
+  console.log("move - client")
+  socket.emit("move", {gameID: gameID, user_id: user_id, dir: dir});
+}

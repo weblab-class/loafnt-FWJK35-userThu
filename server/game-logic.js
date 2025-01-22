@@ -37,14 +37,14 @@ class Game {
   movePlayer(id, dir) {
     if (this.players[id] === undefined) return;
 
-    if (dir === "up" && this.players[id].position.y < screenBorder.height) {
-      gameState.players[id].position.y += 1;
-    } else if (dir === "down" && this.players[id].position.y > 0) {
-      gameState.players[id].position.y -= 1;
+    if (dir === "up" && this.players[id].position.y > 0) {
+      this.players[id].position.y -= 1;
+    } else if (dir === "down" && this.players[id].position.y < screenBorder.height - 1) {
+      this.players[id].position.y += 1;
     } else if (dir === "left" && this.players[id].position.x > 0) {
-      gameState.players[id].position.x -= 1;
-    } else if (dir === "right" && this.players[id].position.x < screenBorder.width) {
-      gameState.players[id].position.x += 1;
+      this.players[id].position.x -= 1;
+    } else if (dir === "right" && this.players[id].position.x < screenBorder.width - 1) {
+      this.players[id].position.x += 1;
     }
   }
 

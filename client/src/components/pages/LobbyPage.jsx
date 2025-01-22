@@ -21,6 +21,9 @@ const LobbyPage = () => {
   useEffect(() => {
     post("/api/joinlobby", { lobbycode: props.lobbycode }).then((lobby) => {
       console.log(lobby);
+      console.log(lobby.playersObj);
+      console.log(new Map(Object.entries(lobby.playersObj)));
+
       setMyLobby(lobby);
     });
   }, []);
@@ -33,7 +36,7 @@ const LobbyPage = () => {
         </div>
         <div>
           {myLobby ? (
-            myLobby.players.map((player) => {
+            Object.values(myLobby.playersObj).map((player) => {
               return <div key={player.name}>{player.name}</div>;
             })
           ) : (

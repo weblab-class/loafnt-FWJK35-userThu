@@ -18,17 +18,48 @@ class Lobby {
     this.code = mycode;
     this.players = [leader];
   }
+
+  addPlayer(newPlayer) {
+    let found = false;
+    this.players.forEach((player) => {
+      if (player.googleid === newPlayer.googleid) {
+        found = true;
+      }
+    });
+    if (!found) {
+      this.players = [...this.players, newPlayer];
+    }
+    allPlayers.set(newPlayer, this.code);
+  }
 }
 
-lobbies = [];
+let lobbies = [];
+let allPlayers = new Map();
 
 const createNewLobby = (leader) => {
   thislobby = new Lobby(lobbies, leader);
-  lobbies.concat(thislobby);
+  lobbies = [...lobbies, thislobby];
+  allPlayers.set(leader, thislobby.code);
   return thislobby;
+};
+
+const findLobbyByCode = (code) => {
+  let output;
+  lobbies.forEach((testLobby) => {
+    if (testLobby.code === code) {
+      output = testLobby;
+    }
+  });
+  return output;
+};
+
+const getLobbies = () => {
+  return lobbies;
 };
 
 module.exports = {
   Lobby,
+  getLobbies,
+  findLobbyByCode,
   createNewLobby,
 };

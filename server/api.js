@@ -20,7 +20,7 @@ const router = express.Router();
 
 //initialize socket
 const socketManager = require("./server-socket");
-const { createNewLobby } = require("./lobby-manager");
+const lobbyManager = require("./lobby-manager");
 
 router.post("/login", auth.login);
 router.post("/logout", auth.logout);
@@ -66,8 +66,29 @@ router.post("/storeuser", (req, res) => {
 
 router.post("/newlobby", (req, res) => {
   if (req.user) {
-    const thislobby = createNewLobby(req.user);
+    const thislobby = lobbyManager.createNewLobby(req.user);
     res.send(thislobby);
+  }
+});
+
+router.post("/joinlobby", (req, res) => {
+  if (req.user) {
+    let lobby = lobbyManager.findLobbyByCode(req.body.lobbycode);
+    if (lobby) {
+      lobby.addPlayer(req.user);
+      res.send(lobby);
+    } else {
+      res.status(500).send("Lobby Not Found");
+    }
+  }
+});
+
+router.get("/lobby", (req, res) => {
+  const lobby = lobbyManager.findLobbyByCode(req.query.lobbycode);
+  if (lobby) {
+    res.send(lobby);
+  } else {
+    res.status(500).send("Lobby Not Found");
   }
 });
 

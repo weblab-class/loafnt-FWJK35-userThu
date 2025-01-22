@@ -36,6 +36,15 @@ const sendGameState = (gameId) => {
 
 // Called when server socket receives a request
 const runGame = (gameId) => {
+  console.log(
+    gameMap[gameId]
+      .getMazeFromChunk({ x: 0, y: 0 })
+      .map((row) => {
+        return row.join(" ");
+      })
+      .join("\n")
+  );
+
   setInterval(() => {
     sendGameState(gameId);
   }, 1000 / 60);
@@ -54,7 +63,7 @@ module.exports = {
       // Server receives request from client to run game
       socket.on("rungame", (gameId) => {
         console.log(gameId + " server");
-        if (gameMap[gameId] === undefined) gameMap[gameId] = new Game.Game();
+        if (gameMap[gameId] === undefined) gameMap[gameId] = new Game.Game(gameId);
         runGame(gameId);
       });
     });

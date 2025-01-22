@@ -47,7 +47,6 @@ const StartGame = (props) => {
         className="start-game"
         onClick={() => {
           runGame(props.lobbycode);
-          window.location.assign(window.location.protocol + "//" + window.location.host + "/game");
         }}
       >
         Start Game

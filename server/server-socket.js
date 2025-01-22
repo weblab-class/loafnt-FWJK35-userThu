@@ -1,4 +1,5 @@
 const Game = require("./game-logic");
+const LobbyManager = require("./lobby-manager");
 
 let io;
 
@@ -44,6 +45,10 @@ const runGame = (gameId) => {
       })
       .join("\n")
   );
+  console.log(gameMap[gameId].players.values());
+  Array.from(gameMap[gameId].players.values()).forEach((player) => {
+    getSocketFromUserID(player.user._id).emit("launchgame");
+  });
 
   setInterval(() => {
     sendGameState(gameId);
@@ -62,8 +67,11 @@ module.exports = {
       });
       // Server receives request from client to run game
       socket.on("rungame", (gameId) => {
-        if (gameMap[gameId] === undefined) gameMap[gameId] = new Game.Game(gameId);
-        runGame(gameId);
+        console.log(gameId + " server");
+        if (gameMap[gameId] === undefined) {
+          gameMap[gameId] = new Game.Game(gameId, LobbyManager.findLobbyByCode(gameId));
+          runGame(gameId);
+        }
       });
 
       socket.on("move", (input) => {

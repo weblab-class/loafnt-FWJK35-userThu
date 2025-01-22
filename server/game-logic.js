@@ -14,12 +14,19 @@ const dummyPlayer1 = {
 };
 
 class Game {
+  seed;
+  players;
+  map;
+
   constructor(seed, lobby) {
     this.seed = seed;
     // players = {user_id: player_obj}
-    this.players = { TEST_PLAYER: dummyPlayer1 };
+    //[["TEST_PLAYER", dummyPlayer1]]
+    this.players = new Map();
     if (lobby) {
-      lobby.players.values().forEach((user) => {
+      console.log(lobby.players.values());
+      Array.from(lobby.players.values()).forEach((user) => {
+        this.players.set(user._id, { data: dummyPlayer1, user: user });
         this.spawnPlayer(user);
       });
     }
@@ -28,8 +35,8 @@ class Game {
   }
 
   spawnPlayer(user) {
-    this.players[user._id] = {
-      char_id: user.char,
+    this.players.get(user._id).data = {
+      char_id: 0,
       position: { x: 0, y: 0 },
     };
   }
@@ -159,6 +166,10 @@ class Game {
     mz([botCon, chunkSize * 2], 0);
 
     return maze;
+  }
+
+  getPlayers() {
+    return this.players.values();
   }
 }
 module.exports = {

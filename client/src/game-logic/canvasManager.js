@@ -8,6 +8,9 @@ let spriteY = 0;
 let assetsMap = {
     avatars: {
         witch_cat: {id: "witch_cat", size: 64, src: "../src/public/assets/calicoKitty_walk.png", imgObj: null},
+    },
+    terrain: {
+        tree: {id: "tree", size: 64, src: "../src/public/assets/tree.png", imgObj: null}
     }
 }
 
@@ -43,20 +46,21 @@ const convertGameToCanvasState = (game) => {
 };
 
 const loadAsset = (asset) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const assetImage = new Image(asset.size, asset.size);
         assetImage.src = asset.src;
         assetImage.onload = () => resolve({id: asset.id, imgObj: assetImage});
-        assetImage.onerror = () => reject(new Error(`Image does not exist. URL: ${asset.src}`));
     });
 }
 
 const loadAssets = async () => {
     // load players
-    const loaded = await Promise.all(Object.values(assetsMap.avatars).map(loadAsset));
-    loaded.forEach((asset) => {
+    const loadedPlayers = await Promise.all(Object.values(assetsMap.avatars).map(loadAsset));
+    loadedPlayers.forEach((asset) => {
         assetsMap.avatars[asset.id].imgObj = asset.imgObj;
     });
+    // load terrain
+    
 }
 
 // Call when game is started

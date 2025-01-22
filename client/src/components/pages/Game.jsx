@@ -5,13 +5,19 @@ import { handleInput } from "../../../../server/input";
 import "./Game.css";
 
 const Game = () => {
-    const [gameID, setGameID] = useState("TEST");
-    const [userID, setUserID] = useState("TEST_PLAYER");
+    const [gameID, setGameID] = useState("");
+    const { user, handleLogin, handleLogout } = useContext(UserContext);
 
     const processInput = (e) => {
         console.log("processInput");
-        handleInput(e, gameID, userID);
+        handleInput(e, gameID, user._id);
     };
+
+    useEffect(() => {
+        get("/api/mylobbycode").then((lobbycode) => {
+            setGameID(lobbycode);
+        });
+    }, []);
 
     useEffect(() => {
         window.addEventListener("keydown", processInput);

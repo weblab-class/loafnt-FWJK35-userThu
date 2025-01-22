@@ -32,7 +32,15 @@ const removeUser = (user, socket) => {
 
 // Emits Game object to client sockets listening for that specific game
 const sendGameState = (gameId) => {
-  io.emit(`update/${gameId}`, gameMap[gameId]);
+  gameMap[gameId].playersObj = Object.fromEntries(gameMap[gameId].players);
+  Array.from(gameMap[gameId].players.values()).forEach((player) => {
+    let gamePacket = { game: gameMap[gameId] };
+    const socket = getSocketFromUserID(player.user._id);
+    if (socket) {
+      socket.emit("update", gamePacket);
+    }
+  });
+  //io.emit(`update/${gameId}`, gamePacket);
 };
 
 // Called when server socket receives a request

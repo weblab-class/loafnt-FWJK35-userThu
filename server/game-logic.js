@@ -9,6 +9,7 @@ const chunkSize = 8;
 
 const dummyPlayer1 = {
   position: { x: 0, y: 0 },
+  chunk: { x: 0, y: 0 },
   avatar_id: "witch_cat",
   sprite_sheet: null,
 };
@@ -16,6 +17,7 @@ const dummyPlayer1 = {
 class Game {
   seed;
   players;
+  playersObj;
   map;
 
   constructor(seed, lobby) {
@@ -24,7 +26,7 @@ class Game {
     //[["TEST_PLAYER", dummyPlayer1]]
     this.players = new Map();
     if (lobby) {
-      console.log(lobby.players.values());
+      console.log("lobby", lobby.players.values());
       Array.from(lobby.players.values()).forEach((user) => {
         this.players.set(user._id, { data: dummyPlayer1, user: user });
         this.spawnPlayer(user);
@@ -36,22 +38,75 @@ class Game {
 
   spawnPlayer(user) {
     this.players.get(user._id).data = {
-      char_id: 0,
+      avatar_id: "witch_cat",
       position: { x: 0, y: 0 },
+      chunk: { x: 0, y: 0 },
+      rendered_chunks: [
+        [
+          this.getMazeFromChunk({ x: -1, y: -1 }),
+          this.getMazeFromChunk({ x: 0, y: -1 }),
+          this.getMazeFromChunk({ x: 1, y: -1 }),
+        ],
+        [
+          this.getMazeFromChunk({ x: -1, y: 0 }),
+          this.getMazeFromChunk({ x: 0, y: 0 }),
+          this.getMazeFromChunk({ x: 1, y: 0 }),
+        ],
+        [
+          this.getMazeFromChunk({ x: -1, y: 1 }),
+          this.getMazeFromChunk({ x: 0, y: 1 }),
+          this.getMazeFromChunk({ x: 1, y: 1 }),
+        ],
+      ],
     };
+
+    this.movePlayer(user._id, "right");
+  }
+
+  static getChunkFromPos(pos) {
+    return Math.floor((pos + chunkSize) / (chunkSize * 2));
+  }
+  static getChunkCenter(chunk) {
+    return chunkSize * 2 * chunk;
+  }
+
+  getPlayerMapData(id, pos) {
+    const player = this.players.get(id);
+    const posInRange = (pos, playerPos) => {
+      return (
+        Math.abs(pos.x - getChunkCenter(getChunkFromPos(playerPos.x))) <= chunkSize * 3 &&
+        Math.abs(pos.y - getChunkCenter(getChunkFromPos(playerPos.y))) <= chunkSize * 3
+      );
+    };
+    if (posInRange(pos, player.position)) {
+    }
   }
 
   movePlayer(id, dir) {
-    if (this.players[id] === undefined) return;
+    if (!this.players.has(id)) {
+      console.log("player no exits");
+      return;
+    }
 
-    if (dir === "up" && this.players[id].position.y > 0) {
-      this.players[id].position.y -= 1;
-    } else if (dir === "down" && this.players[id].position.y < screenBorder.height - 1) {
-      this.players[id].position.y += 1;
-    } else if (dir === "left" && this.players[id].position.x > 0) {
-      this.players[id].position.x -= 1;
-    } else if (dir === "right" && this.players[id].position.x < screenBorder.width - 1) {
-      this.players[id].position.x += 1;
+    let playerPos = this.players.get(id).data.position;
+    let playerChunk = this.players.get(id).data.chunk;
+
+    const posInChunk = (pos, chunk) => {
+      const compressedRight = (pos + chunkSize) / (chunkSize * 2);
+      const compressedLeft = (pos - chunkSize) / (chunkSize * 2);
+      return chunk <= compressedRight && chunk >= compressedLeft;
+    };
+
+    let newPos = Object.assign({}, playerPos);
+
+    if (dir === "up") {
+      newPos.y += 1;
+    } else if (dir === "down") {
+      newPos.y -= 1;
+    } else if (dir === "left") {
+      newPos.x -= 1;
+    } else if (dir === "right") {
+      newPos.x += 1;
     }
   }
 

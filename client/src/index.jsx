@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./components/App";
 import LoginPage from "./components/pages/LoginPage";
+import LobbyPage from "./components/pages/LobbyPage";
 import NotFound from "./components/pages/NotFound";
 import Game from "./components/pages/Game";
 
@@ -21,7 +22,8 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route errorElement={<NotFound />} element={<App />}>
       <Route path="/" element={<LoginPage />} />
-      <Route path="/game" element={<Game />}/>
+      <Route path="/lobby/:lobbycode" element={<LobbyPage />} />
+      <Route path="/game" element={<Game />} />
     </Route>
   )
 );

@@ -9,11 +9,20 @@ import { get, post } from "../../utilities";
 const CreateLobby = () => {
   const { userId, handleLogin, handleLogout } = useContext(UserContext);
 
-  const createLobby = () => {};
+  const createLobby = () => {
+    post("/api/newlobby").then((lobby) => {
+      window.location.replace(window.location.href + "lobby/" + lobby.code);
+    });
+  };
 
   return (
     <>
-      <button className="create-lobby" onClick={createLobby()}>
+      <button
+        className="create-lobby"
+        onClick={() => {
+          createLobby();
+        }}
+      >
         Create Lobby
       </button>
     </>
@@ -21,7 +30,6 @@ const CreateLobby = () => {
 };
 
 const JoinLobby = (props) => {
-  const { userId, handleLogin, handleLogout } = useContext(UserContext);
   return (
     <>
       <button className="create-lobby" onClick={props.joinlobby}>
@@ -29,6 +37,10 @@ const JoinLobby = (props) => {
       </button>
     </>
   );
+};
+
+const StartGame = (props) => {
+  const { userId, handleLogin, handleLogout } = useContext(UserContext);
 };
 
 export { CreateLobby, JoinLobby };

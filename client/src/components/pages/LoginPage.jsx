@@ -4,6 +4,7 @@ import { GoogleLogin, googleLogout } from "@react-oauth/google";
 import "../../utilities.css";
 import "./LoginPage.css";
 import { UserContext } from "../App";
+import { post } from "../../utilities";
 
 import { CreateLobby, JoinLobby } from "../modules/LobbyControls";
 import LobbyInput from "../modules/LobbyInput";
@@ -14,7 +15,9 @@ const LoginPage = () => {
   const [joiningLobby, setJoiningLobby] = useState(false);
 
   const attemptJoinLobby = (lobbycode) => {
-    console.log("joining " + lobbycode);
+    post("/api/joinlobby", { lobbycode: lobbycode }).then((lobby) => {
+      window.location.replace(window.location.href + "lobby/" + lobby.code);
+    });
   };
 
   return (

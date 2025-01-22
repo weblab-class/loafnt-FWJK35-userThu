@@ -81,6 +81,10 @@ module.exports = {
           runGame(gameId);
         }
       });
+
+      socket.on("move", (input) => {
+        gameMap[input.gameID].movePlayer(input.user_id, input.dir);
+      });
     });
   },
 

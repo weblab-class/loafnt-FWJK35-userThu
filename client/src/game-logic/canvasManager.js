@@ -6,15 +6,24 @@ let spriteY = 0;
 
 // Path is relative to 'dist' folder
 let assetsMap = {
-  avatars: {
-    witch_cat: {
-      id: "witch_cat",
-      size: 64,
-      src: "../src/public/assets/calicoKitty_walk.png",
-      imgObj: null,
+    avatars: {
+        witch_cat: {
+          id: "witch_cat",
+          size: 64,
+          src: "../src/public/assets/calicoKitty_walk.png",
+          imgObj: null,
+        },
     },
-  },
-};
+    terrain: {
+        tree: {
+            id: "tree", 
+            size: 64, 
+            src: "../src/public/assets/tree.png", 
+            imgObj: null
+        },
+    }
+}
+
 
 // const dummyPlayer1 = {
 //     position: {x: 0, y: 0},
@@ -56,21 +65,21 @@ const convertGameToCanvasState = (gamePacket) => {
 };
 
 const loadAsset = (asset) => {
-  return new Promise((resolve, reject) => {
-    const assetImage = new Image(asset.size, asset.size);
-    assetImage.src = asset.src;
-    assetImage.onload = () => resolve({ id: asset.id, imgObj: assetImage });
-    assetImage.onerror = () => reject(new Error(`Image does not exist. URL: ${asset.src}`));
-  });
-};
+    return new Promise((resolve, reject) => {
+        const assetImage = new Image(asset.size, asset.size);
+        assetImage.src = asset.src;
+        assetImage.onload = () => resolve({id: asset.id, imgObj: assetImage});
+        assetImage.onerror = () => reject(new Error(`Image does not exist. URL: ${asset.src}`));
+    });
+}
 
 const loadAssets = async () => {
-  // load players
-  const loaded = await Promise.all(Object.values(assetsMap.avatars).map(loadAsset));
-  loaded.forEach((asset) => {
-    assetsMap.avatars[asset.id].imgObj = asset.imgObj;
-  });
-};
+    // load players
+    const loaded = await Promise.all(Object.values(assetsMap.avatars).map(loadAsset));
+    loaded.forEach((asset) => {
+        assetsMap.avatars[asset.id].imgObj = asset.imgObj;
+    });
+}
 
 // Call when game is started
 loadAssets();
@@ -79,13 +88,13 @@ loadAssets();
 // canvasState: {
 //  players: []                                     -- List of active players the game should render (Later on perform checks to see if a player is in screen, compare absolute positions to player positions)
 // }
-export const drawCanvas = (gamePacket, canvasRef) => {
-  const canvas = canvasRef.current;
-  if (!canvas) return;
-  const context = canvas.getContext("2d");
-  // Purposefully give dimensions so Canvas does not upscale inner images
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+export const drawCanvas = (game, canvasRef) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const context = canvas.getContext("2d");
+    // Purposefully give dimensions so Canvas does not upscale inner images
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
   const canvasState = convertGameToCanvasState(gamePacket);
 

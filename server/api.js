@@ -98,7 +98,7 @@ router.get("/lobby", (req, res) => {
   }
 });
 
-router.get("/mylobby", (req, res) => {
+router.get("/mylobbycode", (req, res) => {
   const lobby = lobbyManager.findLobbyOfPlayer(req.user.googleid);
   if (lobby) {
     res.send(lobby.code);

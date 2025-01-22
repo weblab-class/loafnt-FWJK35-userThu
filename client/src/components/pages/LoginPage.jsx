@@ -10,7 +10,7 @@ import { CreateLobby, JoinLobby } from "../modules/LobbyControls";
 import LobbyInput from "../modules/LobbyInput";
 
 const LoginPage = () => {
-  const { userId, handleLogin, handleLogout } = useContext(UserContext);
+  const { user, handleLogin, handleLogout } = useContext(UserContext);
 
   const [joiningLobby, setJoiningLobby] = useState(false);
 
@@ -23,7 +23,7 @@ const LoginPage = () => {
   return (
     <>
       <div className="login-page-background">
-        {userId ? (
+        {user ? (
           <div className="lobby-controls">
             {joiningLobby ? (
               <LobbyInput
@@ -47,7 +47,7 @@ const LoginPage = () => {
           <></>
         )}
         <div className="login-button">
-          {userId ? (
+          {user ? (
             <button
               className="logout-button"
               onClick={() => {

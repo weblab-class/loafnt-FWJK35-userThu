@@ -76,6 +76,7 @@ router.post("/joinlobby", (req, res) => {
     let lobby = lobbyManager.findLobbyByCode(req.body.lobbycode);
     if (lobby) {
       lobby.addPlayer(req.user);
+
       res.send(lobby);
     } else {
       res.status(500).send("Lobby Not Found");

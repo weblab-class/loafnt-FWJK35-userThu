@@ -13,8 +13,8 @@ class Lobby {
   playersObj;
   leader;
   constructor(lobbiesList, leader) {
-    const mycode = getRandomCode(5);
-    while (lobbiesList.map((lobby) => lobby.code).includes(mycode)) {
+    let mycode = getRandomCode(5);
+    while (lobbiesList.has(mycode)) {
       mycode = getRandomCode(5);
     }
     this.code = mycode;
@@ -25,37 +25,32 @@ class Lobby {
 
   removePlayer(player) {
     this.players.delete(player.googleid);
+    this.playersObj = Object.fromEntries(this.players);
   }
 
   addPlayer(newPlayer) {
-    this.players.set(newPlayer.googleid, newPlayer);
-    lobbies.forEach((lobby) => {
+    lobbies.forEach((lobby, code) => {
       if (lobby.players.has(newPlayer.googleid)) {
         lobby.removePlayer(newPlayer);
       }
     });
+    this.players.set(newPlayer.googleid, newPlayer);
     allPlayers.set(newPlayer.googleid, this.code);
+    this.playersObj = Object.fromEntries(this.players);
   }
 }
 
-let lobbies = [];
+let lobbies = new Map();
 let allPlayers = new Map();
 
 const createNewLobby = (leader) => {
   thislobby = new Lobby(lobbies, leader);
-  lobbies = [...lobbies, thislobby];
-  allPlayers.set(leader.googleid, thislobby.code);
+  lobbies.set(thislobby.code, thislobby);
   return thislobby;
 };
 
 const findLobbyByCode = (code) => {
-  let output;
-  lobbies.forEach((testLobby) => {
-    if (testLobby.code === code) {
-      output = testLobby;
-    }
-  });
-  return output;
+  return lobbies.get(code);
 };
 
 const getLobbies = () => {

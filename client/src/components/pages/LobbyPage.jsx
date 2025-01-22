@@ -12,7 +12,7 @@ import { get, post } from "../../utilities";
 import { StartGame } from "../modules/LobbyControls";
 
 const LobbyPage = () => {
-  const { userId, handleLogin, handleLogout } = useContext(UserContext);
+  const { user, handleLogin, handleLogout } = useContext(UserContext);
 
   let props = useParams();
 
@@ -20,10 +20,6 @@ const LobbyPage = () => {
 
   useEffect(() => {
     post("/api/joinlobby", { lobbycode: props.lobbycode }).then((lobby) => {
-      console.log(lobby);
-      console.log(lobby.playersObj);
-      console.log(new Map(Object.entries(lobby.playersObj)));
-
       setMyLobby(lobby);
     });
   }, []);
@@ -43,7 +39,7 @@ const LobbyPage = () => {
             <div>Lobby not found!</div>
           )}
         </div>
-        {myLobby && myLobby.leader.googleid === userId ? <StartGame /> : <></>}
+        {myLobby && user && myLobby.leader.googleid === user.googleid ? <StartGame /> : <></>}
       </div>
     </>
   );

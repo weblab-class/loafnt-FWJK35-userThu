@@ -8,8 +8,6 @@ import { get, post } from "../../utilities";
 import { socket } from "../../client-socket";
 
 const CreateLobby = () => {
-  const { userId, handleLogin, handleLogout } = useContext(UserContext);
-
   const createLobby = () => {
     post("/api/newlobby").then((lobby) => {
       window.location.replace(window.location.href + "lobby/" + lobby.code);
@@ -41,7 +39,6 @@ const JoinLobby = (props) => {
 };
 
 const StartGame = (props) => {
-  const { userId, handleLogin, handleLogout } = useContext(UserContext);
   return (
     <>
       <button

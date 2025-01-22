@@ -10,6 +10,7 @@ const getRandomCode = (len) => {
 class Lobby {
   code;
   players;
+  leader;
   constructor(lobbiesList, leader) {
     const mycode = getRandomCode(5);
     while (lobbiesList.map((lobby) => lobby.code).includes(mycode)) {
@@ -17,6 +18,7 @@ class Lobby {
     }
     this.code = mycode;
     this.players = [leader];
+    this.leader = leader;
   }
 
   addPlayer(newPlayer) {

@@ -1,10 +1,10 @@
-import Game from "./game-logic";
+const Game = require("./game-logic");
 
 let io;
 
 const userToSocketMap = {}; // maps user ID to socket object
 const socketToUserMap = {}; // maps socket ID to user object
-const gameMap = {}
+const gameMap = {};
 
 const getAllConnectedUsers = () => Object.values(socketToUserMap);
 const getSocketFromUserID = (userid) => userToSocketMap[userid];
@@ -32,14 +32,14 @@ const removeUser = (user, socket) => {
 // Emits Game object to client sockets listening for that specific game
 const sendGameState = (gameId) => {
   io.emit(`update/${gameId}`, gameMap[gameId]);
-}
+};
 
 // Called when server API receives a request
 const runGame = (gameId) => {
-  const game = gameMap[gameId]
+  const game = gameMap[gameId];
   setInterval(() => {
     sendGameState(gameId);
-  }, 1000/60);
+  }, 1000 / 60);
 };
 
 module.exports = {
@@ -56,7 +56,7 @@ module.exports = {
       socket.on("rungame", (gameId) => {
         // Add logic for new/existing games
         runGame(gameId);
-      })
+      });
     });
   },
 

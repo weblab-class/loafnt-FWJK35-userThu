@@ -9,6 +9,7 @@ import SinglePlayer from "../modules/SinglePlayer";
 
 import { useParams } from "react-router-dom";
 import { get, post } from "../../utilities";
+import { StartGame } from "../modules/LobbyControls";
 
 const LobbyPage = () => {
   const { userId, handleLogin, handleLogout } = useContext(UserContext);
@@ -39,6 +40,7 @@ const LobbyPage = () => {
             <div>Lobby not found!</div>
           )}
         </div>
+        {myLobby && myLobby.leader.googleid === userId ? <StartGame /> : <></>}
       </div>
     </>
   );

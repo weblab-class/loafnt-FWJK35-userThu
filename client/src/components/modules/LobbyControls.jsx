@@ -5,6 +5,7 @@ import "../../utilities.css";
 import "./LobbyControls.css";
 import { UserContext } from "../App";
 import { get, post } from "../../utilities";
+import { socket } from "../../client-socket";
 
 const CreateLobby = () => {
   const { userId, handleLogin, handleLogout } = useContext(UserContext);
@@ -41,6 +42,18 @@ const JoinLobby = (props) => {
 
 const StartGame = (props) => {
   const { userId, handleLogin, handleLogout } = useContext(UserContext);
+  return (
+    <>
+      <button
+        className="start-game"
+        onClick={() => {
+          socket.runGame(props.lobbycode);
+        }}
+      >
+        Start Game
+      </button>
+    </>
+  );
 };
 
-export { CreateLobby, JoinLobby };
+export { CreateLobby, JoinLobby, StartGame };

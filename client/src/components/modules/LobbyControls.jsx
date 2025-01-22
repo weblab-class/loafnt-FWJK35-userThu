@@ -5,12 +5,14 @@ import "../../utilities.css";
 import "./LobbyControls.css";
 import { UserContext } from "../App";
 import { get, post } from "../../utilities";
-import { socket } from "../../client-socket";
+import { socket, runGame } from "../../client-socket";
 
 const CreateLobby = () => {
   const createLobby = () => {
     post("/api/newlobby").then((lobby) => {
-      window.location.replace(window.location.href + "lobby/" + lobby.code);
+      window.location.assign(
+        window.location.protocol + "//" + window.location.host + "/lobby/" + lobby.code
+      );
     });
   };
 
@@ -44,7 +46,8 @@ const StartGame = (props) => {
       <button
         className="start-game"
         onClick={() => {
-          socket.runGame(props.lobbycode);
+          runGame(props.lobbycode);
+          window.location.assign(window.location.protocol + "//" + window.location.host + "/game");
         }}
       >
         Start Game

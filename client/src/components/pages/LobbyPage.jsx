@@ -10,6 +10,7 @@ import SinglePlayer from "../modules/SinglePlayer";
 import { useParams } from "react-router-dom";
 import { get, post } from "../../utilities";
 import { StartGame } from "../modules/LobbyControls";
+import { socket } from "../../client-socket";
 
 const LobbyPage = () => {
   const { user, handleLogin, handleLogout } = useContext(UserContext);
@@ -17,11 +18,24 @@ const LobbyPage = () => {
   let props = useParams();
 
   const [myLobby, setMyLobby] = useState(null);
+  const [lobbyPlayers, setLobbyPlayers] = useState([]);
 
   useEffect(() => {
     post("/api/joinlobby", { lobbycode: props.lobbycode }).then((lobby) => {
       setMyLobby(lobby);
+      setLobbyPlayers(new Map(Object.entries(lobby.playersObj)));
     });
+    const addNewPlayer = (newuser) => {
+      setLobbyPlayers((prevLobbyPlayers) => {
+        const newLobbyPlayers = new Map(prevLobbyPlayers);
+        newLobbyPlayers.set(newuser.googleid, newuser);
+        return newLobbyPlayers;
+      });
+    };
+    socket.on("joinedlobby", addNewPlayer);
+    return () => {
+      socket.off("joinedlobby", addNewPlayer);
+    };
   }, []);
 
   return (
@@ -32,14 +46,18 @@ const LobbyPage = () => {
         </div>
         <div>
           {myLobby ? (
-            Object.values(myLobby.playersObj).map((player) => {
-              return <div key={player.name}>{player.name}</div>;
-            })
+            Array.from(lobbyPlayers.values()).map((player) => (
+              <div key={player.name}>{player.name}</div>
+            ))
           ) : (
             <div>Lobby not found!</div>
           )}
         </div>
-        {myLobby && user && myLobby.leader.googleid === user.googleid ? <StartGame /> : <></>}
+        {myLobby && user && myLobby.leader.googleid === user.googleid ? (
+          <StartGame lobbycode={props.lobbycode} />
+        ) : (
+          <></>
+        )}
       </div>
     </>
   );

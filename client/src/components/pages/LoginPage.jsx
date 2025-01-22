@@ -16,7 +16,9 @@ const LoginPage = () => {
 
   const attemptJoinLobby = (lobbycode) => {
     post("/api/joinlobby", { lobbycode: lobbycode }).then((lobby) => {
-      window.location.replace(window.location.href + "lobby/" + lobby.code);
+      window.location.assign(
+        window.location.protocol + "//" + window.location.host + "/lobby/" + lobby.code
+      );
     });
   };
 

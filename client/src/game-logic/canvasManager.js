@@ -6,8 +6,11 @@ let spriteY = 0;
 
 // Path is relative to 'dist' folder
 let assetsMap = {
-    avatars: {witch_cat: "../src/public/assets/calicoKitty_walk.png"}
+    avatars: {
+        witch_cat: {id: "witch_cat", size: 64, src: "../src/public/assets/calicoKitty_walk.png", imgObj: null},
+    }
 }
+
 
 // const dummyPlayer1 = {
 //     position: {x: 0, y: 0},
@@ -27,7 +30,7 @@ let assetsMap = {
 const drawPlayer = (player, ctx) => {
     const x = player.position.x;
     const y = player.position.y;
-    ctx.drawImage(player.sprite_sheet,
+    ctx.drawImage(assetsMap.avatars[player.avatar_id].imgObj,
         spriteX * blockSize, spriteY * blockSize, spriteSize, spriteSize,
         x * blockSize, y * blockSize, spriteSize, spriteSize);
 };
@@ -42,29 +45,22 @@ const convertGameToCanvasState = (game) => {
 const loadAsset = (asset) => {
     return new Promise((resolve, reject) => {
         const assetImage = new Image(asset.size, asset.size);
-        assetImage.src = assetsMap[asset.id];
-        assetImage.onload(resolve);
-        assetImage.onerror(reject);
+        assetImage.src = asset.src;
+        assetImage.onload = () => resolve({id: asset.id, imgObj: assetImage});
+        assetImage.onerror = () => reject(new Error(`Image does not exist. URL: ${asset.src}`));
     });
 }
 
-const loadAssets = async (canvasState) => {
+const loadAssets = async () => {
     // load players
-    const loadedImages = await Promises.all(canvasState.players.map(loadAsset))
-    
-    canvasState.players.forEach((player) => {
-        const playerSprite = new Image(64, 64);
-        playerSprite.src = characters[player.avatar_id];
-        playerSprite.onload = () => {
-            player.sprite_sheet = playerSprite;
-        };
-        
+    const loaded = await Promise.all(Object.values(assetsMap.avatars).map(loadAsset));
+    loaded.forEach((asset) => {
+        assetsMap.avatars[asset.id].imgObj = asset.imgObj;
     });
 }
-// create promise move on
 
-// create promises (loading image)
-// Promise.all(those promises) to 
+// Call when game is started
+loadAssets();
 
 // Params
 // canvasState: {
@@ -79,8 +75,7 @@ export const drawCanvas = (game, canvasRef) => {
     canvas.height = window.innerHeight;
 
     const canvasState = convertGameToCanvasState(game);
-    loadAssets(canvasState);
-
+    
     canvasState.players.forEach((player) => {
         drawPlayer(player, context)
     })

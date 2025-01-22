@@ -43,6 +43,7 @@ class Game {
     this.players.get(user._id).data = {
       avatar_id: "witch_cat",
       position: { x: 0, y: 0 },
+      relative_position: { x: 0, y: 0 },
       chunk: { x: 0, y: 0 },
       rendered_chunks: [
         [
@@ -63,31 +64,55 @@ class Game {
       ],
     };
 
-    this.movePlayer(user._id, "right");
+    this.movePlayer(user._id, "none");
+  }
+
+  static addCoords(a, b) {
+    return { x: a.x + b.x, y: a.y + b.y };
+  }
+
+  static subtractCoords(a, b) {
+    return { x: a.x - b.x, y: a.y - b.y };
   }
 
   static getChunkFromPos(pos) {
     return Math.floor((pos + chunkSize) / (chunkSize * 2));
   }
+
   static getChunkCenter(chunk) {
-    return chunkSize * 2 * chunk;
+    return { x: chunkSize * 2 * chunk.x, y: chunkSize * 2 * chunk.y };
+  }
+
+  static getChunkRelativePos(pos, chunk) {
+    return Game.subtractCoords(pos, Game.getChunkCenter(chunk));
   }
 
   getPlayerMapData(id, pos) {
-    const player = this.players.get(id);
+    const playerData = this.players.get(id).data;
     const posInRange = (pos, playerPos) => {
+      const distFromPlayerChunk = Game.subtractCoords(pos, Game.getChunkCenter(playerData.chunk));
       return (
-        Math.abs(pos.x - getChunkCenter(getChunkFromPos(playerPos.x))) <= chunkSize * 3 &&
-        Math.abs(pos.y - getChunkCenter(getChunkFromPos(playerPos.y))) <= chunkSize * 3
+        Math.abs(distFromPlayerChunk.x) <= chunkSize * 3 &&
+        Math.abs(distFromPlayerChunk.y) <= chunkSize * 3
       );
     };
-    if (posInRange(pos, player.position)) {
+    if (posInRange(pos, playerData.position)) {
+      const relChunk = {
+        x: Game.getChunkFromPos(pos.x) - playerData.chunk.x,
+        y: Game.getChunkFromPos(pos.y) - playerData.chunk.y,
+      };
+      const chunkRel = Game.addCoords(
+        Game.getChunkRelativePos(pos, Game.addCoords(playerData.chunk, relChunk)),
+        { x: chunkSize, y: chunkSize }
+      );
+      return playerData.rendered_chunks[relChunk.y + 1][relChunk.x + 1][chunkRel.y][chunkRel.x];
+    } else {
+      return 1;
     }
   }
 
   movePlayer(id, dir) {
     if (!this.players.has(id)) {
-      console.log("player no exits");
       return;
     }
 
@@ -111,6 +136,39 @@ class Game {
     } else if (dir === "right") {
       newPos.x += 1;
     }
+
+    //move player if cell is free
+    if (this.getPlayerMapData(id, newPos) == 0) {
+      playerPos = newPos;
+    }
+
+    //change player's current chunk coord if they moved between chunks
+    const oldChunk = Object.assign({}, playerChunk);
+
+    if (!posInChunk(playerPos.x, playerChunk.x)) {
+      playerChunk.x = Game.getChunkFromPos(playerPos.x);
+    }
+
+    if (!posInChunk(playerPos.y, playerChunk.y)) {
+      playerChunk.y = Game.getChunkFromPos(playerPos.y);
+    }
+
+    //re-generate surrounding maze
+    if (oldChunk !== playerChunk) {
+      let newRenderedChunks = [];
+      for (let ydiff = -1; ydiff < 2; ydiff++) {
+        let newChunkRow = [];
+        for (let xdiff = -1; xdiff < 2; xdiff++) {
+          newChunkRow.push(
+            this.getMazeFromChunk(Game.addCoords(playerChunk, { x: xdiff, y: ydiff }))
+          );
+        }
+        newRenderedChunks.push(newChunkRow);
+      }
+      this.players.get(id).data.rendered_chunks = newRenderedChunks;
+    }
+
+    this.players.get(id).data.relative_position = Game.getChunkRelativePos(playerPos, playerChunk);
   }
 
   getMazeFromChunk(chunk) {

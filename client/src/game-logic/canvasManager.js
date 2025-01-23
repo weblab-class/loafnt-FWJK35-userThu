@@ -79,11 +79,15 @@ const drawTrees = (playerObj, ctx) => {
 //   game: gameObj
 // }
 const convertGameToCanvasState = (gamePacket) => {
+  const players = new Map(Object.entries(gamePacket.game.playersObj));
+  const myplayerdata = players.get(gamePacket.recipientid).data;
+  players.delete(gamePacket.recipientid);
   return {
     // players: {
     //  user._id: {data: playerObj, user: userObj}
     // }
-    player: Object.values(gamePacket.game.playersObj)[0].data,
+    myplayerdata: myplayerdata,
+    otherplayers: players,
   };
 };
 
@@ -133,6 +137,14 @@ export const drawCanvas = (gamePacket, canvasRef) => {
   // Object.values(canvasState.players).forEach((playerObj) => {
   //     drawPlayer(playerObj.data, context);
   // });
-  drawPlayer(canvasState.player, context);
-  drawTrees(canvasState.player, context);
+  drawPlayer(canvasState.myplayerdata, context);
+  Array.from(canvasState.otherplayers.values()).forEach((player) => {
+    if (
+      canvasState.myplayerdata.chunk.x == player.data.chunk.x &&
+      canvasState.myplayerdata.chunk.y == player.data.chunk.y
+    ) {
+      drawPlayer(player.data, context);
+    }
+  });
+  drawTrees(canvasState.myplayerdata, context);
 };

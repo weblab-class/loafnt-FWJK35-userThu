@@ -34,7 +34,7 @@ const removeUser = (user, socket) => {
 const sendGameState = (gameId) => {
   gameMap[gameId].playersObj = Object.fromEntries(gameMap[gameId].players);
   Array.from(gameMap[gameId].players.values()).forEach((player) => {
-    let gamePacket = { game: gameMap[gameId] };
+    let gamePacket = { game: gameMap[gameId], recipientid: player.user._id };
     const socket = getSocketFromUserID(player.user._id);
     if (socket) {
       socket.emit("update", gamePacket);

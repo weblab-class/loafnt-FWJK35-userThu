@@ -2,8 +2,8 @@ const seedrandom = require("seedrandom");
 const help = require("./helpers");
 
 const screenBorder = {
-  width: 20,
-  height: 11,
+  width: 17,
+  height: 17,
 };
 
 const chunkSize = 8;
@@ -18,7 +18,7 @@ const dummyPlayer1 = {
 class Game {
   seed;
   players;
-  playersObj;
+  playersObj; // Object form of players
 
   constructor(seed, lobby) {
     this.seed = seed;

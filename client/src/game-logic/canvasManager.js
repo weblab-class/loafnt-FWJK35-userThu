@@ -10,7 +10,7 @@ let assetsMap = {
     witch_cat: {
       id: "witch_cat",
       size: 32,
-      src: "../src/public/assets/goob.png",
+      src: "../src/public/assets/tree.png",
       imgObj: null,
     },
   },

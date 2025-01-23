@@ -56,6 +56,12 @@ const drawPlayer = (player, ctx) => {
   );
 };
 
+// Returns imageObjects and their corresponding positions to render
+// based on where the user is
+const mapToDisplay = () => {
+    
+}
+
 // gamePacket:
 // {
 //   game: gameObj

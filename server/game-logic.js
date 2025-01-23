@@ -127,9 +127,9 @@ class Game {
     let newPos = Object.assign({}, playerPos);
 
     if (dir === "up") {
-      newPos.y += 1;
-    } else if (dir === "down") {
       newPos.y -= 1;
+    } else if (dir === "down") {
+      newPos.y += 1;
     } else if (dir === "left") {
       newPos.x -= 1;
     } else if (dir === "right") {
@@ -138,6 +138,7 @@ class Game {
 
     //move player if cell is free
     if (this.getPlayerMapData(id, newPos) == 0) {
+      this.players.get(id).data.position = newPos;
       playerPos = newPos;
     }
 

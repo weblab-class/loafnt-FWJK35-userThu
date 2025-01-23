@@ -91,7 +91,12 @@ const loadAsset = (asset) => {
     const assetImage = new Image(asset.size, asset.size);
     assetImage.src = asset.src;
     assetImage.onload = () => resolve({ id: asset.id, imgObj: assetImage });
-    assetImage.onerror = () => reject(new Error(`Image does not exist. URL: ${asset.src}`));
+    assetImage.onerror = () =>
+      reject(
+        new Error(
+          `Image does not exist. URL: ${asset.src}, current path ${scripts[scripts.length - 1].src}`
+        )
+      );
   });
 };
 

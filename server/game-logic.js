@@ -7,6 +7,7 @@ const screenBorder = {
 };
 
 const chunkSize = 8;
+help.setChunkSize(chunkSize);
 
 const dummyPlayer1 = {
   position: { x: 0, y: 0 },
@@ -60,6 +61,7 @@ class Game {
   }
 
   getPlayerMapData(id, pos) {
+    console.log(help.getChunkCenter({ x: 1, y: -1 }));
     const playerData = this.players.get(id).data;
     const posInRange = (pos, playerPos) => {
       const distFromPlayerChunk = help.subtractCoords(pos, help.getChunkCenter(playerData.chunk));
@@ -77,6 +79,7 @@ class Game {
         help.getChunkRelativePos(pos, help.addCoords(playerData.chunk, relChunk)),
         { x: chunkSize, y: chunkSize }
       );
+      console.log([relChunk.y + 1, relChunk.x + 1, chunkRel.y, chunkRel.x]);
       return playerData.rendered_chunks[relChunk.y + 1][relChunk.x + 1][chunkRel.y][chunkRel.x];
     } else {
       return 1;
@@ -113,6 +116,8 @@ class Game {
     if (this.getPlayerMapData(id, newPos) == 0) {
       this.players.get(id).data.position = newPos;
       playerPos = newPos;
+
+      console.log("move", dir, this.players.get(id).data.position, playerPos);
     }
 
     //change player's current chunk coord if they moved between chunks

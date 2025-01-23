@@ -1,3 +1,9 @@
+let chunkSize;
+
+const setChunkSize = (newSize) => {
+  chunkSize = newSize;
+};
+
 const addCoords = (a, b) => {
   return { x: a.x + b.x, y: a.y + b.y };
 };
@@ -19,5 +25,15 @@ const getChunkCenter = (chunk) => {
 };
 
 const getChunkRelativePos = (pos, chunk) => {
-  return Game.subtractCoords(pos, Game.getChunkCenter(chunk));
+  return subtractCoords(pos, getChunkCenter(chunk));
+};
+
+module.exports = {
+  setChunkSize,
+  addCoords,
+  subtractCoords,
+  scaleCoord,
+  getChunkFromPos,
+  getChunkCenter,
+  getChunkRelativePos,
 };

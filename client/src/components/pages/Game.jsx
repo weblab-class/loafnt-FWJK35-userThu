@@ -18,7 +18,6 @@ const Game = () => {
 
   useEffect(() => {
     const processInput = (e) => {
-      console.log("processInput");
       handleInput(e, gameID, user?._id);
     };
 

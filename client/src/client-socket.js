@@ -11,6 +11,5 @@ export const runGame = (gameID) => {
 };
 
 export const move = (gameID, user_id, dir) => {
-  console.log("move - client")
-  socket.emit("move", {gameID: gameID, user_id: user_id, dir: dir});
-}
+  socket.emit("move", { gameID: gameID, user_id: user_id, dir: dir });
+};

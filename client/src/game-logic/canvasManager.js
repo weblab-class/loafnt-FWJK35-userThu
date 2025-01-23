@@ -6,24 +6,23 @@ let spriteY = 0;
 
 // Path is relative to 'dist' folder
 let assetsMap = {
-    avatars: {
-        witch_cat: {
-          id: "witch_cat",
-          size: 32,
-          src: "../src/public/assets/goob.png",
-          imgObj: null,
-        },
+  avatars: {
+    witch_cat: {
+      id: "witch_cat",
+      size: 32,
+      src: "../src/public/assets/goob.png",
+      imgObj: null,
     },
-    terrain: {
-        tree: {
-            id: "tree", 
-            size: 32, 
-            src: "../src/public/assets/tree.png", 
-            imgObj: null
-        },
-    }
-}
-
+  },
+  terrain: {
+    tree: {
+      id: "tree",
+      size: 32,
+      src: "../src/public/assets/tree.png",
+      imgObj: null,
+    },
+  },
+};
 
 // const dummyPlayer1 = {
 //     position: {x: 0, y: 0},
@@ -41,71 +40,70 @@ let assetsMap = {
 // }
 // ctx: context                                     -- Game Canvas context
 const drawPlayer = (player, ctx) => {
-    const offset = 8; // hardcode
-    const x = player.position.x + offset;
-    const y = player.position.y + offset;
-    ctx.drawImage(
-        assetsMap.avatars[player.avatar_id].imgObj,
-        spriteX * blockSize,
-        spriteY * blockSize,
-        spriteSize,
-        spriteSize,
-        x * blockSize,
-        y * blockSize,
-        spriteSize,
-        spriteSize
-    );
+  const offset = 8; // hardcode
+  const x = player.relative_position.x + offset;
+  const y = player.relative_position.y + offset;
+  ctx.drawImage(
+    assetsMap.avatars[player.avatar_id].imgObj,
+    spriteX * blockSize,
+    spriteY * blockSize,
+    spriteSize,
+    spriteSize,
+    x * blockSize,
+    y * blockSize,
+    spriteSize,
+    spriteSize
+  );
 };
 
 const drawTrees = (playerObj, ctx) => {
-    // Chunk to render
-    const chunk = playerObj.rendered_chunks[1][1];
-    // console.log(chunk)
-    for (let row = 0; row < chunk.length; row++) {
-        for (let col = 0; col < chunk.length; col++) {
-            if (chunk[row][col] === 1) {
-                // ctx.drawImage(assetsMap.terrain.tree.imgObj, row * blockSize, col * blockSize);
-                ctx.fillRect(row * blockSize, col * blockSize, 32, 32);
-            }
-        }
+  // Chunk to render
+  const chunk = playerObj.rendered_chunks[1][1];
+  // console.log(chunk)
+  for (let row = 0; row < chunk.length; row++) {
+    for (let col = 0; col < chunk.length; col++) {
+      if (chunk[row][col] === 1) {
+        // ctx.drawImage(assetsMap.terrain.tree.imgObj, row * blockSize, col * blockSize);
+        ctx.fillRect(col * blockSize, row * blockSize, 32, 32);
+      }
     }
-
-}
+  }
+};
 
 // gamePacket:
 // {
 //   game: gameObj
 // }
 const convertGameToCanvasState = (gamePacket) => {
-    return {
-        // players: {
-        //  user._id: {data: playerObj, user: userObj}
-        // }
-        player: Object.values(gamePacket.game.playersObj)[0].data,
-    };
+  return {
+    // players: {
+    //  user._id: {data: playerObj, user: userObj}
+    // }
+    player: Object.values(gamePacket.game.playersObj)[0].data,
+  };
 };
 
 const loadAsset = (asset) => {
-    return new Promise((resolve, reject) => {
-        const assetImage = new Image(asset.size, asset.size);
-        assetImage.src = asset.src;
-        assetImage.onload = () => resolve({id: asset.id, imgObj: assetImage});
-        assetImage.onerror = () => reject(new Error(`Image does not exist. URL: ${asset.src}`));
-    });
-}
+  return new Promise((resolve, reject) => {
+    const assetImage = new Image(asset.size, asset.size);
+    assetImage.src = asset.src;
+    assetImage.onload = () => resolve({ id: asset.id, imgObj: assetImage });
+    assetImage.onerror = () => reject(new Error(`Image does not exist. URL: ${asset.src}`));
+  });
+};
 
 const loadAssets = async () => {
-    // load players
-    const loadedPlayers = await Promise.all(Object.values(assetsMap.avatars).map(loadAsset));
-    loadedPlayers.forEach((asset) => {
-        assetsMap.avatars[asset.id].imgObj = asset.imgObj;
-    });
-    // load terrain
-    const loadedTerrain = await Promise.all(Object.values(assetsMap.terrain).map(loadAsset));
-    loadedTerrain.forEach((asset) => {
-        assetsMap.terrain[asset.id].imgObj = asset.imgObj;
-    });
-}
+  // load players
+  const loadedPlayers = await Promise.all(Object.values(assetsMap.avatars).map(loadAsset));
+  loadedPlayers.forEach((asset) => {
+    assetsMap.avatars[asset.id].imgObj = asset.imgObj;
+  });
+  // load terrain
+  const loadedTerrain = await Promise.all(Object.values(assetsMap.terrain).map(loadAsset));
+  loadedTerrain.forEach((asset) => {
+    assetsMap.terrain[asset.id].imgObj = asset.imgObj;
+  });
+};
 
 // Call when game is started
 loadAssets();
@@ -115,18 +113,18 @@ loadAssets();
 //  players: []                                     -- List of active players the game should render (Later on perform checks to see if a player is in screen, compare absolute positions to player positions)
 // }
 export const drawCanvas = (gamePacket, canvasRef) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const context = canvas.getContext("2d");
-    // Purposefully give dimensions so Canvas does not upscale inner images
-    canvas.width = 544;
-    canvas.height = 544;
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+  const context = canvas.getContext("2d");
+  // Purposefully give dimensions so Canvas does not upscale inner images
+  canvas.width = 544;
+  canvas.height = 544;
 
-    const canvasState = convertGameToCanvasState(gamePacket);
+  const canvasState = convertGameToCanvasState(gamePacket);
 
-    // Object.values(canvasState.players).forEach((playerObj) => {
-    //     drawPlayer(playerObj.data, context);
-    // });
-    drawPlayer(canvasState.player, context);
-    drawTrees(canvasState.player, context);
+  // Object.values(canvasState.players).forEach((playerObj) => {
+  //     drawPlayer(playerObj.data, context);
+  // });
+  drawPlayer(canvasState.player, context);
+  drawTrees(canvasState.player, context);
 };

@@ -280,6 +280,15 @@ class Game {
     mz([topCon, 0], 0);
     mz([botCon, chunkSize * 2], 0);
 
+    //hardcode empty spawn
+    if (chunk.x === 0 && chunk.y === 0) {
+      mz([chunkSize, chunkSize], 0);
+      mz([chunkSize + 1, chunkSize], 0);
+      mz([chunkSize, chunkSize + 1], 0);
+      mz([chunkSize - 1, chunkSize], 0);
+      mz([chunkSize, chunkSize - 1], 0);
+    }
+
     return maze;
   }
 

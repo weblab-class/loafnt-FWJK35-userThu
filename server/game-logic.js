@@ -1,4 +1,5 @@
 const seedrandom = require("seedrandom");
+const help = require("./helpers");
 
 const screenBorder = {
   width: 20,
@@ -16,17 +17,11 @@ const dummyPlayer1 = {
 
 class Game {
   seed;
-  // players (Map/Dict): {
-  //    user._id: {data: playerObj, user: userObj}
-  // }
   players;
   playersObj;
-  map;
 
   constructor(seed, lobby) {
     this.seed = seed;
-    // players = {user_id: player_obj}
-    //[["TEST_PLAYER", dummyPlayer1]]
     this.players = new Map();
     if (lobby) {
       Array.from(lobby.players.values()).forEach((user) => {
@@ -34,8 +29,6 @@ class Game {
         this.spawnPlayer(user);
       });
     }
-
-    this.map = { trees: [] };
   }
 
   spawnPlayer(user) {
@@ -66,30 +59,10 @@ class Game {
     this.movePlayer(user._id, "none");
   }
 
-  static addCoords(a, b) {
-    return { x: a.x + b.x, y: a.y + b.y };
-  }
-
-  static subtractCoords(a, b) {
-    return { x: a.x - b.x, y: a.y - b.y };
-  }
-
-  static getChunkFromPos(pos) {
-    return Math.floor((pos + chunkSize) / (chunkSize * 2));
-  }
-
-  static getChunkCenter(chunk) {
-    return { x: chunkSize * 2 * chunk.x, y: chunkSize * 2 * chunk.y };
-  }
-
-  static getChunkRelativePos(pos, chunk) {
-    return Game.subtractCoords(pos, Game.getChunkCenter(chunk));
-  }
-
   getPlayerMapData(id, pos) {
     const playerData = this.players.get(id).data;
     const posInRange = (pos, playerPos) => {
-      const distFromPlayerChunk = Game.subtractCoords(pos, Game.getChunkCenter(playerData.chunk));
+      const distFromPlayerChunk = help.subtractCoords(pos, help.getChunkCenter(playerData.chunk));
       return (
         Math.abs(distFromPlayerChunk.x) <= chunkSize * 3 &&
         Math.abs(distFromPlayerChunk.y) <= chunkSize * 3
@@ -97,11 +70,11 @@ class Game {
     };
     if (posInRange(pos, playerData.position)) {
       const relChunk = {
-        x: Game.getChunkFromPos(pos.x) - playerData.chunk.x,
-        y: Game.getChunkFromPos(pos.y) - playerData.chunk.y,
+        x: help.getChunkFromPos(pos.x) - playerData.chunk.x,
+        y: help.getChunkFromPos(pos.y) - playerData.chunk.y,
       };
-      const chunkRel = Game.addCoords(
-        Game.getChunkRelativePos(pos, Game.addCoords(playerData.chunk, relChunk)),
+      const chunkRel = help.addCoords(
+        help.getChunkRelativePos(pos, help.addCoords(playerData.chunk, relChunk)),
         { x: chunkSize, y: chunkSize }
       );
       return playerData.rendered_chunks[relChunk.y + 1][relChunk.x + 1][chunkRel.y][chunkRel.x];
@@ -146,11 +119,11 @@ class Game {
     const oldChunk = Object.assign({}, playerChunk);
 
     if (!posInChunk(playerPos.x, playerChunk.x)) {
-      playerChunk.x = Game.getChunkFromPos(playerPos.x);
+      playerChunk.x = help.getChunkFromPos(playerPos.x);
     }
 
     if (!posInChunk(playerPos.y, playerChunk.y)) {
-      playerChunk.y = Game.getChunkFromPos(playerPos.y);
+      playerChunk.y = help.getChunkFromPos(playerPos.y);
     }
 
     //re-generate surrounding maze
@@ -160,7 +133,7 @@ class Game {
         let newChunkRow = [];
         for (let xdiff = -1; xdiff < 2; xdiff++) {
           newChunkRow.push(
-            this.getMazeFromChunk(Game.addCoords(playerChunk, { x: xdiff, y: ydiff }))
+            this.getMazeFromChunk(help.addCoords(playerChunk, { x: xdiff, y: ydiff }))
           );
         }
         newRenderedChunks.push(newChunkRow);
@@ -168,7 +141,7 @@ class Game {
       this.players.get(id).data.rendered_chunks = newRenderedChunks;
     }
 
-    this.players.get(id).data.relative_position = Game.getChunkRelativePos(playerPos, playerChunk);
+    this.players.get(id).data.relative_position = help.getChunkRelativePos(playerPos, playerChunk);
   }
 
   getMazeFromChunk(chunk) {
@@ -295,31 +268,34 @@ class Game {
     return this.players.values();
   }
 }
+
+const player_speed = 1;
+
+class Arena {
+  players;
+  terrain;
+  enemies;
+  projectiles;
+  constructor() {
+    this.players = {};
+    this.terrain = {};
+    this.enemies = {};
+    this.projectiles = {};
+  }
+
+  addPlayer(user) {
+    this.players[user._id] = {
+      pos: { x: 0.0, y: 0.0 },
+      health: 100.0,
+      avatar_id: "witch_cat",
+    };
+  }
+
+  movePlayer(id, inputDir) {
+    this.players[id].pos = help.addCoords(pos, inputDir);
+  }
+}
+
 module.exports = {
   Game,
 };
-// let gameState = {
-//     players: {},
-//     trees: {}
-// };
-
-// const spawnPlayer = (user) => {
-//     gameState.players[user.id] = {
-//         char_id: user.char,
-//         position: {x: 0, y: 0}
-//     };
-// };
-
-// const movePlayer = (id, dir) => {
-//     if (gameState.players[id] === undefined) return;
-
-//     if (dir === "up" && gameState.players[id].position.y < screenBorder.height) {
-//         gameState.players[id].position.y += 1
-//     } else if (dir === "down" && gameState.players[id].position.y > 0) {
-//         gameState.players[id].position.y -= 1
-//     } else if (dir === "left" && gameState.players[id].position.x > 0) {
-//         gameState.players[id].position.x -= 1
-//     } else if (dir === "right" && gameState.players[id].position.x < screenBorder.width) {
-//         gameState.players[id].position.x += 1
-//     }
-// };

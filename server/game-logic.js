@@ -60,6 +60,10 @@ class Game {
     this.movePlayer(user._id, "none");
   }
 
+  removePlayer(userid) {
+    this.players.delete(userid);
+  }
+
   getPlayerMapData(id, pos) {
     const playerData = this.players.get(id).data;
     const posInRange = (pos, playerPos) => {

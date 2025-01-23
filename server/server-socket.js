@@ -40,12 +40,17 @@ const sendGameState = (gameId) => {
       socket.emit("update", gamePacket);
     }
   });
-  //io.emit(`update/${gameId}`, gamePacket);
 };
 
 // Called when server socket receives a request
 const runGame = (gameId) => {
   Array.from(gameMap[gameId].players.values()).forEach((player) => {
+    Object.values(gameMap).forEach((game) => {
+      if (game.seed !== gameId) {
+        console.log(game, gameId);
+        game.removePlayer(player.user._id);
+      }
+    });
     getSocketFromUserID(player.user._id).emit("launchgame");
   });
 

@@ -10,7 +10,7 @@ let assetsMap = {
     witch_cat: {
       id: "witch_cat",
       size: 32,
-      src: "../src/public/assets/tree.png",
+      src: "../src/public/assets/goob.png",
       imgObj: null,
     },
   },
@@ -85,6 +85,9 @@ const convertGameToCanvasState = (gamePacket) => {
 
 const loadAsset = (asset) => {
   return new Promise((resolve, reject) => {
+    console.log("loading", asset.id);
+    let scripts = document.getElementsByTagName("script");
+    console.log(scripts[scripts.length - 1].src);
     const assetImage = new Image(asset.size, asset.size);
     assetImage.src = asset.src;
     assetImage.onload = () => resolve({ id: asset.id, imgObj: assetImage });

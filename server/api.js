@@ -99,12 +99,15 @@ router.get("/lobby", (req, res) => {
 });
 
 router.get("/mylobbycode", (req, res) => {
-  const lobby = lobbyManager.findLobbyOfPlayer(req.user.googleid);
-  if (lobby) {
-    res.send({code: lobby.code});
-  } else {
-    res.status(500).send("Player not in lobby");
+  if (req.user) {
+    const lobby = lobbyManager.findLobbyOfPlayer(req.user.googleid);
+    if (lobby) {
+      return res.send({ code: lobby.code });
+    } else {
+      return res.status(500).send("Player not in lobby");
+    }
   }
+  return res.status(500).send("Player not logged in");
 });
 
 // anything else falls to this "not found" case

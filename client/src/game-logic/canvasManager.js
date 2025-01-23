@@ -1,5 +1,5 @@
-const blockSize = 64;
-const spriteSize = 64;
+const blockSize = 32;
+const spriteSize = 32;
 
 let spriteX = 0;
 let spriteY = 0;
@@ -9,15 +9,15 @@ let assetsMap = {
     avatars: {
         witch_cat: {
           id: "witch_cat",
-          size: 64,
-          src: "../src/public/assets/calicoKitty_walk.png",
+          size: 32,
+          src: "../src/public/assets/goob.png",
           imgObj: null,
         },
     },
     terrain: {
         tree: {
             id: "tree", 
-            size: 64, 
+            size: 32, 
             src: "../src/public/assets/tree.png", 
             imgObj: null
         },
@@ -41,25 +41,35 @@ let assetsMap = {
 // }
 // ctx: context                                     -- Game Canvas context
 const drawPlayer = (player, ctx) => {
-  const x = player.position.x;
-  const y = player.position.y;
-  ctx.drawImage(
-    assetsMap.avatars[player.avatar_id].imgObj,
-    spriteX * blockSize,
-    spriteY * blockSize,
-    spriteSize,
-    spriteSize,
-    x * blockSize,
-    y * blockSize,
-    spriteSize,
-    spriteSize
-  );
+    const offset = 8; // hardcode
+    const x = player.position.x + offset;
+    const y = player.position.y + offset;
+    ctx.drawImage(
+        assetsMap.avatars[player.avatar_id].imgObj,
+        spriteX * blockSize,
+        spriteY * blockSize,
+        spriteSize,
+        spriteSize,
+        x * blockSize,
+        y * blockSize,
+        spriteSize,
+        spriteSize
+    );
 };
 
-// Returns imageObjects and their corresponding positions to render
-// based on where the user is
-const mapToDisplay = () => {
-    
+const drawTrees = (playerObj, ctx) => {
+    // Chunk to render
+    const chunk = playerObj.rendered_chunks[1][1];
+    // console.log(chunk)
+    for (let row = 0; row < chunk.length; row++) {
+        for (let col = 0; col < chunk.length; col++) {
+            if (chunk[row][col] === 1) {
+                // ctx.drawImage(assetsMap.terrain.tree.imgObj, row * blockSize, col * blockSize);
+                ctx.fillRect(row * blockSize, col * blockSize, 32, 32);
+            }
+        }
+    }
+
 }
 
 // gamePacket:
@@ -71,7 +81,7 @@ const convertGameToCanvasState = (gamePacket) => {
         // players: {
         //  user._id: {data: playerObj, user: userObj}
         // }
-        players: gamePacket.game.playersObj,
+        player: Object.values(gamePacket.game.playersObj)[0].data,
     };
 };
 
@@ -109,12 +119,14 @@ export const drawCanvas = (gamePacket, canvasRef) => {
     if (!canvas) return;
     const context = canvas.getContext("2d");
     // Purposefully give dimensions so Canvas does not upscale inner images
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = 544;
+    canvas.height = 544;
 
     const canvasState = convertGameToCanvasState(gamePacket);
 
-    Object.values(canvasState.players).forEach((playerObj) => {
-        drawPlayer(playerObj.data, context);
-    });
+    // Object.values(canvasState.players).forEach((playerObj) => {
+    //     drawPlayer(playerObj.data, context);
+    // });
+    drawPlayer(canvasState.player, context);
+    drawTrees(canvasState.player, context);
 };

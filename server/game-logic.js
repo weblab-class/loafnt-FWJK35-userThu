@@ -1,8 +1,8 @@
 const seedrandom = require("seedrandom");
 
 const screenBorder = {
-  width: 20,
-  height: 11,
+  width: 17,
+  height: 17,
 };
 
 const chunkSize = 8;
@@ -20,7 +20,8 @@ class Game {
   //    user._id: {data: playerObj, user: userObj}
   // }
   players;
-  playersObj;
+  playersObj; // Object form of players
+  //
   map;
 
   constructor(seed, lobby) {

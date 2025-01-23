@@ -1,5 +1,6 @@
 import witchCatImage from "../public/assets/goob.png";
 import treeImage from "../public/assets/tree.png";
+import assetlist from "../public/assets/asset-list";
 
 const blockSize = 32;
 const spriteSize = 32;
@@ -13,7 +14,7 @@ let assetsMap = {
     witch_cat: {
       id: "witch_cat",
       size: 32,
-      src: witchCatImage,
+      src: assetlist.goob,
       imgObj: null,
     },
   },
@@ -21,7 +22,7 @@ let assetsMap = {
     tree: {
       id: "tree",
       size: 32,
-      src: treeImage,
+      src: assetlist.tree,
       imgObj: null,
     },
   },
@@ -94,8 +95,7 @@ const loadAsset = (asset) => {
     assetImage.src = asset.src;
     assetImage.onload = () => resolve({ id: asset.id, imgObj: assetImage });
     assetImage.onerror = (e) => {
-      console.log(e);
-      reject(new Error(`Image does not exist. URL: ${asset.src}, error:${JSON.stringify(e)}`));
+      reject(new Error(`Image does not exist. URL: ${asset.src}`));
     };
   });
 };

@@ -1,9 +1,8 @@
-import witchCatImage from "../public/assets/goob.png";
-import treeImage from "../public/assets/tree.png";
 import assetlist from "../public/assets/asset-list";
 
 const blockSize = 32;
 const spriteSize = 32;
+const tileSize = 32;
 
 let spriteX = 0;
 let spriteY = 0;
@@ -23,6 +22,12 @@ let assetsMap = {
       id: "tree",
       size: 32,
       src: assetlist.tree,
+      imgObj: null,
+    },
+    branchtiles: {
+      id: "branchtiles",
+      size: 64,
+      src: assetlist.branchtilemap,
       imgObj: null,
     },
   },
@@ -58,6 +63,60 @@ const drawPlayer = (player, ctx) => {
     spriteSize,
     spriteSize
   );
+};
+
+const drawBranchTile = (tile, ctx) => {
+  const tilemapx = tile.id % 4;
+  const tilemapy = Math.floor(tile.id / 4);
+  ctx.drawImage(
+    assetsMap.terrain.branchtiles.imgObj,
+    tilemapx * tileSize,
+    tilemapy * tileSize,
+    tileSize,
+    tileSize,
+    tile.x * blockSize,
+    tile.y * blockSize,
+    blockSize,
+    blockSize
+  );
+};
+
+const drawBranchTiles = (playerObj, ctx) => {
+  const chunk = playerObj.rendered_chunks[1][1];
+  for (let row = 0; row < chunk.length; row++) {
+    for (let col = 0; col < chunk.length; col++) {
+      if (chunk[row][col] === 1) {
+        //assign a tile id based on neighbors
+        let tileidx = 0;
+        if (col - 1 >= 0 && chunk[row][col - 1] === 1) {
+          tileidx += 3;
+        }
+        if (col + 1 < chunk.length && chunk[row][col + 1] === 1) {
+          tileidx += 1;
+        }
+        if (tileidx === 4) {
+          tileidx -= 2;
+        }
+
+        let tileidy = 0;
+        if (row - 1 >= 0 && chunk[row - 1][col] === 1) {
+          tileidy += 3;
+        }
+        if (row + 1 < chunk.length && chunk[row + 1][col] === 1) {
+          tileidy += 1;
+        }
+        if (tileidy === 4) {
+          tileidy -= 2;
+        }
+        const thisTile = {
+          x: col,
+          y: row,
+          id: tileidy * 4 + tileidx,
+        };
+        drawBranchTile(thisTile, ctx);
+      }
+    }
+  }
 };
 
 const drawTrees = (playerObj, ctx) => {
@@ -142,5 +201,6 @@ export const drawCanvas = (gamePacket, canvasRef) => {
       drawPlayer(player.data, context);
     }
   });
-  drawTrees(canvasState.myplayerdata, context);
+  //drawTrees(canvasState.myplayerdata, context);
+  drawBranchTiles(canvasState.myplayerdata, context);
 };

@@ -16,10 +16,26 @@ const dummyPlayer1 = {
   sprite_sheet: null,
 };
 
+/*
+Game Class - Attributes:
+seed (String): The GameID is used as the world seed
+players (Map): {
+    user_id: {
+        data: {
+            avatar_id: "",
+            position: { x: 0, y: 0 },
+            relative_position: { x: 0, y: 0 },
+            chunk: { x: 0, y: 0 },
+            rendered_chunks: [],        -- 3x3 2D array
+        user: {},
+    }
+}
+playersObj (Object): Object form of the players
+*/
 class Game {
   seed;
   players;
-  playersObj; // Object form of players
+  playersObj;
 
   constructor(seed, lobby) {
     this.seed = seed;
@@ -32,6 +48,9 @@ class Game {
     }
   }
 
+  /*
+    Populates a player's data field, and spawns them in the world
+  */
   spawnPlayer(user) {
     this.players.get(user._id).data = {
       avatar_id: "witch_cat",
@@ -64,6 +83,15 @@ class Game {
     this.players.delete(userid);
   }
 
+  /*
+    Params:
+    id: Player ID
+    pos: Absolute world position
+
+    Returns:
+    The cell at the absolute world position based on what is currently
+    rendered for the player.
+  */
   getPlayerMapData(id, pos) {
     const playerData = this.players.get(id).data;
     const posInRange = (pos, playerPos) => {
@@ -114,13 +142,13 @@ class Game {
       newPos.x += 1;
     }
 
-    //move player if cell is free
+    // move player if cell is free
     if (this.getPlayerMapData(id, newPos) == 0) {
       this.players.get(id).data.position = newPos;
       playerPos = newPos;
     }
 
-    //change player's current chunk coord if they moved between chunks
+    // change player's current chunk coord if they moved between chunks
     const oldChunk = Object.assign({}, playerChunk);
 
     if (!posInChunk(playerPos.x, playerChunk.x)) {
@@ -131,7 +159,7 @@ class Game {
       playerChunk.y = help.getChunkFromPos(playerPos.y);
     }
 
-    //re-generate surrounding maze
+    // re-generate surrounding maze
     if (oldChunk !== playerChunk) {
       let newRenderedChunks = [];
       for (let ydiff = -1; ydiff < 2; ydiff++) {
@@ -149,6 +177,16 @@ class Game {
     this.players.get(id).data.relative_position = help.getChunkRelativePos(playerPos, playerChunk);
   }
 
+  /*
+    Generates a maze chunk based on the game's seed and the chunk's absolute coordinates.
+
+    Params:
+    chunk (Object): {x: val, y: val}
+
+    Returns:
+    maze (2D Array): 17x17 array, with each cell being a 0 or 1, indicating if a maze wall
+    exists.
+  */
   getMazeFromChunk(chunk) {
     const chunkSeed = this.seed + chunk.x + "|" + chunk.y;
     const chunkRandom = seedrandom(chunkSeed);

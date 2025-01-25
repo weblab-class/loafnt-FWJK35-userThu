@@ -2,7 +2,7 @@ import assetlist from "../public/assets/asset-list";
 
 const blockSize = 32;
 const spriteSize = 32;
-const tileSize = 32;
+const tileSize = 64;
 
 let spriteX = 0;
 let spriteY = 0;

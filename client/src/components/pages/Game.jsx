@@ -2,7 +2,7 @@ import Canvas from "../modules/Canvas";
 import { runGame } from "../../client-socket";
 import { UserContext } from "../App";
 import { useState, useEffect, useContext, useCallback } from "react";
-import { handleInput } from "../../../../server/input";
+import { sendInput, setPressedKey } from "../../game-logic/input";
 import "./Game.css";
 import { get } from "../../utilities";
 
@@ -18,12 +18,23 @@ const Game = () => {
 
   useEffect(() => {
     const processInput = (e) => {
-      handleInput(e, gameID, user?._id);
+      setPressedKey(e);
     };
 
     window.addEventListener("keydown", processInput);
+    window.addEventListener("keyup", processInput);
+    let sendInputInterval = setInterval(
+      sendInput,
+      1000 / 60,
+      user?._id,
+      gameID,
+      Math.floor(1000 / 60) / 1000
+    );
+
     return () => {
       window.removeEventListener("keydown", processInput);
+      window.removeEventListener("keyup", processInput);
+      clearInterval(sendInputInterval);
     };
   }, [gameID, user]);
 

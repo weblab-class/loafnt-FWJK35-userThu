@@ -13,3 +13,7 @@ export const runGame = (gameID) => {
 export const move = (gameID, user_id, dir) => {
   socket.emit("move", { gameID: gameID, user_id: user_id, dir: dir });
 };
+
+export const enterCombat = (gameID, user_id) => {
+  socket.emit("entercombat", { gameID: gameID, user_id: user_id });
+};

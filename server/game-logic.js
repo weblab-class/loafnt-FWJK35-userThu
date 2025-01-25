@@ -39,6 +39,7 @@ class Game {
   playersObj;
   interval;
   killer;
+  arenas;
 
   constructor(seed, lobby) {
     this.seed = seed;
@@ -332,11 +333,14 @@ class Arena {
   terrain;
   enemies;
   projectiles;
+  size;
+
   constructor() {
     this.players = {};
     this.terrain = {};
     this.enemies = {};
     this.projectiles = {};
+    this.size = { width: 32, height: 18 };
   }
 
   addPlayer(user) {
@@ -344,11 +348,25 @@ class Arena {
       pos: { x: 0.0, y: 0.0 },
       health: 100.0,
       avatar_id: "witch_cat",
+      speed: 3,
     };
   }
 
   movePlayer(id, inputDir) {
-    this.players[id].pos = help.addCoords(pos, inputDir);
+    this.players[id].pos = help.scaleCoord(help.addCoords(pos, inputDir), this.players[id].speed);
+    //confine player to arena
+    if (this.players[id].pos.x < 0) {
+      this.players[id].pos.x = 0;
+    }
+    if (this.players[id].pos.x > this.size.width) {
+      this.players[id].pos.x = this.size.width;
+    }
+    if (this.players[id].pos.y < 0) {
+      this.players[id].pos.y = 0;
+    }
+    if (this.players[id].pos.y > this.size.height) {
+      this.players[id].pos.y = this.size.height;
+    }
   }
 }
 

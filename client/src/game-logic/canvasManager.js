@@ -138,9 +138,22 @@ const drawTrees = (playerObj, ctx) => {
 //   game: gameObj
 // }
 const convertGameToCanvasState = (gamePacket) => {
-  const players = new Map(Object.entries(gamePacket.game.playersObj));
-  const myplayerdata = players.get(gamePacket.recipientid).data;
-  players.delete(gamePacket.recipientid);
+  let incombat = false;
+  let myplayerdata;
+  let players;
+  gamePacket.game.arenas.forEach((arena) => {
+    if (Object.hasOwn(arena.players, gamePacket.recipientid)) {
+      incombat = true;
+      players = arena.players;
+    }
+  });
+
+  if (!incombat) {
+    players = new Map(Object.entries(gamePacket.game.playersObj));
+    myplayerdata = players.get(gamePacket.recipientid).data;
+    players.delete(gamePacket.recipientid);
+  }
+
   return {
     // players: {
     //  user._id: {data: playerObj, user: userObj}
@@ -192,15 +205,21 @@ export const drawCanvas = (gamePacket, canvasRef) => {
   // Object.values(canvasState.players).forEach((playerObj) => {
   //     drawPlayer(playerObj.data, context);
   // });
-  drawPlayer(canvasState.myplayerdata, context);
-  Array.from(canvasState.otherplayers.values()).forEach((player) => {
-    if (
-      canvasState.myplayerdata.chunk.x == player.data.chunk.x &&
-      canvasState.myplayerdata.chunk.y == player.data.chunk.y
-    ) {
-      drawPlayer(player.data, context);
-    }
-  });
-  //drawTrees(canvasState.myplayerdata, context);
-  drawBranchTiles(canvasState.myplayerdata, context);
+  if (!canvasState.incombat) {
+    drawPlayer(canvasState.myplayerdata, context);
+    Array.from(canvasState.otherplayers.values()).forEach((player) => {
+      if (
+        canvasState.myplayerdata.chunk.x == player.data.chunk.x &&
+        canvasState.myplayerdata.chunk.y == player.data.chunk.y
+      ) {
+        drawPlayer(player.data, context);
+      }
+    });
+    //drawTrees(canvasState.myplayerdata, context);
+    drawBranchTiles(canvasState.myplayerdata, context);
+  } else {
+    canvasState.otherplayers.forEach((player, id) => {
+      drawPlayer(player, context);
+    });
+  }
 };

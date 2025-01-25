@@ -1,4 +1,4 @@
-import { move } from "../client-socket";
+import { enterCombat, move } from "../client-socket";
 
 const pressedKeys = new Map();
 
@@ -24,6 +24,9 @@ const sendInput = (gameID, userID, deltaT) => {
   xcomp *= deltaT;
   ycomp *= deltaT;
   move(gameID, userID, { x: xcomp, y: ycomp });
+  if (pressedKeys.get("c")) {
+    enterCombat(gameID, userID);
+  }
 };
 
 const setPressedKey = (e) => {

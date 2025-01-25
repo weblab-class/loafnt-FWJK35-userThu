@@ -1,5 +1,6 @@
 const seedrandom = require("seedrandom");
 const help = require("./helpers");
+const lobbyManager = require("./lobby-manager");
 
 const screenBorder = {
   width: 17,
@@ -36,6 +37,8 @@ class Game {
   seed;
   players;
   playersObj;
+  interval;
+  killer;
 
   constructor(seed, lobby) {
     this.seed = seed;
@@ -81,6 +84,16 @@ class Game {
 
   removePlayer(userid) {
     this.players.delete(userid);
+    if (this.players.size === 0) {
+      console.log("kill", this.seed);
+      this.killSelf();
+    }
+  }
+
+  killSelf() {
+    lobbyManager.deleteLobby(this.seed);
+    clearInterval(this.interval);
+    this.killer();
   }
 
   /*

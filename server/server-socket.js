@@ -44,17 +44,20 @@ const sendGameState = (gameId) => {
 
 // Called when server socket receives a request
 const runGame = (gameId) => {
+  console.log(gameMap);
+  gameMap[gameId].killer = () => {
+    delete gameMap[gameId];
+  };
   Array.from(gameMap[gameId].players.values()).forEach((player) => {
     Object.values(gameMap).forEach((game) => {
       if (game.seed !== gameId) {
-        console.log(game, gameId);
         game.removePlayer(player.user._id);
       }
     });
     getSocketFromUserID(player.user._id).emit("launchgame");
   });
 
-  setInterval(() => {
+  gameMap[gameId].interval = setInterval(() => {
     sendGameState(gameId);
   }, 1000 / 60);
 };

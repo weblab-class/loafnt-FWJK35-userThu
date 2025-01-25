@@ -26,6 +26,9 @@ class Lobby {
   removePlayer(player) {
     this.players.delete(player.googleid);
     this.playersObj = Object.fromEntries(this.players);
+    if (this.players.size === 0) {
+      deleteLobby(this.code);
+    }
   }
 
   addPlayer(newPlayer) {
@@ -57,6 +60,15 @@ const findLobbyOfPlayer = (googleid) => {
   return findLobbyByCode(allPlayers.get(googleid));
 };
 
+const deleteLobby = (code) => {
+  allPlayers.forEach((player, lobbycode) => {
+    if (lobbycode === code) {
+      allPlayers.delete(player);
+    }
+  });
+  lobbies.delete(code);
+};
+
 const getLobbies = () => {
   return lobbies;
 };
@@ -67,4 +79,5 @@ module.exports = {
   findLobbyByCode,
   findLobbyOfPlayer,
   createNewLobby,
+  deleteLobby,
 };

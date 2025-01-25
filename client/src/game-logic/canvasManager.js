@@ -80,10 +80,10 @@ const drawBranchTile = (tile, ctx) => {
     tilemapy * tileSize,
     tileSize,
     tileSize,
-    tile.x * blockSize,
-    tile.y * blockSize,
-    blockSize,
-    blockSize
+    (tile.x + (1 - tile.size) / 2) * blockSize,
+    (tile.y + (1 - tile.size) / 2) * blockSize,
+    blockSize * tile.size,
+    blockSize * tile.size
   );
 };
 
@@ -114,10 +114,27 @@ const drawBranchTiles = (map, offset, ctx) => {
           tileidy -= 2;
         }
 
+        const tileDist = Math.sqrt(
+          (col + offset.x - map.length / 2) ** 2 + (row + offset.y - map.length / 2) ** 2
+        );
+
+        const getSize = (dist) => {
+          const minDist = 6;
+          const maxDist = 9;
+          if (dist < minDist) {
+            return 1;
+          }
+          if (dist > maxDist) {
+            return 0;
+          }
+          return 1 - (dist - minDist) / (maxDist - minDist);
+        };
+
         const thisTile = {
           x: col + offset.x - 1,
           y: row + offset.y - 1,
           id: tileidy * 4 + tileidx,
+          size: getSize(tileDist),
         };
 
         drawBranchTile(thisTile, ctx);

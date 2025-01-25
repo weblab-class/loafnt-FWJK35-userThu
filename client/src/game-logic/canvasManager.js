@@ -1,4 +1,5 @@
 import assetlist from "../public/assets/asset-list";
+import help from "./helpers";
 
 const blockSize = 32;
 const spriteSize = 32;
@@ -53,9 +54,9 @@ let assetsMap = {
 // }
 // ctx: context                                     -- Game Canvas context
 const drawPlayer = (player, ctx) => {
-//   const offset = 8;
-//   const x = player.relative_position.x + offset;
-//   const y = player.relative_position.y + offset;
+  //   const offset = 8;
+  //   const x = player.relative_position.x + offset;
+  //   const y = player.relative_position.y + offset;
   ctx.drawImage(
     assetsMap.avatars[player.avatar_id].imgObj,
     spriteX * blockSize,
@@ -63,8 +64,8 @@ const drawPlayer = (player, ctx) => {
     spriteSize,
     spriteSize,
     // Center of the screen
-    8 * blockSize,      // x * blockSize
-    8 * blockSize,      // y * blockSize
+    8 * blockSize, // x * blockSize
+    8 * blockSize, // y * blockSize
     spriteSize,
     spriteSize
   );
@@ -86,7 +87,7 @@ const drawBranchTile = (tile, ctx) => {
   );
 };
 
-const drawBranchTiles = (map, ctx) => {
+const drawBranchTiles = (map, offset, ctx) => {
   for (let row = 0; row < map.length; row++) {
     for (let col = 0; col < map.length; col++) {
       if (map[row][col] === 1) {
@@ -114,11 +115,11 @@ const drawBranchTiles = (map, ctx) => {
         }
 
         const thisTile = {
-            x: col,
-            y: row,
-            id: tileidy * 4 + tileidx,
+          x: col + offset.x,
+          y: row + offset.y,
+          id: tileidy * 4 + tileidx,
         };
-        
+
         drawBranchTile(thisTile, ctx);
       }
     }
@@ -134,129 +135,43 @@ const drawBranchTiles = (map, ctx) => {
     chunkBlockSize (int): The chunk's width/length in terms of game blocks (i.e 17)
 */
 const getMapToRender = (playerObj, chunkBlockSize) => {
-    const relCoords = playerObj.relative_position;      // May have bugs from decimal places
-
-    // Get the relevant chunks
-    const currChunk = playerObj.rendered_chunks[1][1];
-    // Get the number of columns and rows outside the current chunk that needs to be rendered
-    const outsideChunkRight = (screenBlockWidth - 1)/2 - ((chunkBlockSize-1) - relCoords.x);
-    const outsideChunkLeft = (screenBlockWidth - 1)/2 - relCoords.x;
-    const outsideChunkUp = (screenBlockHeight - 1)/2 - relCoords.y;
-    const outsideChunkDown = (screenBlockHeight - 1)/2 - ((chunkBlockSize-1) - relCoords.y);
-    // Start loading mapToRender with objects in player's screen
-    let mapToRender = [];
-    const currChunkRenderableBorders = {
-        top: relCoords.y - (screenBlockHeight-1)/2 >= 0 ? relCoords.y - (screenBlockHeight-1)/2 : 0,
-        bottom: relCoords.y + (screenBlockHeight-1)/2 < chunkBlockSize ? relCoords.y + (screenBlockHeight-1)/2 : chunkBlockSize-1,
-        left: relCoords.x - (screenBlockWidth-1)/2 >= 0 ? relCoords.x - (screenBlockHeight-1)/2 : 0,
-        right: relCoords.x + (screenBlockWidth-1)/2 < chunkBlockSize ? relCoords.x + (screenBlockHeight-1)/2 : chunkBlockSize-1
-    }
-    for (let row = currChunkRenderableBorders.top; row <= currChunkRenderableBorders.bottom; row++) {
-        let currRow = []
-        for (let col = currChunkRenderableBorders.left; col <= currChunkRenderableBorders.right; col++) {
-            currRow.push(currChunk[row][col]);
+  const relCoords = help.roundCoord(playerObj.relative_position);
+  const combinedChunks = [];
+  for (let chunkRow = 0; chunkRow < 3; chunkRow++) {
+    for (let thisRow = 0; thisRow < chunkBlockSize; thisRow++) {
+      const currentRow = [];
+      for (let chunkCol = 0; chunkCol < 3; chunkCol++) {
+        for (let thisCol = 0; thisCol < chunkBlockSize; thisCol++) {
+          currentRow.push(playerObj.rendered_chunks[chunkRow][chunkCol][thisRow][thisCol]);
         }
-        mapToRender.push(currRow);
-    }
-    console.log(currChunkRenderableBorders);
-    // Check if player's screen displays chunks outside of current one
-    let placeholderRow = 0;
-    if (outsideChunkRight > 0) {
-        const rightChunk = playerObj.rendered_chunks[1][2];
-        for (let row = currChunkRenderableBorders.top; row <= currChunkRenderableBorders.bottom; row++) {
-            for (let col = 0; col < outsideChunkRight; col++) {
-                mapToRender[placeholderRow].push(rightChunk[row][col]);
-            }
-            placeholderRow++;
+        if (chunkCol < 2) {
+          currentRow.pop();
         }
-        placeholderRow = 0;
-    }
-    if (outsideChunkLeft > 0) {
-        const leftChunk = playerObj.rendered_chunks[1][0];
-        for (let row = currChunkRenderableBorders.top; row <= currChunkRenderableBorders.bottom; row++) {
-            for (let col = chunkBlockSize-1; col >= chunkBlockSize-outsideChunkLeft; col--) {
-                mapToRender[placeholderRow].unshift(leftChunk[row][col]);
-            }
-            placeholderRow++;
-        }
-        placeholderRow = 0;
-    }
-    if (outsideChunkUp > 0) {
-        const upChunk = playerObj.rendered_chunks[0][1];
-        for (let row = chunkBlockSize-1; row>=chunkBlockSize-outsideChunkUp; row--) {
-            let currRow = []
-            for (let col = currChunkRenderableBorders.left; col <= currChunkRenderableBorders.right; col++) {
-                currRow.push(upChunk[row][col]);
-            }
-            mapToRender.unshift(currRow);
-        }
-    }
-    if (outsideChunkDown > 0) {
-        const downChunk = playerObj.rendered_chunks[2][1];
-        for (let row = 0; row < outsideChunkDown; row++) {
-            let currRow = []
-            for (let col = currChunkRenderableBorders.left; col <= currChunkRenderableBorders.right; col++) {
-                currRow.push(downChunk[row][col]);
-            }
-            mapToRender.push(currRow);
-        }
-    }
-    // Account for the diagonal chunks
-    if (outsideChunkLeft > 0 && outsideChunkUp > 0) {
-        const topLeftChunk = playerObj.rendered_chunks[0][0];
-        for (let row = chunkBlockSize-outsideChunkUp; row<chunkBlockSize; row++) {
-            for (let col = chunkBlockSize-1; col >= chunkBlockSize-outsideChunkLeft; col--) {
-                mapToRender[placeholderRow].unshift(topLeftChunk[row][col]);
-            }
-            placeholderRow++;
-        }
-        placeholderRow = 0;
-    }
-    if (outsideChunkRight > 0 && outsideChunkUp > 0) {
-        const topRightChunk = playerObj.rendered_chunks[2][0];
-        for (let row = chunkBlockSize-outsideChunkUp; row<chunkBlockSize; row++) {
-            for (let col = 0; col < outsideChunkRight; col++) {
-                mapToRender[placeholderRow].push(topRightChunk[row][col]);
-            }
-            placeholderRow++;
-        }
-    }
-    if (outsideChunkLeft > 0 && outsideChunkDown > 0) {
-        const bottomLeftChunk = playerObj.rendered_chunks[0][2];
-        placeholderRow = screenBlockHeight - outsideChunkDown;
-        for (let row = 0; row < outsideChunkDown; row++) {
-            for (let col = chunkBlockSize-1; col >= chunkBlockSize-outsideChunkLeft; col--) {
-                mapToRender[placeholderRow].unshift(bottomLeftChunk[row][col]);
-            }
-            placeholderRow++;
-        }
-    }
-    if (outsideChunkRight > 0 && outsideChunkDown > 0) {
-        const bottomRightChunk = playerObj.rendered_chunks[2][2];
-        placeholderRow = screenBlockHeight - outsideChunkDown;
-        for (let row = 0; row < outsideChunkDown; row++) {
-            for (let col = 0; col < outsideChunkRight; col++) {
-                mapToRender[placeholderRow].push(bottomRightChunk[row][col]);
-            }
-            placeholderRow++;
-        }
-    }
-
-    return mapToRender;
-};
-
-const drawTrees = (playerObj, ctx) => {
-  // Chunk to render
-  const chunk = playerObj.rendered_chunks[1][1];
-  // console.log(chunk)
-  for (let row = 0; row < chunk.length; row++) {
-    for (let col = 0; col < chunk.length; col++) {
-      if (chunk[row][col] === 1) {
-        // ctx.drawImage(assetsMap.terrain.tree.imgObj, row * blockSize, col * blockSize);
-        ctx.fillRect(col * blockSize, row * blockSize, 32, 32);
       }
+      combinedChunks.push(currentRow);
+    }
+    if (chunkRow < 2) {
+      combinedChunks.pop();
     }
   }
+
+  const mapToRender = [];
+  for (let row = 0; row < chunkBlockSize * 3 - 2; row++) {
+    if (row - relCoords.y >= chunkBlockSize - 1 && row - relCoords.y <= (chunkBlockSize - 1) * 2) {
+      const currentRow = [];
+      for (let col = 0; col < chunkBlockSize * 3 - 2; col++) {
+        if (
+          col - relCoords.x >= chunkBlockSize - 1 &&
+          col - relCoords.x <= (chunkBlockSize - 1) * 2
+        ) {
+          currentRow.push(combinedChunks[row][col]);
+        }
+      }
+      mapToRender.push(currentRow);
+    }
+  }
+
+  return mapToRender;
 };
 
 // gamePacket:
@@ -264,7 +179,6 @@ const drawTrees = (playerObj, ctx) => {
 //   game: gameObj
 // }
 const convertGameToCanvasState = (gamePacket) => {
-  //console.log(gamePacket);
   let incombat = false;
   let myplayerdata;
   let players;
@@ -287,14 +201,12 @@ const convertGameToCanvasState = (gamePacket) => {
     // }
     myplayerdata: myplayerdata,
     otherplayers: players,
-    chunkblocksize: gamePacket.game.chunkBlockSize
+    chunkblocksize: gamePacket.game.chunkBlockSize,
   };
 };
 
 const loadAsset = (asset) => {
   return new Promise((resolve, reject) => {
-    console.log("loading", asset.id);
-
     const assetImage = new Image(asset.size, asset.size);
     assetImage.src = asset.src;
     assetImage.onload = () => resolve({ id: asset.id, imgObj: assetImage });
@@ -345,11 +257,16 @@ export const drawCanvas = (gamePacket, canvasRef) => {
     });
     //drawTrees(canvasState.myplayerdata, context);
     const mapToRender = getMapToRender(canvasState.myplayerdata, canvasState.chunkblocksize);
-    drawBranchTiles(mapToRender, context);
+    const playerPos = canvasState.myplayerdata.relative_position;
+    drawBranchTiles(
+      mapToRender,
+      help.subtractCoords(help.roundCoord(playerPos), playerPos),
+      context
+    );
   } else {
     canvasState.otherplayers.forEach((player, id) => {
       drawPlayer(player, context);
     });
   }
-//   getMapToRender(canvasState.myplayerdata, canvasState.chunkblocksize);
+  //   getMapToRender(canvasState.myplayerdata, canvasState.chunkblocksize);
 };

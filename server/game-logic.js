@@ -45,7 +45,7 @@ class Game {
   arenas;
 
   constructor(seed, lobby) {
-    this.chunkBlockSize = (chunkSize * 2) + 1;
+    this.chunkBlockSize = chunkSize * 2 + 1;
     this.seed = seed;
     this.players = {};
     if (lobby) {
@@ -63,7 +63,7 @@ class Game {
   spawnPlayer(user) {
     this.players[user._id].data = {
       avatar_id: "witch_cat",
-      animation: "still",   // unnecessary
+      animation: "still", // unnecessary
       position: { x: 0, y: 0 },
       relative_position: { x: 0, y: 0 },
       chunk: { x: 0, y: 0 },
@@ -213,7 +213,7 @@ class Game {
       this.players[id].data.rendered_chunks = newRenderedChunks;
     }
 
-    this.players[id].data.relative_position = help.addCoords(help.getChunkRelativePos(playerPos, playerChunk), {x: chunkSize, y: chunkSize});
+    this.players[id].data.relative_position = help.getChunkRelativePos(playerPos, playerChunk);
   }
 
   /*

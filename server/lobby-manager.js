@@ -18,12 +18,13 @@ class Lobby {
       mycode = getRandomCode(5);
     }
     this.code = mycode;
-    this.players = new Map([[leader.googleid, leader]]);
+    this.players = new Map();
     this.playersObj = Object.fromEntries(this.players);
     this.leader = leader;
   }
 
   removePlayer(player) {
+    console.log("removed", player);
     this.players.delete(player.googleid);
     this.playersObj = Object.fromEntries(this.players);
     if (this.players.size === 0) {

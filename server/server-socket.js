@@ -44,7 +44,6 @@ const sendGameState = (gameId) => {
 
 // Called when server socket receives a request
 const runGame = (gameId) => {
-  console.log(gameMap);
   gameMap[gameId].killer = () => {
     delete gameMap[gameId];
   };

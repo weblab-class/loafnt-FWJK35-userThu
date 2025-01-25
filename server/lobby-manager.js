@@ -24,7 +24,6 @@ class Lobby {
   }
 
   removePlayer(player) {
-    console.log("removed", player);
     this.players.delete(player.googleid);
     this.playersObj = Object.fromEntries(this.players);
     if (this.players.size === 0) {

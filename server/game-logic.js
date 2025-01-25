@@ -91,7 +91,6 @@ class Game {
   removePlayer(userid) {
     delete this.players[userid];
     if (Object.keys(this.players).length === 0) {
-      console.log("kill", this.seed);
       this.killSelf();
     }
   }
@@ -135,8 +134,19 @@ class Game {
     }
   }
 
+  isInCombat(id) {
+    return (
+      Object.hasOwn(this.arenas, JSON.stringify(this.players[id].data.chunk)) &&
+      this.arenas[JSON.stringify(this.players[id].data.chunk)] !== null
+    );
+  }
+
   movePlayer(id, dir) {
     if (!Object.hasOwn(this.players, id)) {
+      return;
+    }
+    if (this.isInCombat(id)) {
+      this.arenas[JSON.stringify(this.players[id].data.chunk)].movePlayer(id, dir);
       return;
     }
 
@@ -345,6 +355,14 @@ class Game {
 
     return maze;
   }
+
+  beginCombat(playerid) {
+    const arenaId = JSON.stringify(this.players[playerid].data.chunk);
+    if (!this.arenas[arenaId]) {
+      this.arenas[arenaId] = new Arena();
+    }
+    this.arenas[arenaId].addPlayer(playerid);
+  }
 }
 
 const player_speed = 1;
@@ -361,20 +379,23 @@ class Arena {
     this.terrain = {};
     this.enemies = {};
     this.projectiles = {};
-    this.size = { width: 32, height: 18 };
+    this.size = { width: 17, height: 17 };
   }
 
-  addPlayer(user) {
-    this.players[user._id] = {
+  addPlayer(userid) {
+    this.players[userid] = {
       pos: { x: 0.0, y: 0.0 },
       health: 100.0,
       avatar_id: "witch_cat",
-      speed: 3,
+      speed: 5,
     };
   }
 
   movePlayer(id, inputDir) {
-    this.players[id].pos = help.scaleCoord(help.addCoords(pos, inputDir), this.players[id].speed);
+    this.players[id].pos = help.addCoords(
+      this.players[id].pos,
+      help.scaleCoord(inputDir, this.players[id].speed)
+    );
     //confine player to arena
     if (this.players[id].pos.x < 0) {
       this.players[id].pos.x = 0;

@@ -193,12 +193,16 @@ const convertGameToCanvasState = (gamePacket) => {
     players = gamePacket.game.players;
     myplayerdata = players[gamePacket.recipientid].data;
     delete players[gamePacket.recipientid];
+  } else {
+    myplayerdata = players[gamePacket.recipientid];
+    myplayerdata.relative_position = { x: myplayerdata.pos.x - 8, y: myplayerdata.pos.y - 8 };
   }
 
   return {
     // players: {
     //  user._id: {data: playerObj, user: userObj}
     // }
+    incombat: incombat,
     myplayerdata: myplayerdata,
     otherplayers: players,
     chunkblocksize: gamePacket.game.chunkBlockSize,
@@ -264,7 +268,7 @@ export const drawCanvas = (gamePacket, canvasRef) => {
       context
     );
   } else {
-    canvasState.otherplayers.forEach((player, id) => {
+    Object.values(canvasState.otherplayers).forEach((player, id) => {
       drawPlayer(player, context);
     });
   }

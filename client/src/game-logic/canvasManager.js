@@ -141,7 +141,7 @@ const convertGameToCanvasState = (gamePacket) => {
   let incombat = false;
   let myplayerdata;
   let players;
-  gamePacket.game.arenas.forEach((arena) => {
+  Object.values(gamePacket.game.arenas).forEach((arena) => {
     if (Object.hasOwn(arena.players, gamePacket.recipientid)) {
       incombat = true;
       players = arena.players;

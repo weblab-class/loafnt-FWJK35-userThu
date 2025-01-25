@@ -50,6 +50,7 @@ class Game {
         this.spawnPlayer(user);
       });
     }
+    this.arenas = {};
   }
 
   /*

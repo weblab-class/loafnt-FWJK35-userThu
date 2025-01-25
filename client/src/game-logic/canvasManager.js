@@ -179,10 +179,6 @@ const loadAssets = async () => {
 // Call when game is started
 loadAssets();
 
-// Params
-// canvasState: {
-//  players: []                                     -- List of active players the game should render (Later on perform checks to see if a player is in screen, compare absolute positions to player positions)
-// }
 export const drawCanvas = (gamePacket, canvasRef) => {
   const canvas = canvasRef.current;
   if (!canvas) return;

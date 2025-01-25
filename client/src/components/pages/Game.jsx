@@ -26,8 +26,8 @@ const Game = () => {
     let sendInputInterval = setInterval(
       sendInput,
       1000 / 60,
-      user?._id,
       gameID,
+      user?._id,
       Math.floor(1000 / 60) / 1000
     );
 

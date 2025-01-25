@@ -32,12 +32,11 @@ const removeUser = (user, socket) => {
 
 // Emits Game object to client sockets listening for that specific game
 const sendGameState = (gameId) => {
-  gameMap[gameId].playersObj = Object.fromEntries(gameMap[gameId].players);
-  Array.from(gameMap[gameId].players.values()).forEach((player) => {
+  Object.values(gameMap[gameId].players).forEach((player) => {
     let gamePacket = { game: gameMap[gameId], recipientid: player.user._id };
     const socket = getSocketFromUserID(player.user._id);
     if (socket) {
-      socket.emit("update", gamePacket);
+      socket.emit("update", { json: JSON.stringify(gamePacket) });
     }
   });
 };
@@ -47,7 +46,7 @@ const runGame = (gameId) => {
   gameMap[gameId].killer = () => {
     delete gameMap[gameId];
   };
-  Array.from(gameMap[gameId].players.values()).forEach((player) => {
+  Object.values(gameMap[gameId].players).forEach((player) => {
     Object.values(gameMap).forEach((game) => {
       if (game.seed !== gameId) {
         game.removePlayer(player.user._id);

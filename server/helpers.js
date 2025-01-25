@@ -16,6 +16,10 @@ const scaleCoord = (coord, sf) => {
   return { x: coord.x * sf, y: coord.y * sf };
 };
 
+const roundCoord = (coord) => {
+  return { x: Math.round(coord.x), y: Math.round(coord.y) };
+};
+
 const getChunkFromPos = (pos) => {
   return Math.floor((pos + chunkSize) / (chunkSize * 2));
 };
@@ -33,6 +37,7 @@ module.exports = {
   addCoords,
   subtractCoords,
   scaleCoord,
+  roundCoord,
   getChunkFromPos,
   getChunkCenter,
   getChunkRelativePos,

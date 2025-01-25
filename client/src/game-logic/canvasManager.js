@@ -138,6 +138,7 @@ const drawTrees = (playerObj, ctx) => {
 //   game: gameObj
 // }
 const convertGameToCanvasState = (gamePacket) => {
+  //console.log(gamePacket);
   let incombat = false;
   let myplayerdata;
   let players;
@@ -149,9 +150,9 @@ const convertGameToCanvasState = (gamePacket) => {
   });
 
   if (!incombat) {
-    players = new Map(Object.entries(gamePacket.game.playersObj));
-    myplayerdata = players.get(gamePacket.recipientid).data;
-    players.delete(gamePacket.recipientid);
+    players = gamePacket.game.players;
+    myplayerdata = players[gamePacket.recipientid].data;
+    delete players[gamePacket.recipientid];
   }
 
   return {
@@ -193,6 +194,8 @@ const loadAssets = async () => {
 loadAssets();
 
 export const drawCanvas = (gamePacket, canvasRef) => {
+  console.log(JSON.parse(gamePacket.json));
+
   const canvas = canvasRef.current;
   if (!canvas) return;
   const context = canvas.getContext("2d");
@@ -200,14 +203,14 @@ export const drawCanvas = (gamePacket, canvasRef) => {
   canvas.width = 544;
   canvas.height = 544;
 
-  const canvasState = convertGameToCanvasState(gamePacket);
+  const canvasState = convertGameToCanvasState(Object.assign({}, JSON.parse(gamePacket.json)));
 
   // Object.values(canvasState.players).forEach((playerObj) => {
   //     drawPlayer(playerObj.data, context);
   // });
   if (!canvasState.incombat) {
     drawPlayer(canvasState.myplayerdata, context);
-    Array.from(canvasState.otherplayers.values()).forEach((player) => {
+    Object.values(canvasState.otherplayers).forEach((player) => {
       if (
         canvasState.myplayerdata.chunk.x == player.data.chunk.x &&
         canvasState.myplayerdata.chunk.y == player.data.chunk.y

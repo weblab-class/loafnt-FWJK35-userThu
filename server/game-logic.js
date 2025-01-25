@@ -8,6 +8,8 @@ const screenBorder = {
 };
 
 const chunkSize = 8;
+const playerSize = 0.5;
+
 help.setChunkSize(chunkSize);
 
 const dummyPlayer1 = {
@@ -36,17 +38,16 @@ playersObj (Object): Object form of the players
 class Game {
   seed;
   players;
-  playersObj;
   interval;
   killer;
   arenas;
 
   constructor(seed, lobby) {
     this.seed = seed;
-    this.players = new Map();
+    this.players = {};
     if (lobby) {
       Array.from(lobby.players.values()).forEach((user) => {
-        this.players.set(user._id, { data: dummyPlayer1, user: user });
+        this.players[user._id] = { data: dummyPlayer1, user: user };
         this.spawnPlayer(user);
       });
     }
@@ -57,11 +58,12 @@ class Game {
     Populates a player's data field, and spawns them in the world
   */
   spawnPlayer(user) {
-    this.players.get(user._id).data = {
+    this.players[user._id].data = {
       avatar_id: "witch_cat",
       position: { x: 0, y: 0 },
       relative_position: { x: 0, y: 0 },
       chunk: { x: 0, y: 0 },
+      speed: 3,
       rendered_chunks: [
         [
           this.getMazeFromChunk({ x: -1, y: -1 }),
@@ -80,13 +82,11 @@ class Game {
         ],
       ],
     };
-
-    this.movePlayer(user._id, "none");
   }
 
   removePlayer(userid) {
-    this.players.delete(userid);
-    if (this.players.size === 0) {
+    delete this.players[userid];
+    if (Object.keys(this.players).length === 0) {
       console.log("kill", this.seed);
       this.killSelf();
     }
@@ -108,7 +108,7 @@ class Game {
     rendered for the player.
   */
   getPlayerMapData(id, pos) {
-    const playerData = this.players.get(id).data;
+    const playerData = this.players[id].data;
     const posInRange = (pos, playerPos) => {
       const distFromPlayerChunk = help.subtractCoords(pos, help.getChunkCenter(playerData.chunk));
       return (
@@ -127,17 +127,19 @@ class Game {
       );
       return playerData.rendered_chunks[relChunk.y + 1][relChunk.x + 1][chunkRel.y][chunkRel.x];
     } else {
-      return 1;
+      return 0;
     }
   }
 
   movePlayer(id, dir) {
-    if (!this.players.has(id)) {
+    //console.log(dir);
+
+    if (!Object.hasOwn(this.players, id)) {
       return;
     }
 
-    let playerPos = this.players.get(id).data.position;
-    let playerChunk = this.players.get(id).data.chunk;
+    let playerPos = this.players[id].data.position;
+    let playerChunk = this.players[id].data.chunk;
 
     const posInChunk = (pos, chunk) => {
       const compressedRight = (pos + chunkSize) / (chunkSize * 2);
@@ -145,21 +147,22 @@ class Game {
       return chunk <= compressedRight && chunk >= compressedLeft;
     };
 
-    let newPos = Object.assign({}, playerPos);
+    let newPos = help.addCoords(playerPos, help.scaleCoord(dir, 3));
 
-    if (dir === "up") {
-      newPos.y -= 1;
-    } else if (dir === "down") {
-      newPos.y += 1;
-    } else if (dir === "left") {
-      newPos.x -= 1;
-    } else if (dir === "right") {
-      newPos.x += 1;
-    }
-
-    // move player if cell is free
-    if (this.getPlayerMapData(id, newPos) == 0) {
-      this.players.get(id).data.position = newPos;
+    let validMove = true;
+    const corners = [
+      { x: playerSize / 2, y: playerSize / 2 },
+      { x: playerSize / 2, y: -playerSize / 2 },
+      { x: -playerSize / 2, y: playerSize / 2 },
+      { x: -playerSize / 2, y: -playerSize / 2 },
+    ];
+    corners.forEach((cn) => {
+      if (this.getPlayerMapData(id, help.roundCoord(help.addCoords(newPos, cn))) == 1) {
+        validMove = false;
+      }
+    });
+    if (validMove) {
+      this.players[id].data.position = newPos;
       playerPos = newPos;
     }
 
@@ -186,10 +189,10 @@ class Game {
         }
         newRenderedChunks.push(newChunkRow);
       }
-      this.players.get(id).data.rendered_chunks = newRenderedChunks;
+      this.players[id].data.rendered_chunks = newRenderedChunks;
     }
 
-    this.players.get(id).data.relative_position = help.getChunkRelativePos(playerPos, playerChunk);
+    this.players[id].data.relative_position = help.getChunkRelativePos(playerPos, playerChunk);
   }
 
   /*
@@ -320,10 +323,6 @@ class Game {
     }
 
     return maze;
-  }
-
-  getPlayers() {
-    return this.players.values();
   }
 }
 

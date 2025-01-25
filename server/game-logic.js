@@ -63,7 +63,7 @@ class Game {
       position: { x: 0, y: 0 },
       relative_position: { x: 0, y: 0 },
       chunk: { x: 0, y: 0 },
-      speed: 3,
+      speed: 5,
       rendered_chunks: [
         [
           this.getMazeFromChunk({ x: -1, y: -1 }),
@@ -132,7 +132,7 @@ class Game {
   }
 
   movePlayer(id, dir) {
-    //console.log(dir);
+    console.log(dir);
 
     if (!Object.hasOwn(this.players, id)) {
       return;
@@ -147,23 +147,42 @@ class Game {
       return chunk <= compressedRight && chunk >= compressedLeft;
     };
 
-    let newPos = help.addCoords(playerPos, help.scaleCoord(dir, 3));
+    const newPosXY = help.addCoords(playerPos, help.scaleCoord(dir, this.players[id].data.speed));
+    const newPosX = help.addCoords(
+      playerPos,
+      help.scaleCoord({ x: dir.x, y: 0 }, this.players[id].data.speed)
+    );
 
-    let validMove = true;
-    const corners = [
-      { x: playerSize / 2, y: playerSize / 2 },
-      { x: playerSize / 2, y: -playerSize / 2 },
-      { x: -playerSize / 2, y: playerSize / 2 },
-      { x: -playerSize / 2, y: -playerSize / 2 },
-    ];
-    corners.forEach((cn) => {
-      if (this.getPlayerMapData(id, help.roundCoord(help.addCoords(newPos, cn))) == 1) {
-        validMove = false;
-      }
-    });
-    if (validMove) {
-      this.players[id].data.position = newPos;
-      playerPos = newPos;
+    const newPosY = help.addCoords(
+      playerPos,
+      help.scaleCoord({ x: 0, y: dir.y }, this.players[id].data.speed)
+    );
+
+    const checkNoCollisions = (newPos) => {
+      let valid = true;
+      const corners = [
+        { x: playerSize / 2, y: playerSize / 2 },
+        { x: playerSize / 2, y: -playerSize / 2 },
+        { x: -playerSize / 2, y: playerSize / 2 },
+        { x: -playerSize / 2, y: -playerSize / 2 },
+      ];
+      corners.forEach((cn) => {
+        if (this.getPlayerMapData(id, help.roundCoord(help.addCoords(newPos, cn))) == 1) {
+          valid = false;
+        }
+      });
+      return valid;
+    };
+
+    if (checkNoCollisions(newPosXY)) {
+      this.players[id].data.position = newPosXY;
+      playerPos = newPosXY;
+    } else if (checkNoCollisions(newPosX)) {
+      this.players[id].data.position = newPosX;
+      playerPos = newPosX;
+    } else if (checkNoCollisions(newPosY)) {
+      this.players[id].data.position = newPosY;
+      playerPos = newPosY;
     }
 
     // change player's current chunk coord if they moved between chunks

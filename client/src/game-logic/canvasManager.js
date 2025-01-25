@@ -194,8 +194,6 @@ const loadAssets = async () => {
 loadAssets();
 
 export const drawCanvas = (gamePacket, canvasRef) => {
-  console.log(JSON.parse(gamePacket.json));
-
   const canvas = canvasRef.current;
   if (!canvas) return;
   const context = canvas.getContext("2d");

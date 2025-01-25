@@ -115,8 +115,8 @@ const drawBranchTiles = (map, offset, ctx) => {
         }
 
         const thisTile = {
-          x: col + offset.x,
-          y: row + offset.y,
+          x: col + offset.x - 1,
+          y: row + offset.y - 1,
           id: tileidy * 4 + tileidx,
         };
 
@@ -157,12 +157,15 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
 
   const mapToRender = [];
   for (let row = 0; row < chunkBlockSize * 3 - 2; row++) {
-    if (row - relCoords.y >= chunkBlockSize - 1 && row - relCoords.y <= (chunkBlockSize - 1) * 2) {
+    if (
+      row - relCoords.y >= chunkBlockSize - 2 &&
+      row - relCoords.y <= (chunkBlockSize - 1) * 2 + 1
+    ) {
       const currentRow = [];
       for (let col = 0; col < chunkBlockSize * 3 - 2; col++) {
         if (
-          col - relCoords.x >= chunkBlockSize - 1 &&
-          col - relCoords.x <= (chunkBlockSize - 1) * 2
+          col - relCoords.x >= chunkBlockSize - 2 &&
+          col - relCoords.x <= (chunkBlockSize - 1) * 2 + 1
         ) {
           currentRow.push(combinedChunks[row][col]);
         }

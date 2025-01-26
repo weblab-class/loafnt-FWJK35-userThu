@@ -9,6 +9,7 @@ const screenBorder = {
 
 const chunkSize = 8;
 const playerSize = 0.5;
+const cameraBoxSize = { width: 2, height: 2 };
 
 help.setChunkSize(chunkSize);
 
@@ -65,7 +66,9 @@ class Game {
       avatar_id: "witch_cat",
       animation: "still", // unnecessary
       position: { x: 0, y: 0 },
-      relative_position: { x: 0, y: 0 },
+      rendered_position: { x: 0, y: 0 },
+      camera_center: { x: 0, y: 0 },
+      chunk_center: { x: 0, y: 0 },
       chunk: { x: 0, y: 0 },
       speed: 5,
       rendered_chunks: [
@@ -223,7 +226,30 @@ class Game {
       this.players[id].data.rendered_chunks = newRenderedChunks;
     }
 
-    this.players[id].data.relative_position = help.getChunkRelativePos(playerPos, playerChunk);
+    const newRenderedPos = help.subtractCoords(playerPos, this.players[id].data.camera_center);
+    if (newRenderedPos.x < -cameraBoxSize.width) {
+      newRenderedPos.x = -cameraBoxSize.width;
+      this.players[id].data.camera_center.x = playerPos.x + cameraBoxSize.width;
+    }
+    if (newRenderedPos.x > cameraBoxSize.width) {
+      newRenderedPos.x = cameraBoxSize.width;
+      this.players[id].data.camera_center.x = playerPos.x - cameraBoxSize.width;
+    }
+
+    if (newRenderedPos.y < -cameraBoxSize.width) {
+      newRenderedPos.y = -cameraBoxSize.width;
+      this.players[id].data.camera_center.y = playerPos.y + cameraBoxSize.width;
+    }
+    if (newRenderedPos.y > cameraBoxSize.height) {
+      newRenderedPos.y = cameraBoxSize.height;
+      this.players[id].data.camera_center.y = playerPos.y - cameraBoxSize.height;
+    }
+
+    this.players[id].data.rendered_position = help.addCoords(
+      { x: chunkSize, y: chunkSize },
+      newRenderedPos
+    );
+    this.players[id].data.chunk_center = help.getChunkCenter(this.players[id].data.chunk);
   }
 
   /*

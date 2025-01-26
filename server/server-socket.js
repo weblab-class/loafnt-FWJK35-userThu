@@ -85,7 +85,6 @@ module.exports = {
       });
 
       socket.on("entercombat", (input) => {
-        console.log("ec");
         if (Game.gameMap[input.gameID]) {
           if (!Game.gameMap[input.gameID].isInCombat(input.user_id)) {
             Game.gameMap[input.gameID].beginCombat(input.user_id);

@@ -230,6 +230,7 @@ class Game {
       this.players[id].data.rendered_chunks = newRenderedChunks;
     }
 
+    //set camera
     const newRenderedPos = help.subtractCoords(playerPos, this.players[id].data.camera_center);
     if (newRenderedPos.x < -cameraBoxSize.width) {
       newRenderedPos.x = -cameraBoxSize.width;
@@ -249,10 +250,7 @@ class Game {
       this.players[id].data.camera_center.y = playerPos.y - cameraBoxSize.height;
     }
 
-    this.players[id].data.rendered_position = help.addCoords(
-      { x: chunkSize, y: chunkSize },
-      newRenderedPos
-    );
+    this.players[id].data.rendered_position = newRenderedPos;
     this.players[id].data.chunk_center = help.getChunkCenter(this.players[id].data.chunk);
   }
 

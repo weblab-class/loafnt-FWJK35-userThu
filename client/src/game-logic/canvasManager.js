@@ -1,16 +1,18 @@
 import assetlist from "../public/assets/asset-list";
 import help from "./helpers";
 
-const blockSize = 32;
-const spriteSize = 32;
-const tileSize = 64;
+let blockSize = 32;
+let spriteSize = 32;
+let tileSize = 64;
 
 let spriteX = 0;
 let spriteY = 0;
 
 // The size of the screen in terms of the game's blocks
-const screenBlockWidth = 17;
-const screenBlockHeight = 17;
+const screenMinBlocks = 17;
+let screenBlockWidth = 17;
+let screenBlockHeight = 17;
+let canvasCenter = { x: 0, y: 0 };
 
 // Path is relative to 'dist' folder
 let assetsMap = {
@@ -54,16 +56,17 @@ let assetsMap = {
 // }
 // ctx: context                                     -- Game Canvas context
 const drawPlayer = (player, ctx) => {
+  player.rendered_position = help.addCoords(player.rendered_position, canvasCenter);
   ctx.drawImage(
     assetsMap.avatars[player.avatar_id].imgObj,
-    spriteX * blockSize,
-    spriteY * blockSize,
+    spriteX * spriteSize,
+    spriteY * spriteSize,
     spriteSize,
     spriteSize,
-    player.rendered_position.x * blockSize,
-    player.rendered_position.y * blockSize,
-    spriteSize,
-    spriteSize
+    (player.rendered_position.x - 0.5) * blockSize,
+    (player.rendered_position.y - 0.5) * blockSize,
+    blockSize,
+    blockSize
   );
 };
 
@@ -86,14 +89,14 @@ const drawBranchTile = (tile, ctx) => {
 const drawBranchTiles = (canvasState, offset, ctx) => {
   const map = canvasState.map;
   for (let row = 0; row < map.length; row++) {
-    for (let col = 0; col < map.length; col++) {
+    for (let col = 0; col < map[row].length; col++) {
       if (map[row][col] === 1) {
         //assign a tile id based on neighbors
         let tileidx = 0;
         if (col - 1 >= 0 && map[row][col - 1] === 1) {
           tileidx += 3;
         }
-        if (col + 1 < map.length && map[row][col + 1] === 1) {
+        if (col + 1 < map[0].length && map[row][col + 1] === 1) {
           tileidx += 1;
         }
         if (tileidx === 4) {
@@ -110,12 +113,11 @@ const drawBranchTiles = (canvasState, offset, ctx) => {
         if (tileidy === 4) {
           tileidy -= 2;
         }
-
         const tileCoord = help.addCoords(
           canvasState.myplayerdata.camera_center,
           help.subtractCoords(help.addCoords({ x: col, y: row }, offset), {
-            x: (canvasState.chunkblocksize + 1) / 2,
-            y: (canvasState.chunkblocksize + 1) / 2,
+            x: (map[0].length - 1) / 2,
+            y: (map.length - 1) / 2,
           })
         );
 
@@ -142,8 +144,8 @@ const drawBranchTiles = (canvasState, offset, ctx) => {
         });
 
         const thisTile = {
-          x: col + offset.x - 1,
-          y: row + offset.y - 1,
+          x: col - (map[0].length - screenBlockWidth) / 2 + offset.x,
+          y: row - (map.length - screenBlockHeight) / 2 + offset.y,
           id: tileidy * 4 + tileidx,
           size: maxSize,
         };
@@ -164,20 +166,20 @@ const drawBranchTiles = (canvasState, offset, ctx) => {
 */
 const getMapToRender = (playerObj, chunkBlockSize) => {
   const combinedChunks = [];
-  for (let chunkRow = 0; chunkRow < 3; chunkRow++) {
+  for (let chunkRow = 0; chunkRow < playerObj.rendered_chunks.length; chunkRow++) {
     for (let thisRow = 0; thisRow < chunkBlockSize; thisRow++) {
       const currentRow = [];
-      for (let chunkCol = 0; chunkCol < 3; chunkCol++) {
+      for (let chunkCol = 0; chunkCol < playerObj.rendered_chunks.length; chunkCol++) {
         for (let thisCol = 0; thisCol < chunkBlockSize; thisCol++) {
           currentRow.push(playerObj.rendered_chunks[chunkRow][chunkCol][thisRow][thisCol]);
         }
-        if (chunkCol < 2) {
+        if (chunkCol < playerObj.rendered_chunks.length - 1) {
           currentRow.pop();
         }
       }
       combinedChunks.push(currentRow);
     }
-    if (chunkRow < 2) {
+    if (chunkRow < playerObj.rendered_chunks.length - 1) {
       combinedChunks.pop();
     }
   }
@@ -187,24 +189,56 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
   );
 
   const mapToRender = [];
-  for (let row = 0; row < chunkBlockSize * 3 - 2; row++) {
+
+  const mapSize = {
+    width: Math.ceil((screenBlockWidth - 1) / 2) * 2 + 1,
+    height: Math.ceil((screenBlockHeight - 1) / 2) * 2 + 1,
+  };
+
+  for (let row = 0; row < combinedChunks.length; row++) {
     if (
-      row - relCoords.y >= chunkBlockSize - 2 &&
-      row - relCoords.y <= (chunkBlockSize - 1) * 2 + 1
+      row - relCoords.y > (combinedChunks.length - 1) / 2 - (screenBlockHeight + 1) / 2 &&
+      row - relCoords.y < (combinedChunks.length - 1) / 2 + (screenBlockHeight + 1) / 2
     ) {
       const currentRow = [];
-      for (let col = 0; col < chunkBlockSize * 3 - 2; col++) {
+      for (let col = 0; col < combinedChunks.length; col++) {
         if (
-          col - relCoords.x >= chunkBlockSize - 2 &&
-          col - relCoords.x <= (chunkBlockSize - 1) * 2 + 1
+          col - relCoords.x > (combinedChunks.length - 1) / 2 - (screenBlockWidth + 1) / 2 &&
+          col - relCoords.x < (combinedChunks.length - 1) / 2 + (screenBlockWidth + 1) / 2
         ) {
           currentRow.push(combinedChunks[row][col]);
         }
       }
+
+      if (currentRow.length < mapSize.width) {
+        if (relCoords.x > 0) {
+          while (currentRow.length < mapSize.width) {
+            currentRow.push(0);
+          }
+        } else {
+          while (currentRow.length < mapSize.width) {
+            currentRow.unshift(0);
+          }
+        }
+      }
+
       mapToRender.push(currentRow);
     }
   }
 
+  if (mapToRender.length < mapSize.height) {
+    if (relCoords.y > 0) {
+      while (mapToRender.length < mapSize.height) {
+        mapToRender.push(Array(mapSize.width).fill(0));
+      }
+    } else {
+      while (mapToRender.length < mapSize.height) {
+        mapToRender.unshift(Array(mapSize.width).fill(0));
+      }
+    }
+  }
+  if (mapToRender[0].length != mapSize.width) {
+  }
   return mapToRender;
 };
 
@@ -275,13 +309,25 @@ const loadAssets = async () => {
 // Call when game is started
 loadAssets();
 
-export const drawCanvas = (gamePacket, canvasRef) => {
+export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
   const canvas = canvasRef.current;
   if (!canvas) return;
   const context = canvas.getContext("2d");
   // Purposefully give dimensions so Canvas does not upscale inner images
-  canvas.width = 544;
-  canvas.height = 544;
+  canvas.width = dimensions.width;
+  canvas.height = dimensions.height;
+
+  if (dimensions.width > dimensions.height) {
+    screenBlockWidth = (screenMinBlocks * dimensions.width) / dimensions.height;
+    screenBlockHeight = screenMinBlocks;
+    blockSize = dimensions.height / screenMinBlocks;
+  } else {
+    screenBlockHeight = (screenMinBlocks * dimensions.height) / dimensions.width;
+    screenBlockWidth = screenMinBlocks;
+    blockSize = dimensions.width / screenMinBlocks;
+  }
+
+  canvasCenter = { x: screenBlockWidth / 2, y: screenBlockHeight / 2 };
 
   const canvasState = convertGameToCanvasState(Object.assign({}, JSON.parse(gamePacket.json)));
 

@@ -278,6 +278,7 @@ const convertGameToCanvasState = (gamePacket) => {
     return {
       incombat: true,
       players: players,
+      myplayerdata: myplayerdata,
     };
   }
 };

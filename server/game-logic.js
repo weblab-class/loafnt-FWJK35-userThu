@@ -446,22 +446,19 @@ class Arena {
       help.scaleCoord(inputDir, this.players[id].speed)
     );
     //confine player to arena
-    if (this.players[id].position.x < 0) {
-      this.players[id].position.x = 0;
+    if (this.players[id].position.x < -this.size.width / 2) {
+      this.players[id].position.x = -this.size.width / 2;
     }
-    if (this.players[id].position.x > this.size.width) {
-      this.players[id].position.x = this.size.width;
+    if (this.players[id].position.x > this.size.width / 2) {
+      this.players[id].position.x = this.size.width / 2;
     }
-    if (this.players[id].position.y < 0) {
-      this.players[id].position.y = 0;
+    if (this.players[id].position.y < -this.size.height / 2) {
+      this.players[id].position.y = -this.size.height / 2;
     }
-    if (this.players[id].position.y > this.size.height) {
-      this.players[id].position.y = this.size.height;
+    if (this.players[id].position.y > this.size.height / 2) {
+      this.players[id].position.y = this.size.height / 2;
     }
-    this.players[id].rendered_position = help.subtractCoords(this.players[id].position, {
-      x: 0.5,
-      y: 0.5,
-    });
+    this.players[id].rendered_position = this.players[id].position;
   }
 }
 

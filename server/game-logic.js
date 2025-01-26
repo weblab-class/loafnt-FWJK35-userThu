@@ -13,6 +13,8 @@ const cameraBoxSize = { width: 2, height: 2 };
 
 help.setChunkSize(chunkSize);
 
+const gameMap = {};
+
 const dummyPlayer1 = {
   position: { x: 0, y: 0 },
   chunk: { x: 0, y: 0 },
@@ -51,7 +53,6 @@ class Game {
     this.players = {};
     if (lobby) {
       Array.from(lobby.players.values()).forEach((user) => {
-        this.players[user._id] = { data: dummyPlayer1, user: user };
         this.spawnPlayer(user);
       });
     }
@@ -62,32 +63,35 @@ class Game {
     Populates a player's data field, and spawns them in the world
   */
   spawnPlayer(user) {
-    this.players[user._id].data = {
-      avatar_id: "witch_cat",
-      animation: "still", // unnecessary
-      position: { x: 0, y: 0 },
-      rendered_position: { x: 0, y: 0 },
-      camera_center: { x: 0, y: 0 },
-      chunk_center: { x: 0, y: 0 },
-      chunk: { x: 0, y: 0 },
-      speed: 5,
-      rendered_chunks: [
-        [
-          this.getMazeFromChunk({ x: -1, y: -1 }),
-          this.getMazeFromChunk({ x: 0, y: -1 }),
-          this.getMazeFromChunk({ x: 1, y: -1 }),
+    this.players[user._id] = {
+      data: {
+        avatar_id: "witch_cat",
+        animation: "still", // unnecessary
+        position: { x: 0, y: 0 },
+        rendered_position: { x: 0, y: 0 },
+        camera_center: { x: 0, y: 0 },
+        chunk_center: { x: 0, y: 0 },
+        chunk: { x: 0, y: 0 },
+        speed: 5,
+        rendered_chunks: [
+          [
+            this.getMazeFromChunk({ x: -1, y: -1 }),
+            this.getMazeFromChunk({ x: 0, y: -1 }),
+            this.getMazeFromChunk({ x: 1, y: -1 }),
+          ],
+          [
+            this.getMazeFromChunk({ x: -1, y: 0 }),
+            this.getMazeFromChunk({ x: 0, y: 0 }),
+            this.getMazeFromChunk({ x: 1, y: 0 }),
+          ],
+          [
+            this.getMazeFromChunk({ x: -1, y: 1 }),
+            this.getMazeFromChunk({ x: 0, y: 1 }),
+            this.getMazeFromChunk({ x: 1, y: 1 }),
+          ],
         ],
-        [
-          this.getMazeFromChunk({ x: -1, y: 0 }),
-          this.getMazeFromChunk({ x: 0, y: 0 }),
-          this.getMazeFromChunk({ x: 1, y: 0 }),
-        ],
-        [
-          this.getMazeFromChunk({ x: -1, y: 1 }),
-          this.getMazeFromChunk({ x: 0, y: 1 }),
-          this.getMazeFromChunk({ x: 1, y: 1 }),
-        ],
-      ],
+      },
+      user: user,
     };
   }
 
@@ -140,7 +144,7 @@ class Game {
   isInCombat(id) {
     return (
       Object.hasOwn(this.arenas, JSON.stringify(this.players[id].data.chunk)) &&
-      this.arenas[JSON.stringify(this.players[id].data.chunk)] !== null
+      Object.hasOwn(this.arenas[JSON.stringify(this.players[id].data.chunk)].players, id)
     );
   }
 
@@ -226,6 +230,7 @@ class Game {
       this.players[id].data.rendered_chunks = newRenderedChunks;
     }
 
+    //set camera
     const newRenderedPos = help.subtractCoords(playerPos, this.players[id].data.camera_center);
     if (newRenderedPos.x < -cameraBoxSize.width) {
       newRenderedPos.x = -cameraBoxSize.width;
@@ -245,10 +250,7 @@ class Game {
       this.players[id].data.camera_center.y = playerPos.y - cameraBoxSize.height;
     }
 
-    this.players[id].data.rendered_position = help.addCoords(
-      { x: chunkSize, y: chunkSize },
-      newRenderedPos
-    );
+    this.players[id].data.rendered_position = newRenderedPos;
     this.players[id].data.chunk_center = help.getChunkCenter(this.players[id].data.chunk);
   }
 
@@ -386,12 +388,20 @@ class Game {
     const arenaId = JSON.stringify(this.players[playerid].data.chunk);
     if (!this.arenas[arenaId]) {
       this.arenas[arenaId] = new Arena();
+      this.arenas[arenaId].killer = () => {
+        delete this.arenas[arenaId];
+      };
     }
     this.arenas[arenaId].addPlayer(playerid);
   }
-}
 
-const player_speed = 1;
+  leaveCombat(playerid) {
+    const arenaId = JSON.stringify(this.players[playerid].data.chunk);
+    if (this.arenas[arenaId]) {
+      this.arenas[arenaId].removePlayer(playerid);
+    }
+  }
+}
 
 class Arena {
   players;
@@ -399,6 +409,7 @@ class Arena {
   enemies;
   projectiles;
   size;
+  killer;
 
   constructor() {
     this.players = {};
@@ -410,34 +421,48 @@ class Arena {
 
   addPlayer(userid) {
     this.players[userid] = {
-      pos: { x: 0.0, y: 0.0 },
+      position: { x: 0.0, y: 0.0 },
+      rendered_position: { x: 0.0, y: 0.0 },
       health: 100.0,
       avatar_id: "witch_cat",
-      speed: 5,
+      speed: 7,
     };
   }
 
+  removePlayer(userid) {
+    delete this.players[userid];
+    if (Object.keys(this.players).length == 0) {
+      this.killer();
+    }
+  }
+
+  killSelf() {
+    this.killer();
+  }
+
   movePlayer(id, inputDir) {
-    this.players[id].pos = help.addCoords(
-      this.players[id].pos,
+    this.players[id].position = help.addCoords(
+      this.players[id].position,
       help.scaleCoord(inputDir, this.players[id].speed)
     );
     //confine player to arena
-    if (this.players[id].pos.x < 0) {
-      this.players[id].pos.x = 0;
+    if (this.players[id].position.x < -this.size.width / 2) {
+      this.players[id].position.x = -this.size.width / 2;
     }
-    if (this.players[id].pos.x > this.size.width) {
-      this.players[id].pos.x = this.size.width;
+    if (this.players[id].position.x > this.size.width / 2) {
+      this.players[id].position.x = this.size.width / 2;
     }
-    if (this.players[id].pos.y < 0) {
-      this.players[id].pos.y = 0;
+    if (this.players[id].position.y < -this.size.height / 2) {
+      this.players[id].position.y = -this.size.height / 2;
     }
-    if (this.players[id].pos.y > this.size.height) {
-      this.players[id].pos.y = this.size.height;
+    if (this.players[id].position.y > this.size.height / 2) {
+      this.players[id].position.y = this.size.height / 2;
     }
+    this.players[id].rendered_position = this.players[id].position;
   }
 }
 
 module.exports = {
+  gameMap,
   Game,
 };

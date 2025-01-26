@@ -12,6 +12,8 @@ class Lobby {
   players;
   playersObj;
   leader;
+  started;
+
   constructor(lobbiesList, leader) {
     let mycode = getRandomCode(5);
     while (lobbiesList.has(mycode)) {
@@ -21,6 +23,7 @@ class Lobby {
     this.players = new Map();
     this.playersObj = Object.fromEntries(this.players);
     this.leader = leader;
+    this.started = false;
   }
 
   removePlayer(player) {

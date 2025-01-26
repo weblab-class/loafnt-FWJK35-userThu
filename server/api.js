@@ -21,6 +21,7 @@ const router = express.Router();
 //initialize socket
 const socketManager = require("./server-socket");
 const lobbyManager = require("./lobby-manager");
+const game = require("./game-logic");
 
 router.post("/login", auth.login);
 router.post("/logout", auth.logout);
@@ -81,7 +82,9 @@ router.post("/joinlobby", (req, res) => {
           socketManager.getSocketFromUserID(player._id).emit("joinedlobby", req.user);
         }
       });
-
+      if (lobby.started) {
+        game.gameMap[req.body.lobbycode].spawnPlayer(req.user);
+      }
       res.send(lobby);
     } else {
       res.status(500).send("Lobby Not Found");

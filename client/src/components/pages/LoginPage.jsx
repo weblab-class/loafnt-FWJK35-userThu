@@ -27,35 +27,35 @@ const LoginPage = () => {
       <div className="login-page-background">
         <div className="top-container">
           <div className="log-div">
-            <img className="log-image"/>
+            <img className="log-image" />
           </div>
           <div className="small-container">
-            <img className="title"/>
+            <img className="title" />
             <div className="lobby">
-          {user ? (
-            <div className="lobby-controls">
-              {joiningLobby ? (
-                <LobbyInput
-                  cancel={() => {
-                    setJoiningLobby(false);
-                  }}
-                  onSubmit={attemptJoinLobby}
-                />
+              {user ? (
+                <div className="lobby-controls">
+                  {joiningLobby ? (
+                    <LobbyInput
+                      cancel={() => {
+                        setJoiningLobby(false);
+                      }}
+                      onSubmit={attemptJoinLobby}
+                    />
+                  ) : (
+                    <>
+                      <CreateLobby />
+                      <JoinLobby
+                        joinlobby={() => {
+                          setJoiningLobby(true);
+                        }}
+                      />
+                    </>
+                  )}
+                </div>
               ) : (
-                <>
-                  <CreateLobby />
-                  <JoinLobby
-                    joinlobby={() => {
-                      setJoiningLobby(true);
-                    }}
-                  />
-                </>
+                <></>
               )}
             </div>
-          ) : (
-            <></>
-          )}
-        </div>
             <div className="login-button">
               {user ? (
                 <button
@@ -71,9 +71,7 @@ const LoginPage = () => {
                 <GoogleLogin onSuccess={handleLogin} onError={(err) => console.log(err)} />
               )}
             </div>
-            
           </div>
-          
         </div>
       </div>
     </>

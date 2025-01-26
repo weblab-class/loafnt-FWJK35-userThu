@@ -1,10 +1,9 @@
 import Canvas from "../modules/Canvas";
-import { runGame } from "../../client-socket";
 import { UserContext } from "../App";
 import { useState, useEffect, useContext, useCallback } from "react";
 import { sendInput, setPressedKey } from "../../game-logic/input";
-import "./Game.css";
 import { get } from "../../utilities";
+import "./Game.css";
 
 const Game = () => {
   const [gameID, setGameID] = useState("");

@@ -150,6 +150,44 @@ const drawBranchTiles = (canvasState, offset, ctx) => {
   }
 };
 
+const drawArena = (canvasState, ctx) => {
+  //render all players
+  Object.values(canvasState.players).forEach((player, id) => {
+    drawPlayer(player, ctx);
+  });
+
+  //draw borders
+  ctx.fillStyle = "#000000";
+  //left border
+  ctx.fillRect(
+    0,
+    0,
+    ((screenBlockWidth - canvasState.arena.size.width) / 2) * blockSize,
+    screenBlockHeight * blockSize
+  );
+  //top border
+  ctx.fillRect(
+    0,
+    0,
+    screenBlockWidth * blockSize,
+    ((screenBlockHeight - canvasState.arena.size.height) / 2) * blockSize
+  );
+  //right border
+  ctx.fillRect(
+    screenBlockWidth * blockSize,
+    screenBlockHeight * blockSize,
+    -((screenBlockWidth - canvasState.arena.size.width) / 2) * blockSize,
+    -screenBlockHeight * blockSize
+  );
+  //bottom border
+  ctx.fillRect(
+    screenBlockWidth * blockSize,
+    screenBlockHeight * blockSize,
+    -screenBlockWidth * blockSize,
+    -((screenBlockHeight - canvasState.arena.size.height) / 2) * blockSize
+  );
+};
+
 /*
     Return the terrain within the player's screen that needs to
     be rendered.
@@ -248,10 +286,12 @@ const convertGameToCanvasState = (gamePacket) => {
   let myplayerdata;
   let players;
   let map;
+  let myarena;
   Object.values(gamePacket.game.arenas).forEach((arena) => {
     if (Object.hasOwn(arena.players, gamePacket.recipientid)) {
       incombat = true;
       players = arena.players;
+      myarena = arena;
     }
   });
 
@@ -276,6 +316,7 @@ const convertGameToCanvasState = (gamePacket) => {
       incombat: true,
       players: players,
       myplayerdata: myplayerdata,
+      arena: myarena,
     };
   }
 };
@@ -366,8 +407,6 @@ export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
   }
   //if player in combat, render that arena
   else {
-    Object.values(canvasState.players).forEach((player, id) => {
-      drawPlayer(player, context);
-    });
+    drawArena(canvasState, context);
   }
 };

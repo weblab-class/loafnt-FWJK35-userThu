@@ -53,7 +53,10 @@ const runGame = (gameId) => {
         game.removePlayer(player.user._id);
       }
     });
-    getSocketFromUserID(player.user._id).emit("launchgame");
+    const socket = getSocketFromUserID(player.user._id);
+    if (socket) {
+      getSocketFromUserID(player.user._id).emit("launchgame");
+    }
   });
 
   Game.gameMap[gameId].interval = setInterval(() => {

@@ -72,7 +72,6 @@ module.exports = {
       });
       // Server receives request from client to run game
       socket.on("rungame", (gameId) => {
-        console.log(gameId + " server");
         if (gameMap[gameId] === undefined) {
           gameMap[gameId] = new Game.Game(gameId, LobbyManager.findLobbyByCode(gameId));
           runGame(gameId);
@@ -82,6 +81,12 @@ module.exports = {
       socket.on("move", (input) => {
         if (gameMap[input.gameID]) {
           gameMap[input.gameID].movePlayer(input.user_id, input.dir);
+        }
+      });
+
+      socket.on("entercombat", (input) => {
+        if (gameMap[input.gameID]) {
+          gameMap[input.gameID].beginCombat(input.user_id);
         }
       });
     });

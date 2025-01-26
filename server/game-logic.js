@@ -9,6 +9,7 @@ const screenBorder = {
 
 const chunkSize = 8;
 const playerSize = 0.5;
+const cameraBoxSize = { width: 2, height: 2 };
 
 help.setChunkSize(chunkSize);
 
@@ -65,7 +66,9 @@ class Game {
       avatar_id: "witch_cat",
       animation: "still", // unnecessary
       position: { x: 0, y: 0 },
-      relative_position: { x: 0, y: 0 },
+      rendered_position: { x: 0, y: 0 },
+      camera_center: { x: 0, y: 0 },
+      chunk_center: { x: 0, y: 0 },
       chunk: { x: 0, y: 0 },
       speed: 5,
       rendered_chunks: [
@@ -91,7 +94,6 @@ class Game {
   removePlayer(userid) {
     delete this.players[userid];
     if (Object.keys(this.players).length === 0) {
-      console.log("kill", this.seed);
       this.killSelf();
     }
   }
@@ -135,8 +137,19 @@ class Game {
     }
   }
 
+  isInCombat(id) {
+    return (
+      Object.hasOwn(this.arenas, JSON.stringify(this.players[id].data.chunk)) &&
+      this.arenas[JSON.stringify(this.players[id].data.chunk)] !== null
+    );
+  }
+
   movePlayer(id, dir) {
     if (!Object.hasOwn(this.players, id)) {
+      return;
+    }
+    if (this.isInCombat(id)) {
+      this.arenas[JSON.stringify(this.players[id].data.chunk)].movePlayer(id, dir);
       return;
     }
 
@@ -213,7 +226,30 @@ class Game {
       this.players[id].data.rendered_chunks = newRenderedChunks;
     }
 
-    this.players[id].data.relative_position = help.getChunkRelativePos(playerPos, playerChunk);
+    const newRenderedPos = help.subtractCoords(playerPos, this.players[id].data.camera_center);
+    if (newRenderedPos.x < -cameraBoxSize.width) {
+      newRenderedPos.x = -cameraBoxSize.width;
+      this.players[id].data.camera_center.x = playerPos.x + cameraBoxSize.width;
+    }
+    if (newRenderedPos.x > cameraBoxSize.width) {
+      newRenderedPos.x = cameraBoxSize.width;
+      this.players[id].data.camera_center.x = playerPos.x - cameraBoxSize.width;
+    }
+
+    if (newRenderedPos.y < -cameraBoxSize.width) {
+      newRenderedPos.y = -cameraBoxSize.width;
+      this.players[id].data.camera_center.y = playerPos.y + cameraBoxSize.width;
+    }
+    if (newRenderedPos.y > cameraBoxSize.height) {
+      newRenderedPos.y = cameraBoxSize.height;
+      this.players[id].data.camera_center.y = playerPos.y - cameraBoxSize.height;
+    }
+
+    this.players[id].data.rendered_position = help.addCoords(
+      { x: chunkSize, y: chunkSize },
+      newRenderedPos
+    );
+    this.players[id].data.chunk_center = help.getChunkCenter(this.players[id].data.chunk);
   }
 
   /*
@@ -345,6 +381,14 @@ class Game {
 
     return maze;
   }
+
+  beginCombat(playerid) {
+    const arenaId = JSON.stringify(this.players[playerid].data.chunk);
+    if (!this.arenas[arenaId]) {
+      this.arenas[arenaId] = new Arena();
+    }
+    this.arenas[arenaId].addPlayer(playerid);
+  }
 }
 
 const player_speed = 1;
@@ -361,20 +405,23 @@ class Arena {
     this.terrain = {};
     this.enemies = {};
     this.projectiles = {};
-    this.size = { width: 32, height: 18 };
+    this.size = { width: 17, height: 17 };
   }
 
-  addPlayer(user) {
-    this.players[user._id] = {
+  addPlayer(userid) {
+    this.players[userid] = {
       pos: { x: 0.0, y: 0.0 },
       health: 100.0,
       avatar_id: "witch_cat",
-      speed: 3,
+      speed: 5,
     };
   }
 
   movePlayer(id, inputDir) {
-    this.players[id].pos = help.scaleCoord(help.addCoords(pos, inputDir), this.players[id].speed);
+    this.players[id].pos = help.addCoords(
+      this.players[id].pos,
+      help.scaleCoord(inputDir, this.players[id].speed)
+    );
     //confine player to arena
     if (this.players[id].pos.x < 0) {
       this.players[id].pos.x = 0;

@@ -54,18 +54,14 @@ let assetsMap = {
 // }
 // ctx: context                                     -- Game Canvas context
 const drawPlayer = (player, ctx) => {
-  //   const offset = 8;
-  //   const x = player.relative_position.x + offset;
-  //   const y = player.relative_position.y + offset;
   ctx.drawImage(
     assetsMap.avatars[player.avatar_id].imgObj,
     spriteX * blockSize,
     spriteY * blockSize,
     spriteSize,
     spriteSize,
-    // Center of the screen
-    8 * blockSize, // x * blockSize
-    8 * blockSize, // y * blockSize
+    player.rendered_position.x * blockSize,
+    player.rendered_position.y * blockSize,
     spriteSize,
     spriteSize
   );
@@ -80,14 +76,15 @@ const drawBranchTile = (tile, ctx) => {
     tilemapy * tileSize,
     tileSize,
     tileSize,
-    tile.x * blockSize,
-    tile.y * blockSize,
-    blockSize,
-    blockSize
+    (tile.x + (1 - tile.size) / 2) * blockSize,
+    (tile.y + (1 - tile.size) / 2) * blockSize,
+    blockSize * tile.size,
+    blockSize * tile.size
   );
 };
 
-const drawBranchTiles = (map, offset, ctx) => {
+const drawBranchTiles = (canvasState, offset, ctx) => {
+  const map = canvasState.map;
   for (let row = 0; row < map.length; row++) {
     for (let col = 0; col < map.length; col++) {
       if (map[row][col] === 1) {
@@ -114,10 +111,28 @@ const drawBranchTiles = (map, offset, ctx) => {
           tileidy -= 2;
         }
 
+        const tileDist = Math.sqrt(
+          (col + offset.x - canvasState.myplayerdata.rendered_position.x) ** 2 +
+            (row + offset.y - canvasState.myplayerdata.rendered_position.y) ** 2
+        );
+
+        const getSize = (dist) => {
+          const minDist = 6;
+          const maxDist = 9;
+          if (dist < minDist) {
+            return 1;
+          }
+          if (dist > maxDist) {
+            return 0;
+          }
+          return 1 - (dist - minDist) / (maxDist - minDist);
+        };
+
         const thisTile = {
-          x: col + offset.x,
-          y: row + offset.y,
+          x: col + offset.x - 1,
+          y: row + offset.y - 1,
           id: tileidy * 4 + tileidx,
+          size: getSize(tileDist),
         };
 
         drawBranchTile(thisTile, ctx);
@@ -135,7 +150,6 @@ const drawBranchTiles = (map, offset, ctx) => {
     chunkBlockSize (int): The chunk's width/length in terms of game blocks (i.e 17)
 */
 const getMapToRender = (playerObj, chunkBlockSize) => {
-  const relCoords = help.roundCoord(playerObj.relative_position);
   const combinedChunks = [];
   for (let chunkRow = 0; chunkRow < 3; chunkRow++) {
     for (let thisRow = 0; thisRow < chunkBlockSize; thisRow++) {
@@ -155,14 +169,21 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
     }
   }
 
+  const relCoords = help.roundCoord(
+    help.subtractCoords(playerObj.camera_center, playerObj.chunk_center)
+  );
+
   const mapToRender = [];
   for (let row = 0; row < chunkBlockSize * 3 - 2; row++) {
-    if (row - relCoords.y >= chunkBlockSize - 1 && row - relCoords.y <= (chunkBlockSize - 1) * 2) {
+    if (
+      row - relCoords.y >= chunkBlockSize - 2 &&
+      row - relCoords.y <= (chunkBlockSize - 1) * 2 + 1
+    ) {
       const currentRow = [];
       for (let col = 0; col < chunkBlockSize * 3 - 2; col++) {
         if (
-          col - relCoords.x >= chunkBlockSize - 1 &&
-          col - relCoords.x <= (chunkBlockSize - 1) * 2
+          col - relCoords.x >= chunkBlockSize - 2 &&
+          col - relCoords.x <= (chunkBlockSize - 1) * 2 + 1
         ) {
           currentRow.push(combinedChunks[row][col]);
         }
@@ -182,6 +203,7 @@ const convertGameToCanvasState = (gamePacket) => {
   let incombat = false;
   let myplayerdata;
   let players;
+  let map;
   Object.values(gamePacket.game.arenas).forEach((arena) => {
     if (Object.hasOwn(arena.players, gamePacket.recipientid)) {
       incombat = true;
@@ -193,15 +215,21 @@ const convertGameToCanvasState = (gamePacket) => {
     players = gamePacket.game.players;
     myplayerdata = players[gamePacket.recipientid].data;
     delete players[gamePacket.recipientid];
+    map = getMapToRender(myplayerdata, gamePacket.game.chunkBlockSize);
+  } else {
+    myplayerdata = players[gamePacket.recipientid];
+    myplayerdata.rendered_position = { x: myplayerdata.pos.x - 8, y: myplayerdata.pos.y - 8 };
   }
 
   return {
     // players: {
     //  user._id: {data: playerObj, user: userObj}
     // }
+    incombat: incombat,
     myplayerdata: myplayerdata,
     otherplayers: players,
     chunkblocksize: gamePacket.game.chunkBlockSize,
+    map: map,
   };
 };
 
@@ -256,15 +284,14 @@ export const drawCanvas = (gamePacket, canvasRef) => {
       }
     });
     //drawTrees(canvasState.myplayerdata, context);
-    const mapToRender = getMapToRender(canvasState.myplayerdata, canvasState.chunkblocksize);
-    const playerPos = canvasState.myplayerdata.relative_position;
+    const playerPos = canvasState.myplayerdata.camera_center;
     drawBranchTiles(
-      mapToRender,
+      canvasState,
       help.subtractCoords(help.roundCoord(playerPos), playerPos),
       context
     );
   } else {
-    canvasState.otherplayers.forEach((player, id) => {
+    Object.values(canvasState.otherplayers).forEach((player, id) => {
       drawPlayer(player, context);
     });
   }

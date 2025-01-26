@@ -22,6 +22,10 @@ const LobbyPage = () => {
 
   useEffect(() => {
     post("/api/joinlobby", { lobbycode: props.lobbycode }).then((lobby) => {
+      console.log(lobby);
+      if (lobby.started) {
+        window.location.assign(window.location.protocol + "//" + window.location.host + "/game");
+      }
       setMyLobby(lobby);
       setLobbyPlayers(new Map(Object.entries(lobby.playersObj)));
     });

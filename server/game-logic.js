@@ -13,6 +13,8 @@ const cameraBoxSize = { width: 2, height: 2 };
 
 help.setChunkSize(chunkSize);
 
+const gameMap = {};
+
 const dummyPlayer1 = {
   position: { x: 0, y: 0 },
   chunk: { x: 0, y: 0 },
@@ -51,7 +53,6 @@ class Game {
     this.players = {};
     if (lobby) {
       Array.from(lobby.players.values()).forEach((user) => {
-        this.players[user._id] = { data: dummyPlayer1, user: user };
         this.spawnPlayer(user);
       });
     }
@@ -62,32 +63,35 @@ class Game {
     Populates a player's data field, and spawns them in the world
   */
   spawnPlayer(user) {
-    this.players[user._id].data = {
-      avatar_id: "witch_cat",
-      animation: "still", // unnecessary
-      position: { x: 0, y: 0 },
-      rendered_position: { x: 0, y: 0 },
-      camera_center: { x: 0, y: 0 },
-      chunk_center: { x: 0, y: 0 },
-      chunk: { x: 0, y: 0 },
-      speed: 5,
-      rendered_chunks: [
-        [
-          this.getMazeFromChunk({ x: -1, y: -1 }),
-          this.getMazeFromChunk({ x: 0, y: -1 }),
-          this.getMazeFromChunk({ x: 1, y: -1 }),
+    this.players[user._id] = {
+      data: {
+        avatar_id: "witch_cat",
+        animation: "still", // unnecessary
+        position: { x: 0, y: 0 },
+        rendered_position: { x: 0, y: 0 },
+        camera_center: { x: 0, y: 0 },
+        chunk_center: { x: 0, y: 0 },
+        chunk: { x: 0, y: 0 },
+        speed: 5,
+        rendered_chunks: [
+          [
+            this.getMazeFromChunk({ x: -1, y: -1 }),
+            this.getMazeFromChunk({ x: 0, y: -1 }),
+            this.getMazeFromChunk({ x: 1, y: -1 }),
+          ],
+          [
+            this.getMazeFromChunk({ x: -1, y: 0 }),
+            this.getMazeFromChunk({ x: 0, y: 0 }),
+            this.getMazeFromChunk({ x: 1, y: 0 }),
+          ],
+          [
+            this.getMazeFromChunk({ x: -1, y: 1 }),
+            this.getMazeFromChunk({ x: 0, y: 1 }),
+            this.getMazeFromChunk({ x: 1, y: 1 }),
+          ],
         ],
-        [
-          this.getMazeFromChunk({ x: -1, y: 0 }),
-          this.getMazeFromChunk({ x: 0, y: 0 }),
-          this.getMazeFromChunk({ x: 1, y: 0 }),
-        ],
-        [
-          this.getMazeFromChunk({ x: -1, y: 1 }),
-          this.getMazeFromChunk({ x: 0, y: 1 }),
-          this.getMazeFromChunk({ x: 1, y: 1 }),
-        ],
-      ],
+      },
+      user: user,
     };
   }
 
@@ -464,5 +468,6 @@ class Arena {
 }
 
 module.exports = {
+  gameMap,
   Game,
 };

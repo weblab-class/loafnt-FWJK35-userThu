@@ -1,10 +1,10 @@
 .login-page-background {
   height: 100vh;
-  background-color: #ccba7d;
-  background-image: url("../../assets/maze-background.jpg");
-  background-blend-mode: normal;
+  /* background-color: #ccba7d; */
+  background-image: url("../../assets/Background.png");
+  /* /* background-blend-mode: normal; */
   background-size: cover;
-  background-position: 50%;
+  /* background-position: 50%; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -14,9 +14,35 @@
   display: flex;
 }
 
+.top-container {
+  display: flex;
+  /* justify-content: space-between; */
+  margin: 0;
+  width: 100vw;
+}
+
+.title {
+  content: url("../../assets/MAZE-GAME.png");
+  margin-bottom: 48px;
+}
+
+.small-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
+
+.log-image {
+  content: url("../../assets/Log.png");
+  height: 100vh;
+}
+
 .login-button {
   width: min-content;
   background-color: transparent;
+  
 }
 .logout-button {
   background-color: orange;

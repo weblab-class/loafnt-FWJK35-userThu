@@ -85,8 +85,13 @@ module.exports = {
       });
 
       socket.on("entercombat", (input) => {
+        console.log("ec");
         if (gameMap[input.gameID]) {
-          gameMap[input.gameID].beginCombat(input.user_id);
+          if (!gameMap[input.gameID].isInCombat(input.user_id)) {
+            gameMap[input.gameID].beginCombat(input.user_id);
+          } else {
+            gameMap[input.gameID].leaveCombat(input.user_id);
+          }
         }
       });
     });

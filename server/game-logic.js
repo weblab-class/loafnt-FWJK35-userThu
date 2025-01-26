@@ -140,7 +140,7 @@ class Game {
   isInCombat(id) {
     return (
       Object.hasOwn(this.arenas, JSON.stringify(this.players[id].data.chunk)) &&
-      this.arenas[JSON.stringify(this.players[id].data.chunk)] !== null
+      Object.hasOwn(this.arenas[JSON.stringify(this.players[id].data.chunk)].players, id)
     );
   }
 
@@ -386,12 +386,20 @@ class Game {
     const arenaId = JSON.stringify(this.players[playerid].data.chunk);
     if (!this.arenas[arenaId]) {
       this.arenas[arenaId] = new Arena();
+      this.arenas[arenaId].killer = () => {
+        delete this.arenas[arenaId];
+      };
     }
     this.arenas[arenaId].addPlayer(playerid);
   }
-}
 
-const player_speed = 1;
+  leaveCombat(playerid) {
+    const arenaId = JSON.stringify(this.players[playerid].data.chunk);
+    if (this.arenas[arenaId]) {
+      this.arenas[arenaId].removePlayer(playerid);
+    }
+  }
+}
 
 class Arena {
   players;
@@ -399,6 +407,7 @@ class Arena {
   enemies;
   projectiles;
   size;
+  killer;
 
   constructor() {
     this.players = {};
@@ -410,31 +419,47 @@ class Arena {
 
   addPlayer(userid) {
     this.players[userid] = {
-      pos: { x: 0.0, y: 0.0 },
+      position: { x: 0.0, y: 0.0 },
+      rendered_position: { x: 0.0, y: 0.0 },
       health: 100.0,
       avatar_id: "witch_cat",
-      speed: 5,
+      speed: 7,
     };
   }
 
+  removePlayer(userid) {
+    delete this.players[userid];
+    if (Object.keys(this.players).length == 0) {
+      this.killer();
+    }
+  }
+
+  killSelf() {
+    this.killer();
+  }
+
   movePlayer(id, inputDir) {
-    this.players[id].pos = help.addCoords(
-      this.players[id].pos,
+    this.players[id].position = help.addCoords(
+      this.players[id].position,
       help.scaleCoord(inputDir, this.players[id].speed)
     );
     //confine player to arena
-    if (this.players[id].pos.x < 0) {
-      this.players[id].pos.x = 0;
+    if (this.players[id].position.x < 0) {
+      this.players[id].position.x = 0;
     }
-    if (this.players[id].pos.x > this.size.width) {
-      this.players[id].pos.x = this.size.width;
+    if (this.players[id].position.x > this.size.width) {
+      this.players[id].position.x = this.size.width;
     }
-    if (this.players[id].pos.y < 0) {
-      this.players[id].pos.y = 0;
+    if (this.players[id].position.y < 0) {
+      this.players[id].position.y = 0;
     }
-    if (this.players[id].pos.y > this.size.height) {
-      this.players[id].pos.y = this.size.height;
+    if (this.players[id].position.y > this.size.height) {
+      this.players[id].position.y = this.size.height;
     }
+    this.players[id].rendered_position = help.subtractCoords(this.players[id].position, {
+      x: 0.5,
+      y: 0.5,
+    });
   }
 }
 

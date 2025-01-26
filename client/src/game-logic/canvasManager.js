@@ -229,21 +229,23 @@ const convertGameToCanvasState = (gamePacket) => {
     myplayerdata = players[gamePacket.recipientid].data;
     delete players[gamePacket.recipientid];
     map = getMapToRender(myplayerdata, gamePacket.game.chunkBlockSize);
+    return {
+      // players: {
+      //  user._id: {data: playerObj, user: userObj}
+      // }
+      incombat: incombat,
+      myplayerdata: myplayerdata,
+      otherplayers: players,
+      chunkblocksize: gamePacket.game.chunkBlockSize,
+      map: map,
+    };
   } else {
     myplayerdata = players[gamePacket.recipientid];
-    myplayerdata.rendered_position = { x: myplayerdata.pos.x - 8, y: myplayerdata.pos.y - 8 };
+    return {
+      incombat: true,
+      players: players,
+    };
   }
-
-  return {
-    // players: {
-    //  user._id: {data: playerObj, user: userObj}
-    // }
-    incombat: incombat,
-    myplayerdata: myplayerdata,
-    otherplayers: players,
-    chunkblocksize: gamePacket.game.chunkBlockSize,
-    map: map,
-  };
 };
 
 const loadAsset = (asset) => {
@@ -300,7 +302,6 @@ export const drawCanvas = (gamePacket, canvasRef) => {
         drawPlayer(player.data, context);
       }
     });
-    //drawTrees(canvasState.myplayerdata, context);
     const playerPos = canvasState.myplayerdata.camera_center;
     drawBranchTiles(
       canvasState,
@@ -308,9 +309,8 @@ export const drawCanvas = (gamePacket, canvasRef) => {
       context
     );
   } else {
-    Object.values(canvasState.otherplayers).forEach((player, id) => {
+    Object.values(canvasState.players).forEach((player, id) => {
       drawPlayer(player, context);
     });
   }
-  //   getMapToRender(canvasState.myplayerdata, canvasState.chunkblocksize);
 };

@@ -63,42 +63,53 @@ class Game {
     Populates a player's data field, and spawns them in the world
   */
   spawnPlayer(user) {
-    this.players[user._id] = {
-      data: {
-        avatar_id: "witch_cat",
-        animation: "still", // unnecessary
-        position: { x: 0, y: 0 },
-        rendered_position: { x: 0, y: 0 },
-        camera_center: { x: 0, y: 0 },
-        chunk_center: { x: 0, y: 0 },
-        chunk: { x: 0, y: 0 },
-        speed: 5,
-        rendered_chunks: [
-          [
-            this.getMazeFromChunk({ x: -1, y: -1 }),
-            this.getMazeFromChunk({ x: 0, y: -1 }),
-            this.getMazeFromChunk({ x: 1, y: -1 }),
+    if (!this.players.userid) {
+      this.players[user._id] = {
+        data: {
+          avatar_id: "witch_cat",
+          animation: "still", // unnecessary
+          position: { x: 0, y: 0 },
+          rendered_position: { x: 0, y: 0 },
+          camera_center: { x: 0, y: 0 },
+          chunk_center: { x: 0, y: 0 },
+          chunk: { x: 0, y: 0 },
+          speed: 5,
+          rendered_chunks: [
+            [
+              this.getMazeFromChunk({ x: -1, y: -1 }),
+              this.getMazeFromChunk({ x: 0, y: -1 }),
+              this.getMazeFromChunk({ x: 1, y: -1 }),
+            ],
+            [
+              this.getMazeFromChunk({ x: -1, y: 0 }),
+              this.getMazeFromChunk({ x: 0, y: 0 }),
+              this.getMazeFromChunk({ x: 1, y: 0 }),
+            ],
+            [
+              this.getMazeFromChunk({ x: -1, y: 1 }),
+              this.getMazeFromChunk({ x: 0, y: 1 }),
+              this.getMazeFromChunk({ x: 1, y: 1 }),
+            ],
           ],
-          [
-            this.getMazeFromChunk({ x: -1, y: 0 }),
-            this.getMazeFromChunk({ x: 0, y: 0 }),
-            this.getMazeFromChunk({ x: 1, y: 0 }),
-          ],
-          [
-            this.getMazeFromChunk({ x: -1, y: 1 }),
-            this.getMazeFromChunk({ x: 0, y: 1 }),
-            this.getMazeFromChunk({ x: 1, y: 1 }),
-          ],
-        ],
-      },
-      user: user,
-    };
+        },
+        user: user,
+        active: true,
+      };
+    } else {
+      this.players[user._id].active = true;
+    }
   }
 
   removePlayer(userid) {
     delete this.players[userid];
     if (Object.keys(this.players).length === 0) {
       this.killSelf();
+    }
+  }
+
+  setInactive(userid) {
+    if (this.players[userid]) {
+      this.players[userid].active = false;
     }
   }
 

@@ -76,12 +76,24 @@ router.post("/joinlobby", (req, res) => {
   if (req.user) {
     let lobby = lobbyManager.findLobbyByCode(req.body.lobbycode);
     if (lobby) {
+      //remove player from all other lobbies
+      lobbyManager.lobbies.forEach((lobby, code) => {
+        if (lobby.players.has(req.user.googleid)) {
+          lobby.removePlayer(req.user);
+          if (lobby.started) {
+            game.gameMap[code].setInactive(req.user._id);
+          }
+        }
+      });
+      //add player to lobby if exists
       lobby.addPlayer(req.user);
+      //tell other players they joined this lobby
       lobby.players.forEach((player) => {
         if (socketManager.getSocketFromUserID(player._id)) {
           socketManager.getSocketFromUserID(player._id).emit("joinedlobby", req.user);
         }
       });
+      //spawn them if this game has already started
       if (lobby.started) {
         game.gameMap[req.body.lobbycode].spawnPlayer(req.user);
       }

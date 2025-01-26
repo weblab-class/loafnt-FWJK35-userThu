@@ -1,3 +1,5 @@
+const Game = require("./game-logic");
+
 const getRandomCode = (len) => {
   alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   code = "";
@@ -34,12 +36,13 @@ class Lobby {
     }
   }
 
+  deactivatePlayer(player) {
+    if (this.started) {
+      Game.gameMap[this.code].setInactive(player._id);
+    }
+  }
+
   addPlayer(newPlayer) {
-    lobbies.forEach((lobby, code) => {
-      if (lobby.players.has(newPlayer.googleid)) {
-        lobby.removePlayer(newPlayer);
-      }
-    });
     this.players.set(newPlayer.googleid, newPlayer);
     allPlayers.set(newPlayer.googleid, this.code);
     this.playersObj = Object.fromEntries(this.players);
@@ -72,13 +75,9 @@ const deleteLobby = (code) => {
   lobbies.delete(code);
 };
 
-const getLobbies = () => {
-  return lobbies;
-};
-
 module.exports = {
   Lobby,
-  getLobbies,
+  lobbies,
   findLobbyByCode,
   findLobbyOfPlayer,
   createNewLobby,

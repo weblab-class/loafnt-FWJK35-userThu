@@ -2,6 +2,8 @@ import assetlist from "../public/assets/asset-list";
 import help from "./helpers";
 
 let blockSize = 32;
+let playerSize = 32;
+
 let spriteSize = 32;
 let tileSize = 64;
 
@@ -40,19 +42,10 @@ let assetsMap = {
   },
 };
 
-// const dummyPlayer1 = {
-//     position: {x: 0, y: 0},
-//     avatar_id: 'witch_cat'
-// };
-
-// const dummyCanvasState = {
-//     players: [dummyPlayer1]
-// };
-
 // Params:
-// playerState: {
-//  position: {x: value, y: value}                  -- Block Coordinates relative to Screen, not entire map
-//  character: id
+// player: {
+//  rendered_position: {x: value, y: value}         -- Block Coordinates relative to Screen, not entire map with (0,0) being center
+//  avatar_id: id
 // }
 // ctx: context                                     -- Game Canvas context
 const drawPlayer = (player, ctx) => {
@@ -63,8 +56,8 @@ const drawPlayer = (player, ctx) => {
     spriteY * spriteSize,
     spriteSize,
     spriteSize,
-    (player.rendered_position.x - 0.5) * blockSize,
-    (player.rendered_position.y - 0.5) * blockSize,
+    player.rendered_position.x * blockSize - playerSize / 2, //center of player is rendered at position, not top left of player
+    player.rendered_position.y * blockSize - playerSize / 2,
     blockSize,
     blockSize
   );
@@ -167,10 +160,10 @@ const drawBranchTiles = (canvasState, offset, ctx) => {
 const getMapToRender = (playerObj, chunkBlockSize) => {
   const combinedChunks = [];
   for (let chunkRow = 0; chunkRow < playerObj.rendered_chunks.length; chunkRow++) {
-    for (let thisRow = 0; thisRow < chunkBlockSize; thisRow++) {
+    for (let thisRow = 0; thisRow < playerObj.rendered_chunks[0][0].length; thisRow++) {
       const currentRow = [];
       for (let chunkCol = 0; chunkCol < playerObj.rendered_chunks.length; chunkCol++) {
-        for (let thisCol = 0; thisCol < chunkBlockSize; thisCol++) {
+        for (let thisCol = 0; thisCol < playerObj.rendered_chunks[0][0].length; thisCol++) {
           currentRow.push(playerObj.rendered_chunks[chunkRow][chunkCol][thisRow][thisCol]);
         }
         if (chunkCol < playerObj.rendered_chunks.length - 1) {
@@ -191,20 +184,20 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
   const mapToRender = [];
 
   const mapSize = {
-    width: Math.ceil((screenBlockWidth - 1) / 2) * 2 + 1,
-    height: Math.ceil((screenBlockHeight - 1) / 2) * 2 + 1,
+    width: (Math.floor((screenBlockWidth - 1) / 2) + 1) * 2 + 1,
+    height: (Math.floor((screenBlockHeight - 1) / 2) + 1) * 2 + 1,
   };
 
   for (let row = 0; row < combinedChunks.length; row++) {
     if (
-      row - relCoords.y > (combinedChunks.length - 1) / 2 - (screenBlockHeight + 1) / 2 &&
-      row - relCoords.y < (combinedChunks.length - 1) / 2 + (screenBlockHeight + 1) / 2
+      row - relCoords.y >= (combinedChunks.length - 1) / 2 - (screenBlockHeight + 1) / 2 &&
+      row - relCoords.y <= (combinedChunks.length - 1) / 2 + (screenBlockHeight + 1) / 2
     ) {
       const currentRow = [];
       for (let col = 0; col < combinedChunks.length; col++) {
         if (
-          col - relCoords.x > (combinedChunks.length - 1) / 2 - (screenBlockWidth + 1) / 2 &&
-          col - relCoords.x < (combinedChunks.length - 1) / 2 + (screenBlockWidth + 1) / 2
+          col - relCoords.x >= (combinedChunks.length - 1) / 2 - (screenBlockWidth + 1) / 2 &&
+          col - relCoords.x <= (combinedChunks.length - 1) / 2 + (screenBlockWidth + 1) / 2
         ) {
           currentRow.push(combinedChunks[row][col]);
         }
@@ -242,10 +235,13 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
   return mapToRender;
 };
 
-// gamePacket:
-// {
-//   game: gameObj
-// }
+/*
+    Return the canvas state given a game packet, including
+    player information and combat state
+
+    Params:
+    gamePacket (object): The game packet object that was received from the socket
+*/
 const convertGameToCanvasState = (gamePacket) => {
   let incombat = false;
   let myplayerdata;
@@ -258,22 +254,22 @@ const convertGameToCanvasState = (gamePacket) => {
     }
   });
 
+  //player is exploring maze
   if (!incombat) {
     players = gamePacket.game.players;
     myplayerdata = players[gamePacket.recipientid].data;
     delete players[gamePacket.recipientid];
     map = getMapToRender(myplayerdata, gamePacket.game.chunkBlockSize);
     return {
-      // players: {
-      //  user._id: {data: playerObj, user: userObj}
-      // }
       incombat: incombat,
       myplayerdata: myplayerdata,
       otherplayers: players,
       chunkblocksize: gamePacket.game.chunkBlockSize,
       map: map,
     };
-  } else {
+  }
+  //player is in arena combat
+  else {
     myplayerdata = players[gamePacket.recipientid];
     return {
       incombat: true,
@@ -310,6 +306,17 @@ const loadAssets = async () => {
 // Call when game is started
 loadAssets();
 
+/*
+    Renders the game canvas based on game state info
+
+    Params:
+    gamePacket (object): The game packet object that was received from the socket
+    canvasRed (Reference): The reference to the current canvas
+    dimensions {
+      width: width of game canvas
+      height: height of game canvas
+    }
+*/
 export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
   const canvas = canvasRef.current;
   if (!canvas) return;
@@ -332,15 +339,12 @@ export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
 
   const canvasState = convertGameToCanvasState(Object.assign({}, JSON.parse(gamePacket.json)));
 
-  // Object.values(canvasState.players).forEach((playerObj) => {
-  //     drawPlayer(playerObj.data, context);
-  // });
+  //if player exploring maze, render maze
   if (!canvasState.incombat) {
-    drawPlayer(canvasState.myplayerdata, context);
     Object.values(canvasState.otherplayers).forEach((player) => {
       if (
         help.coordDist(canvasState.myplayerdata.position, player.data.position) <
-        canvasState.chunkblocksize
+        canvasState.chunkblocksize * 2
       ) {
         player.data.rendered_position = help.addCoords(
           canvasState.myplayerdata.rendered_position,
@@ -349,13 +353,17 @@ export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
         drawPlayer(player.data, context);
       }
     });
+    drawPlayer(canvasState.myplayerdata, context);
+
     const playerPos = canvasState.myplayerdata.camera_center;
     drawBranchTiles(
       canvasState,
       help.subtractCoords(help.roundCoord(playerPos), playerPos),
       context
     );
-  } else {
+  }
+  //if player in combat, render that arena
+  else {
     Object.values(canvasState.players).forEach((player, id) => {
       drawPlayer(player, context);
     });

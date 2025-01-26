@@ -25,43 +25,55 @@ const LoginPage = () => {
   return (
     <>
       <div className="login-page-background">
-        {user ? (
-          <div className="lobby-controls">
-            {joiningLobby ? (
-              <LobbyInput
-                cancel={() => {
-                  setJoiningLobby(false);
-                }}
-                onSubmit={attemptJoinLobby}
-              />
-            ) : (
-              <>
-                <CreateLobby />
-                <JoinLobby
-                  joinlobby={() => {
-                    setJoiningLobby(true);
-                  }}
-                />
-              </>
-            )}
+        <div className="top-container">
+          <div className="log-div">
+            <img className="log-image"/>
           </div>
-        ) : (
-          <></>
-        )}
-        <div className="login-button">
+          <div className="small-container">
+            <img className="title"/>
+            <div className="lobby">
           {user ? (
-            <button
-              className="logout-button"
-              onClick={() => {
-                googleLogout();
-                handleLogout();
-              }}
-            >
-              Logout
-            </button>
+            <div className="lobby-controls">
+              {joiningLobby ? (
+                <LobbyInput
+                  cancel={() => {
+                    setJoiningLobby(false);
+                  }}
+                  onSubmit={attemptJoinLobby}
+                />
+              ) : (
+                <>
+                  <CreateLobby />
+                  <JoinLobby
+                    joinlobby={() => {
+                      setJoiningLobby(true);
+                    }}
+                  />
+                </>
+              )}
+            </div>
           ) : (
-            <GoogleLogin onSuccess={handleLogin} onError={(err) => console.log(err)} />
+            <></>
           )}
+        </div>
+            <div className="login-button">
+              {user ? (
+                <button
+                  className="logout-button"
+                  onClick={() => {
+                    googleLogout();
+                    handleLogout();
+                  }}
+                >
+                  Logout
+                </button>
+              ) : (
+                <GoogleLogin onSuccess={handleLogin} onError={(err) => console.log(err)} />
+              )}
+            </div>
+            
+          </div>
+          
         </div>
       </div>
     </>

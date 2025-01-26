@@ -111,14 +111,15 @@ const drawBranchTiles = (canvasState, offset, ctx) => {
           tileidy -= 2;
         }
 
-        const tileDist = Math.sqrt(
-          (col + offset.x - canvasState.myplayerdata.rendered_position.x) ** 2 +
-            (row + offset.y - canvasState.myplayerdata.rendered_position.y) ** 2
+        const tileCoord = help.addCoords(
+          canvasState.myplayerdata.camera_center,
+          help.subtractCoords(help.addCoords({ x: col, y: row }, offset), {
+            x: (canvasState.chunkblocksize + 1) / 2,
+            y: (canvasState.chunkblocksize + 1) / 2,
+          })
         );
 
-        const getSize = (dist) => {
-          const minDist = 6;
-          const maxDist = 9;
+        const getSize = (dist, minDist, maxDist) => {
           if (dist < minDist) {
             return 1;
           }
@@ -128,11 +129,23 @@ const drawBranchTiles = (canvasState, offset, ctx) => {
           return 1 - (dist - minDist) / (maxDist - minDist);
         };
 
+        let tileDist = help.coordDist(tileCoord, canvasState.myplayerdata.position);
+
+        let maxSize = getSize(tileDist, 5, 8);
+
+        Object.values(canvasState.otherplayers).forEach((player) => {
+          tileDist = help.coordDist(tileCoord, player.data.position);
+          const thisSize = getSize(tileDist, 3, 5);
+          if (thisSize > maxSize) {
+            maxSize = thisSize;
+          }
+        });
+
         const thisTile = {
           x: col + offset.x - 1,
           y: row + offset.y - 1,
           id: tileidy * 4 + tileidx,
-          size: getSize(tileDist),
+          size: maxSize,
         };
 
         drawBranchTile(thisTile, ctx);
@@ -277,9 +290,13 @@ export const drawCanvas = (gamePacket, canvasRef) => {
     drawPlayer(canvasState.myplayerdata, context);
     Object.values(canvasState.otherplayers).forEach((player) => {
       if (
-        canvasState.myplayerdata.chunk.x == player.data.chunk.x &&
-        canvasState.myplayerdata.chunk.y == player.data.chunk.y
+        help.coordDist(canvasState.myplayerdata.position, player.data.position) <
+        canvasState.chunkblocksize
       ) {
+        player.data.rendered_position = help.addCoords(
+          canvasState.myplayerdata.rendered_position,
+          help.subtractCoords(player.data.position, canvasState.myplayerdata.position)
+        );
         drawPlayer(player.data, context);
       }
     });

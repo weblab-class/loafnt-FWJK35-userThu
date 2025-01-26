@@ -20,6 +20,10 @@ const roundCoord = (coord) => {
   return { x: Math.round(coord.x), y: Math.round(coord.y) };
 };
 
+const coordDist = (a, b) => {
+  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+};
+
 const getChunkFromPos = (pos) => {
   return Math.floor((pos + chunkSize) / (chunkSize * 2));
 };
@@ -38,6 +42,7 @@ export default {
   subtractCoords,
   scaleCoord,
   roundCoord,
+  coordDist,
   getChunkFromPos,
   getChunkCenter,
   getChunkRelativePos,

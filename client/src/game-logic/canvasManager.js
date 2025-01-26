@@ -49,6 +49,7 @@ let assetsMap = {
 // }
 // ctx: context                                     -- Game Canvas context
 const drawPlayer = (player, ctx) => {
+  //translate rendered position so it is relative to top left
   player.rendered_position = help.addCoords(player.rendered_position, canvasCenter);
   ctx.drawImage(
     assetsMap.avatars[player.avatar_id].imgObj,
@@ -334,6 +335,7 @@ export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
     screenBlockWidth = screenMinBlocks;
     blockSize = dimensions.width / screenMinBlocks;
   }
+  playerSize = blockSize * 1;
 
   canvasCenter = { x: screenBlockWidth / 2, y: screenBlockHeight / 2 };
 

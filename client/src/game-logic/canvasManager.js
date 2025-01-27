@@ -2,13 +2,6 @@ import assetlist from "../public/assets/asset-list";
 import help from "./helpers";
 
 let blockSize = 32;
-let playerSize = 32;
-
-let spriteSize = 32;
-let tileSize = 64;
-
-let spriteX = 0;
-let spriteY = 0;
 
 // The size of the screen in terms of the game's blocks
 const screenMinBlocks = 17;
@@ -40,9 +33,9 @@ let assetsMap = {
   enemies: {
     boss: {
       id: "boss",
-      spriteSize: 128,
-      imageSize: { width: 128, height: 128 },
-      blockSize: 8,
+      spriteSize: 64,
+      imageSize: { width: 64, height: 64 },
+      blockSize: 4,
       src: assetlist.boss,
       imgObj: null,
     },
@@ -116,6 +109,38 @@ const drawSprite = (sprite, asset, ctx) => {
   );
 };
 
+//draws a fillable bar at a specified position
+/*
+Params:
+bar: {
+  max: value                                  -- The max value for this bar, if completely full
+  current: value                              -- The current value for this bar
+  color: String                               -- The hex code for the color of this bar
+  border: value                               -- The thickness of this bar's border
+  size: {length: value, width: value}         -- The size in blocks to draw this bar
+  rendered_position: {x:value, y:value}       -- Block Coordinates relative to Screen, not entire map, with (0,0) being center
+}
+ctx: context                                  -- Game canvas context
+*/
+const drawFillableBar = (bar, ctx) => {
+  bar.rendered_position = help.addCoords(bar.rendered_position, canvasCenter);
+  ctx.lineWidth = bar.border;
+  ctx.strokeStyle = bar.color;
+  ctx.fillStyle = bar.color;
+  ctx.strokeRect(
+    (bar.rendered_position.x - bar.size.width / 2) * blockSize,
+    (bar.rendered_position.y - bar.size.height / 2) * blockSize,
+    bar.size.width * blockSize,
+    bar.size.height * blockSize
+  );
+  ctx.fillRect(
+    (bar.rendered_position.x - bar.size.width / 2) * blockSize + bar.border * 2,
+    (bar.rendered_position.y - bar.size.height / 2) * blockSize + bar.border * 2,
+    ((bar.size.width * blockSize - bar.border * 4) * bar.current) / bar.max,
+    bar.size.height * blockSize - bar.border * 4
+  );
+};
+
 const drawPlayer = (player, ctx) => {
   player.animation = 0;
   player.scale = 1;
@@ -126,6 +151,23 @@ const drawEnemy = (enemy, ctx) => {
   enemy.rendered_position = Object.assign({}, enemy.position);
   enemy.animation = 0;
   enemy.scale = 1;
+  drawFillableBar(
+    {
+      max: enemy.maxhealth,
+      current: enemy.health,
+      color: "#ff0004",
+      border: 2,
+      size: {
+        width: assetsMap.enemies[enemy.type].blockSize,
+        height: assetsMap.enemies[enemy.type].blockSize / 8,
+      },
+      rendered_position: help.addCoords(enemy.rendered_position, {
+        x: 0,
+        y: (assetsMap.enemies[enemy.type].blockSize / 2) * -1.25,
+      }),
+    },
+    ctx
+  );
   drawSprite(enemy, assetsMap.enemies[enemy.type], ctx);
 };
 
@@ -552,7 +594,6 @@ export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
     screenBlockWidth = screenMinBlocks;
     blockSize = dimensions.width / screenMinBlocks;
   }
-  playerSize = blockSize * 1;
 
   canvasCenter = { x: screenBlockWidth / 2, y: screenBlockHeight / 2 };
 

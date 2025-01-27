@@ -263,16 +263,19 @@ const drawArena = (canvasState, ctx) => {
     playerObj (object): An object with the player information
     chunkBlockSize (int): The chunk's width/length in terms of game blocks (i.e 17)
 */
-const getMapToRender = (playerObj, chunkBlockSize) => {
+const getMapToRender = (playerObj) => {
+  //create a single 2d array containing all blocks in the rendered area
   const combinedChunks = [];
   for (let chunkRow = 0; chunkRow < playerObj.rendered_chunks.length; chunkRow++) {
     for (let thisRow = 0; thisRow < playerObj.rendered_chunks[0][0].length; thisRow++) {
       const currentRow = [];
       for (let chunkCol = 0; chunkCol < playerObj.rendered_chunks.length; chunkCol++) {
         for (let thisCol = 0; thisCol < playerObj.rendered_chunks[0][0].length; thisCol++) {
+          //add cell to array
           const thisCell = playerObj.rendered_chunks[chunkRow][chunkCol][thisRow][thisCol];
           currentRow.push(thisCell);
         }
+        //remove chunk overlap at borders
         if (chunkCol < playerObj.rendered_chunks.length - 1) {
           currentRow.pop();
         }
@@ -284,17 +287,20 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
     }
   }
 
+  //relative coordinate of the camera's center to the chunk center
   const relCoords = help.roundCoord(
     help.subtractCoords(playerObj.camera_center, playerObj.chunk_center)
   );
 
   const mapToRender = [];
 
+  //size of the rendered map on player's screen in block coordinates
   const mapSize = {
     width: (Math.floor((screenBlockWidth - 1) / 2) + 1) * 2 + 1,
     height: (Math.floor((screenBlockHeight - 1) / 2) + 1) * 2 + 1,
   };
 
+  //select desired rows and columns from combined chunks to render
   for (let row = 0; row < combinedChunks.length; row++) {
     if (
       row - relCoords.y >= (combinedChunks.length - 1) / 2 - (screenBlockHeight + 1) / 2 &&
@@ -310,6 +316,7 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
         }
       }
 
+      //add empty rendered areas if current map isn't big enough
       if (currentRow.length < mapSize.width) {
         if (relCoords.x > 0) {
           while (currentRow.length < mapSize.width) {
@@ -326,7 +333,7 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
     }
   }
 
-  //add empty rendered areas if current amount isn't enough
+  //add empty rendered areas if current map isn't big enough
   if (mapToRender.length < mapSize.height) {
     if (relCoords.y > 0) {
       while (mapToRender.length < mapSize.height) {
@@ -363,6 +370,10 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
     }
   }
 
+  //return the 2d array containing all cells to render with int ids corresponding to type
+  //0: empty
+  //1: branch tile
+  //2: path tile
   return mapToRender;
 };
 
@@ -393,7 +404,7 @@ const convertGameToCanvasState = (gamePacket) => {
     players = gamePacket.game.players;
     myplayerdata = players[gamePacket.recipientid].data;
     delete players[gamePacket.recipientid];
-    map = getMapToRender(myplayerdata, gamePacket.game.chunkBlockSize);
+    map = getMapToRender(myplayerdata);
 
     return {
       incombat: incombat,

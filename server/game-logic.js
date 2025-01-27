@@ -74,7 +74,7 @@ class Game {
           camera_center: { x: 0, y: 0 },
           chunk_center: { x: 0, y: 0 },
           chunk: { x: 0, y: 0 },
-          speed: 5,
+          speed: 10,
           rendered_chunks: [
             [
               this.getMazeFromChunk({ x: -1, y: -1 }),

@@ -192,13 +192,16 @@ const drawTiles = (canvasState, offset, ctx) => {
           Math.abs(tileCoord.y - canvasState.myplayerdata.camera_center.y) >
           screenBlockHeight / 2 - borderFadeStart
         ) {
-          thisTileSize = Math.max(
-            0,
-            (screenBlockHeight / 2 -
-              borderFadeStart +
-              borderFadeDist -
-              Math.abs(tileCoord.y - canvasState.myplayerdata.camera_center.y)) /
-              borderFadeDist
+          thisTileSize = Math.min(
+            Math.max(
+              0,
+              (screenBlockHeight / 2 -
+                borderFadeStart +
+                borderFadeDist -
+                Math.abs(tileCoord.y - canvasState.myplayerdata.camera_center.y)) /
+                borderFadeDist
+            ),
+            thisTileSize
           );
         }
 

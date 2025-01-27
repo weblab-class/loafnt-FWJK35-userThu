@@ -33,27 +33,22 @@ let assetsMap = {
       src: assetlist.tree,
       imgObj: null,
     },
-    branchtiles: {
-      id: "branchtiles",
-      size: 32,
-      src: assetlist.branchtilemap,
-      imgObj: null,
-    },
     pathtiles: {
-      id: "pathtiles",
-      size: 32,
-      src: assetlist.pathtilemap,
-      imgObj: null,
-    },
+        id: "pathtiles",
+        size: 32,
+        src: assetlist.pathtilemap,
+        imgObj: null,
+      },
   },
 };
 
-// Params:
-// player: {
-//  rendered_position: {x: value, y: value}         -- Block Coordinates relative to Screen, not entire map with (0,0) being center
-//  avatar_id: id
-// }
-// ctx: context                                     -- Game Canvas context
+/*
+    Render the given player with the provided Canvas context
+
+    Parameters:
+    player (Object): The player to be rendered
+    ctx (Object): The context reference to the Canvas
+*/
 const drawPlayer = (player, ctx) => {
   //translate rendered position so it is relative to top left
   player.rendered_position = help.addCoords(player.rendered_position, canvasCenter);
@@ -247,33 +242,36 @@ const drawArena = (canvasState, ctx) => {
     Params:
     playerObj (object): An object with the player information
     chunkBlockSize (int): The chunk's width/length in terms of game blocks (i.e 17)
+    mode (String): Indicate which canvas to render
 */
 const getMapToRender = (playerObj, chunkBlockSize) => {
-  const combinedChunks = [];
-  for (let chunkRow = 0; chunkRow < playerObj.rendered_chunks.length; chunkRow++) {
-    for (let thisRow = 0; thisRow < playerObj.rendered_chunks[0][0].length; thisRow++) {
-      const currentRow = [];
-      for (let chunkCol = 0; chunkCol < playerObj.rendered_chunks.length; chunkCol++) {
-        for (let thisCol = 0; thisCol < playerObj.rendered_chunks[0][0].length; thisCol++) {
-          const thisCell = playerObj.rendered_chunks[chunkRow][chunkCol][thisRow][thisCol];
-          currentRow.push(thisCell);
+    let rendered_chunks = playerObj.rendered_chunks;
+    if (playerObj.mode.type === "invisible-maze") rendered_chunks = playerObj.mode.packet.chunks;
+    const combinedChunks = [];
+    for (let chunkRow = 0; chunkRow < playerObj.rendered_chunks.length; chunkRow++) {
+        for (let thisRow = 0; thisRow < playerObj.rendered_chunks[0][0].length; thisRow++) {
+            const currentRow = [];
+            for (let chunkCol = 0; chunkCol < playerObj.rendered_chunks.length; chunkCol++) {
+                for (let thisCol = 0; thisCol < playerObj.rendered_chunks[0][0].length; thisCol++) {
+                    const thisCell = playerObj.rendered_chunks[chunkRow][chunkCol][thisRow][thisCol];
+                    currentRow.push(thisCell);
+                }
+                if (chunkCol < playerObj.rendered_chunks.length - 1) {
+                    currentRow.pop();
+                }
+            }
+            combinedChunks.push(currentRow);
         }
-        if (chunkCol < playerObj.rendered_chunks.length - 1) {
-          currentRow.pop();
+        if (chunkRow < playerObj.rendered_chunks.length - 1) {
+            combinedChunks.pop();
         }
-      }
-      combinedChunks.push(currentRow);
     }
-    if (chunkRow < playerObj.rendered_chunks.length - 1) {
-      combinedChunks.pop();
-    }
-  }
 
-  const relCoords = help.roundCoord(
-    help.subtractCoords(playerObj.camera_center, playerObj.chunk_center)
-  );
+    const relCoords = help.roundCoord(
+        help.subtractCoords(playerObj.camera_center, playerObj.chunk_center)
+    );
 
-  const mapToRender = [];
+    const mapToRender = [];
 
   const mapSize = {
     width: (Math.floor((screenBlockWidth - 1) / 2) + 1) * 2 + 1,
@@ -295,21 +293,21 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
         }
       }
 
-      if (currentRow.length < mapSize.width) {
-        if (relCoords.x > 0) {
-          while (currentRow.length < mapSize.width) {
-            currentRow.push(0);
-          }
-        } else {
-          while (currentRow.length < mapSize.width) {
-            currentRow.unshift(0);
-          }
+        if (currentRow.length < mapSize.width) {
+            if (relCoords.x > 0) {
+            while (currentRow.length < mapSize.width) {
+                currentRow.push(0);
+            }
+            } else {
+            while (currentRow.length < mapSize.width) {
+                currentRow.unshift(0);
+            }
+            }
         }
-      }
 
-      mapToRender.push(currentRow);
+        mapToRender.push(currentRow);
+        }
     }
-  }
 
   if (mapToRender.length < mapSize.height) {
     if (relCoords.y > 0) {
@@ -432,49 +430,61 @@ loadAssets();
     gamePacket (object): The game packet object that was received from the socket
     canvasRed (Reference): The reference to the current canvas
     dimensions {
-      width: width of game canvas
-      height: height of game canvas
+      width: width of game canvas/user's screen
+      height: height of game canvas/user's screen
     }
 */
 export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
-  const canvas = canvasRef.current;
-  if (!canvas) return;
-  const context = canvas.getContext("2d");
-  // Purposefully give dimensions so Canvas does not upscale inner images
-  canvas.width = dimensions.width;
-  canvas.height = dimensions.height;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const context = canvas.getContext("2d");
+    // Purposefully give dimensions so Canvas does not upscale inner images
+    canvas.width = dimensions.width;
+    canvas.height = dimensions.height;
 
-  if (dimensions.width > dimensions.height) {
-    screenBlockWidth = (screenMinBlocks * dimensions.width) / dimensions.height;
-    screenBlockHeight = screenMinBlocks;
-    blockSize = dimensions.height / screenMinBlocks;
-  } else {
-    screenBlockHeight = (screenMinBlocks * dimensions.height) / dimensions.width;
-    screenBlockWidth = screenMinBlocks;
-    blockSize = dimensions.width / screenMinBlocks;
-  }
-  playerSize = blockSize * 1;
+    /*
+        Calculate the dimensions of the screen in terms of game "blocks"
+        blockSize: The number of pixels in a game "block", which is dependent on the
+        user's screen.
+    */
+    if (dimensions.width > dimensions.height) {
+        screenBlockWidth = (screenMinBlocks * dimensions.width) / dimensions.height; // Can also think of blockSize * dimensions.width
+        screenBlockHeight = screenMinBlocks;
+        blockSize = dimensions.height / screenMinBlocks;
+    } else {
+        screenBlockHeight = (screenMinBlocks * dimensions.height) / dimensions.width;
+        screenBlockWidth = screenMinBlocks;
+        blockSize = dimensions.width / screenMinBlocks;
+    }
+    // playerSize (in terms of pixels): The player is equal to the size of one block
+    playerSize = blockSize * 1;
 
-  canvasCenter = { x: screenBlockWidth / 2, y: screenBlockHeight / 2 };
+    canvasCenter = { x: screenBlockWidth / 2, y: screenBlockHeight / 2 };
 
-  const canvasState = convertGameToCanvasState(Object.assign({}, JSON.parse(gamePacket.json)));
-  context.fillStyle = "#3E3038";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  //if player exploring maze, render maze
-  if (!canvasState.incombat) {
-    Object.values(canvasState.otherplayers).forEach((player) => {
-      if (
-        help.coordDist(canvasState.myplayerdata.position, player.data.position) <
-        canvasState.chunkblocksize * 2
-      ) {
-        player.data.rendered_position = help.addCoords(
-          canvasState.myplayerdata.rendered_position,
-          help.subtractCoords(player.data.position, canvasState.myplayerdata.position)
-        );
-        drawPlayer(player.data, context);
-      }
-    });
-    drawPlayer(canvasState.myplayerdata, context);
+    // Extract the relevant information to render from the gamePacket
+    const canvasState = convertGameToCanvasState(Object.assign({}, JSON.parse(gamePacket.json)));
+    context.fillStyle = "#3E3038";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    // If player is exploring maze, render maze
+    if (!canvasState.incombat) {
+        // Draw the other players
+        Object.values(canvasState.otherplayers).forEach((player) => {
+        // The linear distance between other players to the main
+        if (
+            help.coordDist(canvasState.myplayerdata.position, player.data.position) <
+            canvasState.chunkblocksize * 2
+        ) {
+            // [Rendered Position] You + ([Absolute Position] Other - You)
+            // i.e Get the difference in positions and add it to the rendered position
+            player.data.rendered_position = help.addCoords(
+            canvasState.myplayerdata.rendered_position,
+            help.subtractCoords(player.data.position, canvasState.myplayerdata.position)
+            );
+            drawPlayer(player.data, context);
+
+        }
+        });
+        drawPlayer(canvasState.myplayerdata, context);
 
     const playerPos = canvasState.myplayerdata.camera_center;
     drawTiles(canvasState, help.subtractCoords(help.roundCoord(playerPos), playerPos), context);

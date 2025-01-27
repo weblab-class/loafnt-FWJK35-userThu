@@ -130,6 +130,15 @@ class InvisibleMaze {
     initExits() {
 
     }
+
+    /*
+
+    */
+   getPacket() {
+    return {
+        chunks: this.chunks
+    }
+   }
 }
 
 module.exports = {

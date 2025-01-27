@@ -39,6 +39,12 @@ let assetsMap = {
       src: assetlist.branchtilemap,
       imgObj: null,
     },
+    pathtiles: {
+      id: "pathtiles",
+      size: 32,
+      src: assetlist.pathtilemap,
+      imgObj: null,
+    },
   },
 };
 
@@ -80,7 +86,23 @@ const drawBranchTile = (tile, ctx) => {
   );
 };
 
-const drawBranchTiles = (canvasState, offset, ctx) => {
+const drawPathTile = (tile, ctx) => {
+  const tilemapx = tile.id % 4;
+  const tilemapy = Math.floor(tile.id / 4);
+  ctx.drawImage(
+    assetsMap.terrain.pathtiles.imgObj,
+    tilemapx * tileSize,
+    tilemapy * tileSize,
+    tileSize,
+    tileSize,
+    (tile.x + (1 - tile.size) / 2) * blockSize,
+    (tile.y + (1 - tile.size) / 2) * blockSize,
+    blockSize * tile.size,
+    blockSize * tile.size
+  );
+};
+
+const drawTiles = (canvasState, offset, ctx) => {
   const map = canvasState.map;
   for (let row = 0; row < map.length; row++) {
     for (let col = 0; col < map[row].length; col++) {
@@ -145,6 +167,36 @@ const drawBranchTiles = (canvasState, offset, ctx) => {
         };
 
         drawBranchTile(thisTile, ctx);
+      } else if (map[row][col] === 2) {
+        let tileidx = 0;
+        if (col - 1 >= 0 && map[row][col - 1] === 2) {
+          tileidx += 3;
+        }
+        if (col + 1 < map[0].length && map[row][col + 1] === 2) {
+          tileidx += 1;
+        }
+        if (tileidx === 4) {
+          tileidx -= 2;
+        }
+
+        let tileidy = 0;
+        if (row - 1 >= 0 && map[row - 1][col] === 2) {
+          tileidy += 3;
+        }
+        if (row + 1 < map.length && map[row + 1][col] === 2) {
+          tileidy += 1;
+        }
+        if (tileidy === 4) {
+          tileidy -= 2;
+        }
+
+        const thisTile = {
+          x: col - (map[0].length - screenBlockWidth) / 2 + offset.x,
+          y: row - (map.length - screenBlockHeight) / 2 + offset.y,
+          id: tileidy * 4 + tileidx,
+          size: 1,
+        };
+        drawPathTile(thisTile, ctx);
       }
     }
   }
@@ -203,7 +255,8 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
       const currentRow = [];
       for (let chunkCol = 0; chunkCol < playerObj.rendered_chunks.length; chunkCol++) {
         for (let thisCol = 0; thisCol < playerObj.rendered_chunks[0][0].length; thisCol++) {
-          currentRow.push(playerObj.rendered_chunks[chunkRow][chunkCol][thisRow][thisCol]);
+          const thisCell = playerObj.rendered_chunks[chunkRow][chunkCol][thisRow][thisCol];
+          currentRow.push(thisCell);
         }
         if (chunkCol < playerObj.rendered_chunks.length - 1) {
           currentRow.pop();
@@ -269,8 +322,30 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
       }
     }
   }
-  if (mapToRender[0].length != mapSize.width) {
+
+  for (let y = 0; y < mapToRender.length; y++) {
+    for (let x = 0; x < mapToRender[0].length; x++) {
+      if (mapToRender[y][x] === 0) {
+        let adjacentCount = 0;
+        if (y - 1 >= 0 && mapToRender[y - 1][x] === 2) {
+          adjacentCount += 1;
+        }
+        if (y + 1 < mapToRender.length && mapToRender[y + 1][x] === 2) {
+          adjacentCount += 1;
+        }
+        if (x - 1 >= 0 && mapToRender[y][x - 1] === 2) {
+          adjacentCount += 1;
+        }
+        if (x + 1 < mapToRender[0].length && mapToRender[y][x + 1] === 2) {
+          adjacentCount += 1;
+        }
+        if (adjacentCount >= 2) {
+          mapToRender[y][x] = 2;
+        }
+      }
+    }
   }
+
   return mapToRender;
 };
 
@@ -287,6 +362,7 @@ const convertGameToCanvasState = (gamePacket) => {
   let players;
   let map;
   let myarena;
+
   Object.values(gamePacket.game.arenas).forEach((arena) => {
     if (Object.hasOwn(arena.players, gamePacket.recipientid)) {
       incombat = true;
@@ -301,6 +377,7 @@ const convertGameToCanvasState = (gamePacket) => {
     myplayerdata = players[gamePacket.recipientid].data;
     delete players[gamePacket.recipientid];
     map = getMapToRender(myplayerdata, gamePacket.game.chunkBlockSize);
+
     return {
       incombat: incombat,
       myplayerdata: myplayerdata,
@@ -381,7 +458,8 @@ export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
   canvasCenter = { x: screenBlockWidth / 2, y: screenBlockHeight / 2 };
 
   const canvasState = convertGameToCanvasState(Object.assign({}, JSON.parse(gamePacket.json)));
-
+  context.fillStyle = "#3E3038";
+  context.fillRect(0, 0, canvas.width, canvas.height);
   //if player exploring maze, render maze
   if (!canvasState.incombat) {
     Object.values(canvasState.otherplayers).forEach((player) => {
@@ -399,11 +477,7 @@ export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
     drawPlayer(canvasState.myplayerdata, context);
 
     const playerPos = canvasState.myplayerdata.camera_center;
-    drawBranchTiles(
-      canvasState,
-      help.subtractCoords(help.roundCoord(playerPos), playerPos),
-      context
-    );
+    drawTiles(canvasState, help.subtractCoords(help.roundCoord(playerPos), playerPos), context);
   }
   //if player in combat, render that arena
   else {

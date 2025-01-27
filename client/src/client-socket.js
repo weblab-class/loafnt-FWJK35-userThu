@@ -21,3 +21,7 @@ export const enterCombat = (gameID, user_id) => {
 export const enterInvisibleMaze = (gameID, userID) => {
   socket.emit("enter-invisiblemaze", {gameID: gameID, userID: userID});
 }
+
+export const inventorySelect = (gameID, userID, slotIdx) => {
+  socket.emit("inventoryselect", {gameID: gameID, userID: userID, slotIdx: slotIdx});
+}

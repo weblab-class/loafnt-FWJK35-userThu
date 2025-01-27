@@ -71,32 +71,37 @@ class Game {
     if (!this.players.userid) {
           this.players[user._id] = {
             data: {
-              avatar_id: "witch_cat",   // Sprite ID to be rendered
-              animation: "still",       // Animation player is undergoing
-              position: { x: 0, y: 0 }, // Absolute position
-              rendered_position: { x: 0, y: 0 },    // Where the player is rendered on the user's screen
-              camera_center: { x: 0, y: 0 },
-              chunk_center: { x: 0, y: 0 },
-              chunk: { x: 0, y: 0 },
-              mode: {type: "normal", packet: null},
-            speed: 5,
-              rendered_chunks: [
-                [
-                  this.getMazeFromChunk({ x: -1, y: -1 }),
-                  this.getMazeFromChunk({ x: 0, y: -1 }),
-                  this.getMazeFromChunk({ x: 1, y: -1 }),
+                avatar_id: "witch_cat",                 // Sprite ID to be rendered
+                animation: "still",                     // Animation player is undergoing
+                position: { x: 0, y: 0 },               // Absolute position
+                rendered_position: { x: 0, y: 0 },      // Where the player is rendered on the user's screen
+                camera_center: { x: 0, y: 0 },
+                chunk_center: { x: 0, y: 0 },
+                chunk: { x: 0, y: 0 },
+                mode: {type: "normal", packet: null},
+                speed: 5,
+                health: [1, 1, 1],                      // Each element in the array represents a heart, and how full it is
+                rendered_chunks: [
+                    [
+                    this.getMazeFromChunk({ x: -1, y: -1 }),
+                    this.getMazeFromChunk({ x: 0, y: -1 }),
+                    this.getMazeFromChunk({ x: 1, y: -1 }),
+                    ],
+                    [
+                    this.getMazeFromChunk({ x: -1, y: 0 }),
+                    this.getMazeFromChunk({ x: 0, y: 0 }),
+                    this.getMazeFromChunk({ x: 1, y: 0 }),
+                    ],
+                    [
+                    this.getMazeFromChunk({ x: -1, y: 1 }),
+                    this.getMazeFromChunk({ x: 0, y: 1 }),
+                    this.getMazeFromChunk({ x: 1, y: 1 }),
+                    ],
                 ],
-                [
-                  this.getMazeFromChunk({ x: -1, y: 0 }),
-                  this.getMazeFromChunk({ x: 0, y: 0 }),
-                  this.getMazeFromChunk({ x: 1, y: 0 }),
-                ],
-                [
-                  this.getMazeFromChunk({ x: -1, y: 1 }),
-                  this.getMazeFromChunk({ x: 0, y: 1 }),
-                  this.getMazeFromChunk({ x: 1, y: 1 }),
-                ],
-              ],
+                inventory: {
+                    selected: 0,
+                    inventory: [[{itemID: "lantern", itemObj: null}, null, null, null, null, null, null, null], ]
+                }
             },
             user: user,
         active: true,
@@ -123,6 +128,15 @@ class Game {
     lobbyManager.deleteLobby(this.seed);
     clearInterval(this.interval);
     this.killer();
+  }
+
+  /*
+    Update the player's data to reflect selected item.
+  */
+  selectItem(userid, itemIdx) {
+    if (this.players[userid]) {
+        this.players[userid].data.inventory.selected = itemIdx-1;
+    }
   }
 
   /*

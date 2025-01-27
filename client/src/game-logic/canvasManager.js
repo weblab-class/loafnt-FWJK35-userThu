@@ -156,37 +156,41 @@ const drawTiles = (canvasState, offset, ctx) => {
   const map = canvasState.map;
   for (let row = 0; row < map.length; row++) {
     for (let col = 0; col < map[row].length; col++) {
-      if (map[row][col] === 1) {
-        //assign a tile id based on neighbors
-        let tileidx = 0;
-        if (col - 1 >= 0 && map[row][col - 1] === 1) {
-          tileidx += 3;
-        }
-        if (col + 1 < map[0].length && map[row][col + 1] === 1) {
-          tileidx += 1;
-        }
-        if (tileidx === 4) {
-          tileidx -= 2;
-        }
+      const tileType = map[row][col];
+      //assign a tile id based on neighbors of same type
 
-        let tileidy = 0;
-        if (row - 1 >= 0 && map[row - 1][col] === 1) {
-          tileidy += 3;
-        }
-        if (row + 1 < map.length && map[row + 1][col] === 1) {
-          tileidy += 1;
-        }
-        if (tileidy === 4) {
-          tileidy -= 2;
-        }
-        const tileCoord = help.addCoords(
-          canvasState.myplayerdata.camera_center,
-          help.subtractCoords(help.addCoords({ x: col, y: row }, offset), {
-            x: (map[0].length - 1) / 2,
-            y: (map.length - 1) / 2,
-          })
-        );
+      let tileidx = 0;
+      if (col - 1 >= 0 && map[row][col - 1] === tileType) {
+        tileidx += 3;
+      }
+      if (col + 1 < map[0].length && map[row][col + 1] === tileType) {
+        tileidx += 1;
+      }
+      if (tileidx === 4) {
+        tileidx -= 2;
+      }
 
+      let tileidy = 0;
+      if (row - 1 >= 0 && map[row - 1][col] === tileType) {
+        tileidy += 3;
+      }
+      if (row + 1 < map.length && map[row + 1][col] === tileType) {
+        tileidy += 1;
+      }
+      if (tileidy === 4) {
+        tileidy -= 2;
+      }
+      const tileid = tileidy * 4 + tileidx;
+
+      const tileCoord = help.addCoords(
+        canvasState.myplayerdata.camera_center,
+        help.subtractCoords(help.addCoords({ x: col, y: row }, offset), {
+          x: (map[0].length - 1) / 2,
+          y: (map.length - 1) / 2,
+        })
+      );
+
+      if (tileType === 1) {
         const getSize = (dist, minDist, maxDist) => {
           if (dist < minDist) {
             return 1;
@@ -217,34 +221,45 @@ const drawTiles = (canvasState, offset, ctx) => {
         };
 
         drawBranchTile(thisTile, ctx);
-      } else if (map[row][col] === 2) {
-        let tileidx = 0;
-        if (col - 1 >= 0 && map[row][col - 1] === 2) {
-          tileidx += 3;
+      } else if (tileType === 2) {
+        let thisTileSize = 1;
+        const borderFadeStart = 3;
+        const borderFadeDist = 2;
+        if (
+          Math.abs(tileCoord.x - canvasState.myplayerdata.camera_center.x) >
+          screenBlockWidth / 2 - borderFadeStart
+        ) {
+          thisTileSize = Math.max(
+            0,
+            (screenBlockWidth / 2 -
+              borderFadeStart +
+              borderFadeDist -
+              Math.abs(tileCoord.x - canvasState.myplayerdata.camera_center.x)) /
+              borderFadeDist
+          );
         }
-        if (col + 1 < map[0].length && map[row][col + 1] === 2) {
-          tileidx += 1;
-        }
-        if (tileidx === 4) {
-          tileidx -= 2;
-        }
-
-        let tileidy = 0;
-        if (row - 1 >= 0 && map[row - 1][col] === 2) {
-          tileidy += 3;
-        }
-        if (row + 1 < map.length && map[row + 1][col] === 2) {
-          tileidy += 1;
-        }
-        if (tileidy === 4) {
-          tileidy -= 2;
+        if (
+          Math.abs(tileCoord.y - canvasState.myplayerdata.camera_center.y) >
+          screenBlockHeight / 2 - borderFadeStart
+        ) {
+          thisTileSize = Math.min(
+            Math.max(
+              0,
+              (screenBlockHeight / 2 -
+                borderFadeStart +
+                borderFadeDist -
+                Math.abs(tileCoord.y - canvasState.myplayerdata.camera_center.y)) /
+                borderFadeDist
+            ),
+            thisTileSize
+          );
         }
 
         const thisTile = {
           x: col - (map[0].length - screenBlockWidth) / 2 + offset.x,
           y: row - (map.length - screenBlockHeight) / 2 + offset.y,
           id: tileidy * 4 + tileidx,
-          size: 1,
+          size: thisTileSize,
         };
         drawPathTile(thisTile, ctx);
       }
@@ -379,29 +394,26 @@ const drawArena = (canvasState, ctx) => {
 const getMapToRender = (playerObj, chunkBlockSize) => {
     let rendered_chunks = playerObj.rendered_chunks;
     if (playerObj.mode.type === "invisible-maze") rendered_chunks = playerObj.mode.packet.chunks;
-
-    const combinedChunks = [];
-    /*
-        Looks at rendered_chunk as one "combined" chunk array. 
-    */
-    for (let chunkRow = 0; chunkRow < playerObj.rendered_chunks.length; chunkRow++) {
-        for (let thisRow = 0; thisRow < playerObj.rendered_chunks[0][0].length; thisRow++) {
-            const currentRow = [];
-            for (let chunkCol = 0; chunkCol < playerObj.rendered_chunks.length; chunkCol++) {
-                for (let thisCol = 0; thisCol < playerObj.rendered_chunks[0][0].length; thisCol++) {
-                    const thisCell = playerObj.rendered_chunks[chunkRow][chunkCol][thisRow][thisCol];
-                    currentRow.push(thisCell);
-                }
-                if (chunkCol < playerObj.rendered_chunks.length - 1) { // What does this do
-                    currentRow.pop();
-                }
-            }
-            combinedChunks.push(currentRow);
+    // Create a single 2d array containing all blocks in the rendered area
+  const combinedChunks = [];
+  for (let chunkRow = 0; chunkRow < playerObj.rendered_chunks.length; chunkRow++) {
+    for (let thisRow = 0; thisRow < playerObj.rendered_chunks[0][0].length; thisRow++) {
+      const currentRow = [];
+      for (let chunkCol = 0; chunkCol < playerObj.rendered_chunks.length; chunkCol++) {
+        for (let thisCol = 0; thisCol < playerObj.rendered_chunks[0][0].length; thisCol++) {
+          const thisCell = playerObj.rendered_chunks[chunkRow][chunkCol][thisRow][thisCol];
+          currentRow.push(thisCell);
         }
-        if (chunkRow < playerObj.rendered_chunks.length - 1) { // What does this do
-            combinedChunks.pop();
+        if (chunkCol < playerObj.rendered_chunks.length - 1) {
+          currentRow.pop();
         }
+      }
+      combinedChunks.push(currentRow);
     }
+    if (chunkRow < playerObj.rendered_chunks.length - 1) {
+      combinedChunks.pop();
+    }
+  }
 
     // Get the player's relative coordinates 
     const relCoords = help.roundCoord(
@@ -410,26 +422,29 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
 
     const mapToRender = [];
 
-    const mapSize = {
-        width: (Math.floor((screenBlockWidth - 1) / 2) + 1) * 2 + 1,
-        height: (Math.floor((screenBlockHeight - 1) / 2) + 1) * 2 + 1,
-    };
+  //size of the rendered map on player's screen in block coordinates
+  const mapSize = {
+    width: (Math.floor((screenBlockWidth - 1) / 2) + 1) * 2 + 1,
+    height: (Math.floor((screenBlockHeight - 1) / 2) + 1) * 2 + 1,
+  };
 
-    for (let row = 0; row < combinedChunks.length; row++) {
+  // Select desired rows and columns from combined chunks to render
+  for (let row = 0; row < combinedChunks.length; row++) {
+    if (
+      row - relCoords.y >= (combinedChunks.length - 1) / 2 - (screenBlockHeight + 1) / 2 &&
+      row - relCoords.y <= (combinedChunks.length - 1) / 2 + (screenBlockHeight + 1) / 2
+    ) {
+      const currentRow = [];
+      for (let col = 0; col < combinedChunks.length; col++) {
         if (
-        row - relCoords.y >= (combinedChunks.length - 1) / 2 - (screenBlockHeight + 1) / 2 &&
-        row - relCoords.y <= (combinedChunks.length - 1) / 2 + (screenBlockHeight + 1) / 2
+          col - relCoords.x >= (combinedChunks.length - 1) / 2 - (screenBlockWidth + 1) / 2 &&
+          col - relCoords.x <= (combinedChunks.length - 1) / 2 + (screenBlockWidth + 1) / 2
         ) {
-        const currentRow = [];
-        for (let col = 0; col < combinedChunks.length; col++) {
-            if (
-            col - relCoords.x >= (combinedChunks.length - 1) / 2 - (screenBlockWidth + 1) / 2 &&
-            col - relCoords.x <= (combinedChunks.length - 1) / 2 + (screenBlockWidth + 1) / 2
-            ) {
-            currentRow.push(combinedChunks[row][col]);
-            }
+          currentRow.push(combinedChunks[row][col]);
         }
+      }
 
+        //add empty rendered areas if current map isn't big enough
         if (currentRow.length < mapSize.width) {
             if (relCoords.x > 0) {
             while (currentRow.length < mapSize.width) {
@@ -446,6 +461,7 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
         }
     }
 
+  //add empty rendered areas if current map isn't big enough
   if (mapToRender.length < mapSize.height) {
     if (relCoords.y > 0) {
       while (mapToRender.length < mapSize.height) {
@@ -458,6 +474,7 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
     }
   }
 
+  //fill in connecting path tiles
   for (let y = 0; y < mapToRender.length; y++) {
     for (let x = 0; x < mapToRender[0].length; x++) {
       if (mapToRender[y][x] === 0) {
@@ -481,6 +498,10 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
     }
   }
 
+  //return the 2d array containing all cells to render with int ids corresponding to type
+  //0: empty
+  //1: branch tile
+  //2: path tile
   return mapToRender;
 };
 

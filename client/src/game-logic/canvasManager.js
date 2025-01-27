@@ -458,7 +458,8 @@ export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
   canvasCenter = { x: screenBlockWidth / 2, y: screenBlockHeight / 2 };
 
   const canvasState = convertGameToCanvasState(Object.assign({}, JSON.parse(gamePacket.json)));
-
+  context.fillStyle = "#3E3038";
+  context.fillRect(0, 0, canvas.width, canvas.height);
   //if player exploring maze, render maze
   if (!canvasState.incombat) {
     Object.values(canvasState.otherplayers).forEach((player) => {

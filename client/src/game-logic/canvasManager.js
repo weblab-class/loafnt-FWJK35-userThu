@@ -16,13 +16,34 @@ let screenBlockWidth = 17;
 let screenBlockHeight = 17;
 let canvasCenter = { x: 0, y: 0 };
 
-// Path is relative to 'dist' folder
+/*
+  asset: {
+    id: "asset",
+    imageSize: { width: 32, height: 32 },
+    spriteSize: 32,
+    blockSize: 1,
+    src: assetlist.goob,
+    imgObj: null,
+  }
+*/
 let assetsMap = {
   avatars: {
     witch_cat: {
       id: "witch_cat",
-      size: 32,
+      imageSize: { width: 32, height: 32 },
+      spriteSize: 32,
+      blockSize: 1,
       src: assetlist.goob,
+      imgObj: null,
+    },
+  },
+  enemies: {
+    boss: {
+      id: "boss",
+      spriteSize: 128,
+      imageSize: { width: 128, height: 128 },
+      blockSize: 8,
+      src: assetlist.boss,
       imgObj: null,
     },
   },
@@ -35,71 +56,91 @@ let assetsMap = {
     },
     branchtiles: {
       id: "branchtiles",
-      size: 32,
+      imageSize: { width: 256, height: 256 },
+      spriteSize: 64,
+      blockSize: 1,
       src: assetlist.branchtilemap,
       imgObj: null,
     },
     pathtiles: {
       id: "pathtiles",
-      size: 32,
+      imageSize: { width: 256, height: 256 },
+      spriteSize: 64,
+      blockSize: 1,
       src: assetlist.pathtilemap,
       imgObj: null,
     },
   },
 };
 
-// Params:
-// player: {
-//  rendered_position: {x: value, y: value}         -- Block Coordinates relative to Screen, not entire map with (0,0) being center
-//  avatar_id: id
-// }
-// ctx: context                                     -- Game Canvas context
-const drawPlayer = (player, ctx) => {
+/*
+Params:
+sprite: {
+  rendered_position: {x: value, y: value}         -- Block Coordinates relative to Screen, not entire map with (0,0) being center
+  animation: value                                -- The integer value of the current animation frame
+  scale: value                                    -- A float for how much to scale the sprite size
+ }
+asset: {
+  imageSize: {width: value, height: value}        -- The size of the source sprite image
+  spriteSize: value                               -- The size of one frame of the sprite in the source image
+  imgObj: reference                               -- The loaded image object
+  blockSize: value                                -- The size of the sprite in blocks
+}
+ctx: context                                     -- Game Canvas context
+
+NOTE: all sprites are assumed to be square lmao
+*/
+const drawSprite = (sprite, asset, ctx) => {
   //translate rendered position so it is relative to top left
-  player.rendered_position = help.addCoords(player.rendered_position, canvasCenter);
+  sprite.rendered_position = help.addCoords(sprite.rendered_position, canvasCenter);
+  //get position in source image of current animation
+  const spriteX = sprite.animation % (asset.imageSize.width / asset.spriteSize);
+  const spriteY = Math.floor(sprite.animation / (asset.imageSize.width / asset.spriteSize));
   ctx.drawImage(
-    assetsMap.avatars[player.avatar_id].imgObj,
-    spriteX * spriteSize,
-    spriteY * spriteSize,
-    spriteSize,
-    spriteSize,
-    player.rendered_position.x * blockSize - playerSize / 2, //center of player is rendered at position, not top left of player
-    player.rendered_position.y * blockSize - playerSize / 2,
-    blockSize,
-    blockSize
+    asset.imgObj,
+    spriteX * asset.spriteSize,
+    spriteY * asset.spriteSize,
+    asset.spriteSize,
+    asset.spriteSize,
+    //center of sprite is rendered at position instead of top left
+    (sprite.rendered_position.x -
+      asset.blockSize / 2 +
+      (asset.blockSize * (1 - sprite.scale)) / 2) *
+      blockSize,
+    (sprite.rendered_position.y -
+      asset.blockSize / 2 +
+      (asset.blockSize * (1 - sprite.scale)) / 2) *
+      blockSize,
+    sprite.scale * asset.blockSize * blockSize,
+    sprite.scale * asset.blockSize * blockSize
   );
+};
+
+const drawPlayer = (player, ctx) => {
+  player.animation = 0;
+  player.scale = 1;
+  drawSprite(player, assetsMap.avatars[player.avatar_id], ctx);
+};
+
+const drawEnemy = (enemy, ctx) => {
+  enemy.rendered_position = Object.assign({}, enemy.position);
+  enemy.animation = 0;
+  enemy.scale = 1;
+  drawSprite(enemy, assetsMap.enemies[enemy.type], ctx);
 };
 
 const drawBranchTile = (tile, ctx) => {
-  const tilemapx = tile.id % 4;
-  const tilemapy = Math.floor(tile.id / 4);
-  ctx.drawImage(
-    assetsMap.terrain.branchtiles.imgObj,
-    tilemapx * tileSize,
-    tilemapy * tileSize,
-    tileSize,
-    tileSize,
-    (tile.x + (1 - tile.size) / 2) * blockSize,
-    (tile.y + (1 - tile.size) / 2) * blockSize,
-    blockSize * tile.size,
-    blockSize * tile.size
-  );
+  tile.animation = tile.id;
+  tile.rendered_position = help.subtractCoords({ x: tile.x + 0.5, y: tile.y + 0.5 }, canvasCenter);
+  tile.scale = tile.size;
+  drawSprite(tile, assetsMap.terrain.branchtiles, ctx);
 };
 
 const drawPathTile = (tile, ctx) => {
-  const tilemapx = tile.id % 4;
-  const tilemapy = Math.floor(tile.id / 4);
-  ctx.drawImage(
-    assetsMap.terrain.pathtiles.imgObj,
-    tilemapx * tileSize,
-    tilemapy * tileSize,
-    tileSize,
-    tileSize,
-    (tile.x + (1 - tile.size) / 2) * blockSize,
-    (tile.y + (1 - tile.size) / 2) * blockSize,
-    blockSize * tile.size,
-    blockSize * tile.size
-  );
+  tile.animation = tile.id;
+  tile.rendered_position = help.subtractCoords({ x: tile.x + 0.5, y: tile.y + 0.5 }, canvasCenter);
+  tile.scale = tile.size;
+  drawSprite(tile, assetsMap.terrain.pathtiles, ctx);
 };
 
 const drawTiles = (canvasState, offset, ctx) => {
@@ -218,8 +259,13 @@ const drawTiles = (canvasState, offset, ctx) => {
 };
 
 const drawArena = (canvasState, ctx) => {
+  //render all enemies
+  Object.values(canvasState.arena.enemies).forEach((enemy) => {
+    drawEnemy(enemy, ctx);
+  });
+
   //render all players
-  Object.values(canvasState.players).forEach((player, id) => {
+  Object.values(canvasState.players).forEach((player) => {
     drawPlayer(player, ctx);
   });
 
@@ -253,6 +299,25 @@ const drawArena = (canvasState, ctx) => {
     -screenBlockWidth * blockSize,
     -((screenBlockHeight - canvasState.arena.size.height) / 2) * blockSize
   );
+};
+
+const drawMaze = (canvasState, ctx) => {
+  const playerPos = canvasState.myplayerdata.camera_center;
+  drawTiles(canvasState, help.subtractCoords(help.roundCoord(playerPos), playerPos), ctx);
+
+  Object.values(canvasState.otherplayers).forEach((player) => {
+    if (
+      help.coordDist(canvasState.myplayerdata.position, player.data.position) <
+      canvasState.chunkblocksize * 2
+    ) {
+      player.data.rendered_position = help.addCoords(
+        canvasState.myplayerdata.rendered_position,
+        help.subtractCoords(player.data.position, canvasState.myplayerdata.position)
+      );
+      drawPlayer(player.data, ctx);
+    }
+  });
+  drawPlayer(canvasState.myplayerdata, ctx);
 };
 
 /*
@@ -443,6 +508,12 @@ const loadAssets = async () => {
   loadedPlayers.forEach((asset) => {
     assetsMap.avatars[asset.id].imgObj = asset.imgObj;
   });
+  //load enemies
+  const loadedEnemies = await Promise.all(Object.values(assetsMap.enemies).map(loadAsset));
+  loadedEnemies.forEach((asset) => {
+    assetsMap.enemies[asset.id].imgObj = asset.imgObj;
+  });
+
   // load terrain
   const loadedTerrain = await Promise.all(Object.values(assetsMap.terrain).map(loadAsset));
   loadedTerrain.forEach((asset) => {
@@ -486,26 +557,14 @@ export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
   canvasCenter = { x: screenBlockWidth / 2, y: screenBlockHeight / 2 };
 
   const canvasState = convertGameToCanvasState(Object.assign({}, JSON.parse(gamePacket.json)));
+
+  //fill background with a color
   context.fillStyle = "#3E3038";
   context.fillRect(0, 0, canvas.width, canvas.height);
+
   //if player exploring maze, render maze
   if (!canvasState.incombat) {
-    const playerPos = canvasState.myplayerdata.camera_center;
-    drawTiles(canvasState, help.subtractCoords(help.roundCoord(playerPos), playerPos), context);
-
-    Object.values(canvasState.otherplayers).forEach((player) => {
-      if (
-        help.coordDist(canvasState.myplayerdata.position, player.data.position) <
-        canvasState.chunkblocksize * 2
-      ) {
-        player.data.rendered_position = help.addCoords(
-          canvasState.myplayerdata.rendered_position,
-          help.subtractCoords(player.data.position, canvasState.myplayerdata.position)
-        );
-        drawPlayer(player.data, context);
-      }
-    });
-    drawPlayer(canvasState.myplayerdata, context);
+    drawMaze(canvasState, context);
   }
   //if player in combat, render that arena
   else {

@@ -33,7 +33,10 @@ const removeUser = (user, socket) => {
 const sendGameState = (gameId) => {
   Object.values(Game.gameMap[gameId].players).forEach((player) => {
     if (player.active) {
-      let gamePacket = { game: Game.gameMap[gameId], recipientid: player.user._id };
+      //delete server-stored information
+      let gameObj = Object.assign({}, Game.gameMap[gameId]);
+      delete gameObj.explored;
+      let gamePacket = { game: gameObj, recipientid: player.user._id };
       const socket = getSocketFromUserID(player.user._id);
       if (socket) {
         socket.emit("update", { json: JSON.stringify(gamePacket) });

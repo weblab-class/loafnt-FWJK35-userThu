@@ -42,7 +42,7 @@ class Game {
   seed;
   players;
   chunkBlockSize;
-  playersObj;
+  explored;
   interval;
   killer;
   arenas;
@@ -57,6 +57,7 @@ class Game {
       });
     }
     this.arenas = {};
+    this.explored = {};
   }
 
   /*
@@ -138,10 +139,7 @@ class Game {
       );
     };
     if (posInRange(pos, playerData.position)) {
-      const relChunk = {
-        x: help.getChunkFromPos(pos.x) - playerData.chunk.x,
-        y: help.getChunkFromPos(pos.y) - playerData.chunk.y,
-      };
+      const relChunk = help.subtractCoords(help.getChunkFromPos(pos), playerData.chunk);
       const chunkRel = help.addCoords(
         help.getChunkRelativePos(pos, help.addCoords(playerData.chunk, relChunk)),
         { x: chunkSize, y: chunkSize }
@@ -157,6 +155,22 @@ class Game {
       Object.hasOwn(this.arenas, JSON.stringify(this.players[id].data.chunk)) &&
       Object.hasOwn(this.arenas[JSON.stringify(this.players[id].data.chunk)].players, id)
     );
+  }
+
+  getTileExplored(pos) {
+    const chunk = help.getChunkFromPos(pos);
+    const latticePoint = help.getLatticePoint(pos, chunk);
+    const bitIndex = latticePoint.x + latticePoint.y * chunkSize;
+    if (Object.hasOwn(this.explored, JSON.stringify(chunk))) {
+      return 1 & (this.explored[JSON.stringify(chunk)][Math.floor(bitIndex / 32)] >> bitIndex % 32);
+    }
+    return 0;
+  }
+
+  setTileExplored(pos, chunk) {
+    const latticePoint = help.getLatticePoint(pos, chunk);
+    const bitIndex = latticePoint.x + latticePoint.y * chunkSize;
+    this.explored[JSON.stringify(chunk)][Math.floor(bitIndex / 32)] |= 1 << bitIndex % 32;
   }
 
   movePlayer(id, dir) {
@@ -219,11 +233,11 @@ class Game {
     const oldChunk = Object.assign({}, playerChunk);
 
     if (!posInChunk(playerPos.x, playerChunk.x)) {
-      playerChunk.x = help.getChunkFromPos(playerPos.x);
+      playerChunk.x = help.getChunkFromPos(playerPos).x;
     }
 
     if (!posInChunk(playerPos.y, playerChunk.y)) {
-      playerChunk.y = help.getChunkFromPos(playerPos.y);
+      playerChunk.y = help.getChunkFromPos(playerPos).y;
     }
 
     // re-generate surrounding maze
@@ -239,6 +253,35 @@ class Game {
         newRenderedChunks.push(newChunkRow);
       }
       this.players[id].data.rendered_chunks = newRenderedChunks;
+    }
+
+    //set explored tiles
+    if (!this.explored[JSON.stringify(playerChunk)]) {
+      this.explored[JSON.stringify(playerChunk)] = Array(Math.ceil(chunkSize ** 2 / 32)).fill(0);
+    }
+
+    this.setTileExplored(playerPos, playerChunk);
+
+    //put explored tiles in rendered chunk
+    for (let chunkydiff = -1; chunkydiff < 2; chunkydiff++) {
+      for (let chunkxdiff = -1; chunkxdiff < 2; chunkxdiff++) {
+        for (let y = 0; y < chunkSize; y++) {
+          for (let x = 0; x < chunkSize; x++) {
+            const isExplored =
+              this.getTileExplored(
+                help.addCoords(
+                  help.getChunkCenter(
+                    help.addCoords(playerChunk, { x: chunkxdiff, y: chunkydiff })
+                  ),
+                  { x: x * 2 - chunkSize + 1, y: y * 2 - chunkSize + 1 }
+                )
+              ) * 2;
+            this.players[id].data.rendered_chunks[chunkydiff + 1][chunkxdiff + 1][y * 2 + 1][
+              x * 2 + 1
+            ] = isExplored;
+          }
+        }
+      }
     }
 
     //set camera

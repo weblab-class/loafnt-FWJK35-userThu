@@ -20,8 +20,20 @@ const roundCoord = (coord) => {
   return { x: Math.round(coord.x), y: Math.round(coord.y) };
 };
 
+const getLatticePoint = (coord, chunk) => {
+  const chunkRelative = getChunkRelativePos(coord, chunk);
+  const latticePoint = {
+    x: Math.floor(chunkRelative.x / 2 + chunkSize / 2),
+    y: Math.floor(chunkRelative.y / 2 + chunkSize / 2),
+  };
+  return latticePoint;
+};
+
 const getChunkFromPos = (pos) => {
-  return Math.floor((pos + chunkSize) / (chunkSize * 2));
+  return {
+    x: Math.floor((pos.x + chunkSize) / (chunkSize * 2)),
+    y: Math.floor((pos.y + chunkSize) / (chunkSize * 2)),
+  };
 };
 
 const getChunkCenter = (chunk) => {
@@ -38,6 +50,7 @@ module.exports = {
   subtractCoords,
   scaleCoord,
   roundCoord,
+  getLatticePoint,
   getChunkFromPos,
   getChunkCenter,
   getChunkRelativePos,

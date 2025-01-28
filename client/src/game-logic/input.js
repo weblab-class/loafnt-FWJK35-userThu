@@ -1,22 +1,29 @@
-import { inventorySelect, enterInvisibleMaze, enterCombat, move } from "../client-socket";
+import {
+  inventorySelect,
+  enterInvisibleMaze,
+  enterCombat,
+  move,
+  attack,
+  utility,
+} from "../client-socket";
 
 const pressedKeys = new Map();
-const singlePresses = new Set(["c"]);
+const singlePresses = new Set(["c", "i", " ", "shift"]);
 const inventoryKeys = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
 const sendInput = (gameID, userID, deltaT) => {
   let xcomp = 0;
   let ycomp = 0;
-  if (pressedKeys.get("ArrowUp") || pressedKeys.get("w") || pressedKeys.get("W")) {
+  if (pressedKeys.get("arrowup") || pressedKeys.get("w")) {
     ycomp -= 1;
   }
-  if (pressedKeys.get("ArrowDown") || pressedKeys.get("s") || pressedKeys.get("S")) {
+  if (pressedKeys.get("arrowdown") || pressedKeys.get("s")) {
     ycomp += 1;
   }
-  if (pressedKeys.get("ArrowLeft") || pressedKeys.get("a") || pressedKeys.get("A")) {
+  if (pressedKeys.get("arrowleft") || pressedKeys.get("a")) {
     xcomp -= 1;
   }
-  if (pressedKeys.get("ArrowRight") || pressedKeys.get("d") || pressedKeys.get("D")) {
+  if (pressedKeys.get("arrowright") || pressedKeys.get("d")) {
     xcomp += 1;
   }
   if (Math.abs(xcomp) + Math.abs(ycomp) === 2) {
@@ -28,35 +35,39 @@ const sendInput = (gameID, userID, deltaT) => {
 
   if (pressedKeys.get("i")) {
     enterInvisibleMaze(gameID, userID);
-  };
+  }
 
   if (pressedKeys.get("c")) {
     enterCombat(gameID, userID);
+  }
+
+  if (pressedKeys.get(" ")) {
+    attack(gameID, userID);
+  }
+
+  if (pressedKeys.get("shift")) {
+    utility(gameID, userID);
   }
 
   inventoryKeys.forEach((key) => {
     if (pressedKeys.get(key)) {
       inventorySelect(gameID, userID, Number(key));
     }
-  })
+  });
 
   move(gameID, userID, { x: xcomp, y: ycomp });
 
   singlePresses.forEach((key) => {
-    pressedKeys.set(key, false);
+    pressedKeys.set(key.toLowerCase(), false);
   });
-  
-  
 };
-
-
 
 const setPressedKey = (e) => {
   if (e.type === "keydown" && !e.repeat) {
-    pressedKeys.set(e.key, true);
+    pressedKeys.set(e.key.toLowerCase(), true);
   }
   if (e.type === "keyup") {
-    pressedKeys.set(e.key, false);
+    pressedKeys.set(e.key.toLowerCase(), false);
   }
 };
 

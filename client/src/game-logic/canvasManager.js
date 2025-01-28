@@ -107,6 +107,14 @@ let assetsMap = {
       src: assetlist.selectedslot,
       imgObj: null,
     },
+    target: {
+      id: "target",
+      imageSize: { width: 192, height: 64 },
+      spriteSize: 64,
+      blockSize: 4,
+      src: assetlist.target,
+      imgObj: null,
+    },
   },
   items: {
     lantern: {
@@ -510,6 +518,24 @@ const drawArena = (canvasState, ctx) => {
     -screenBlockWidth * blockSize,
     -((screenBlockHeight - canvasState.arena.size.height) / 2) * blockSize
   );
+
+  //Arena UI
+  //targeted enemy UI
+  if (canvasState.myplayerdata.targetid != 0) {
+    Object.values(canvasState.arena.enemies).forEach((enemy) => {
+      if (enemy.id === canvasState.myplayerdata.targetid) {
+        drawSprite(
+          {
+            rendered_position: enemy.position,
+            animation: 0,
+            scale: 1,
+          },
+          assetsMap.UI.target,
+          ctx
+        );
+      }
+    });
+  }
 };
 
 const drawMaze = (canvasState, ctx) => {
@@ -699,7 +725,11 @@ const convertGameToCanvasState = (gamePacket) => {
   }
   // Player is in arena combat
   else {
-    myplayerdata = players[gamePacket.recipientid];
+    Object.values(myarena.players).forEach((player) => {
+      if (player.userid === gamePacket.recipientid) {
+        myplayerdata = myarena.players[player.id];
+      }
+    });
     return {
       incombat: true,
       players: players,

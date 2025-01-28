@@ -9,6 +9,7 @@ import selectedslot from "./selectedslot.png";
 import lantern from "./lantern.png";
 import boss from "./badguy.png";
 import bullet from "./bullet.png";
+import target from "./target.png";
 
 export default {
   goob,
@@ -24,4 +25,5 @@ export default {
   bullet,
   boss,
   bullet,
+  target,
 };

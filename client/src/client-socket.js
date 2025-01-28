@@ -1,27 +1,37 @@
 import socketIOClient from "socket.io-client";
 import { post } from "./utilities";
 const endpoint = window.location.hostname + ":" + window.location.port;
-export const socket = socketIOClient(endpoint);
+const socket = socketIOClient(endpoint);
 socket.on("connect", () => {
   post("/api/initsocket", { socketid: socket.id });
 });
 
-export const runGame = (gameID) => {
+const runGame = (gameID) => {
   socket.emit("rungame", gameID);
 };
 
-export const move = (gameID, user_id, dir) => {
+const move = (gameID, user_id, dir) => {
   socket.emit("move", { gameID: gameID, user_id: user_id, dir: dir });
 };
 
-export const enterCombat = (gameID, user_id) => {
+const enterCombat = (gameID, user_id) => {
   socket.emit("entercombat", { gameID: gameID, user_id: user_id });
 };
 
-export const enterInvisibleMaze = (gameID, userID) => {
-  socket.emit("enter-invisiblemaze", {gameID: gameID, userID: userID});
-}
+const enterInvisibleMaze = (gameID, userID) => {
+  socket.emit("enter-invisiblemaze", { gameID: gameID, userID: userID });
+};
 
-export const inventorySelect = (gameID, userID, slotIdx) => {
-  socket.emit("inventoryselect", {gameID: gameID, userID: userID, slotIdx: slotIdx});
-}
+const inventorySelect = (gameID, userID, slotIdx) => {
+  socket.emit("inventoryselect", { gameID: gameID, userID: userID, slotIdx: slotIdx });
+};
+
+const attack = (gameID, user_id) => {
+  socket.emit("attack", { gameID: gameID, user_id: user_id });
+};
+
+const utility = (gameID, user_id) => {
+  socket.emit("utility", { gameID: gameID, user_id: user_id });
+};
+
+export { socket, runGame, move, enterCombat, enterInvisibleMaze, inventorySelect, attack, utility };

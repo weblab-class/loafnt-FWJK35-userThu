@@ -1,4 +1,5 @@
 const help = require("./helpers");
+const Component = require("./components");
 
 class Arena {
   players;
@@ -69,16 +70,25 @@ class Arena {
       rendered_position: { x: 0.0, y: 0.0 },
       health: 100.0,
       maxhealth: 100.0,
+      stamina: 100.0,
+      maxstamina: 100.0,
       hitboxes: [
         {
           shape: "circle",
           radius: 0.5,
           center: { x: 0, y: 0 },
+          ownerid: this.idcount,
           onCollision: (collisionPoint, collisionEntity) => {},
         },
       ],
       avatar_id: "witch_cat",
       speed: 7,
+      build: {
+        weapon: "singlebullet",
+        chargeup: "time",
+        utility: "dash",
+      },
+      targetid: 0,
     };
   }
 
@@ -133,7 +143,31 @@ class Arena {
     if (this.players[id].position.y > this.size.height / 2) {
       this.players[id].position.y = this.size.height / 2;
     }
+
+    //target nearest enemy
+    let nearestDist = this.size.width * 2;
+    this.players[id].targetid = 0;
+
+    Object.values(this.enemies).forEach((enemy) => {
+      const thisEnemyDist = help.getMagnitude(
+        help.subtractCoords(this.players[id].position, enemy.position)
+      );
+      if (thisEnemyDist < nearestDist) {
+        this.players[id].targetid = enemy.id;
+        nearestDist = thisEnemyDist;
+      }
+    });
+
     this.players[id].rendered_position = this.players[id].position;
+  }
+
+  attack(userid) {
+    const id = this.getIdOfUser(userid);
+    Component.useWeapon(this, id);
+  }
+
+  useUtility(userid) {
+    const id = this.getIdOfUser(userid);
   }
 
   checkCollisions(hitboxes) {
@@ -214,8 +248,11 @@ class Arena {
         }
 
         if (collided) {
-          hit.onCollision(collisionPoint, this.getEntity(box.ownerid));
-          box.onCollision(collisionPoint, this.getEntity(hit.ownerid));
+          const boxEntity = Object.assign({}, this.getEntity(box.ownerid));
+          const hitEntity = Object.assign({}, this.getEntity(hit.ownerid));
+
+          hit.onCollision(collisionPoint, boxEntity);
+          box.onCollision(collisionPoint, hitEntity);
         }
       }
     }
@@ -315,8 +352,9 @@ class Arena {
     */
   spawnEnemy() {
     this.idcount++;
-    this.enemies[this.idcount] = {
-      id: this.idcount,
+    const enemyId = this.idcount;
+    this.enemies[enemyId] = {
+      id: enemyId,
       class: "enemy",
       position: { x: 0, y: 0 },
       radius: 2,
@@ -335,7 +373,18 @@ class Arena {
           shape: "circle",
           radius: 2,
           center: { x: 0, y: 0 },
-          onCollision: (collisionPoint, collisionEntity) => {},
+          ownerid: enemyId,
+          onCollision: (collisionPoint, collisionEntity) => {
+            if (collisionEntity.class === "projectile") {
+              //take damage if player bullet
+              if (
+                this.getEntity(collisionEntity.source) &&
+                this.getEntity(collisionEntity.source).class === "player"
+              ) {
+                this.enemies[enemyId].health -= collisionEntity.damage; //TODO implemet like projectiles
+              }
+            }
+          },
         },
       ],
       possibleattacks: [
@@ -360,6 +409,7 @@ class Arena {
           shape: "circle",
           radius: radius,
           center: { x: 0, y: 0 },
+          ownerid: bulletId,
           onCollision: (collisionPoint, collisionEntity) => {},
         },
       ],
@@ -379,8 +429,13 @@ class Arena {
       type: projectile.type,
       deathtime: this.time + projectile.lifetime * this.fps,
       onDeath: projectile.onDeath,
+      dieOnCollision: projectile.dieOnCollision,
       hitboxes: projectile.hitboxes,
     };
+    //assign this bullet to its owner
+    Object.values(this.projectiles[bulletId].hitboxes).forEach((hitbox) => {
+      hitbox.ownerid = bulletId;
+    });
     return bulletId;
   }
 
@@ -421,6 +476,9 @@ class Arena {
                 center: { x: 0, y: 0 },
                 onCollision: (collisionPoint, collisionEntity) => {
                   if (collisionEntity.class === "player" || collisionEntity.class === "terrain") {
+                    if (this.projectiles[bulletId].dieOnCollision) {
+                      this.projectiles[bulletId].onDeath();
+                    }
                     this.deleteProjectile(bulletId);
                   }
                 },

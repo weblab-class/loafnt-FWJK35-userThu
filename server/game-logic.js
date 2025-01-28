@@ -243,7 +243,7 @@ class Game {
     dir (Object): Represents the player's change in position through X and Y components.
   */
   movePlayer(id, dir) {
-    if (!Object.hasOwn(this.players, id)) {
+    if (!this.players[id]) {
       return;
     }
     if (this.isInCombat(id)) {
@@ -404,6 +404,26 @@ class Game {
 
     this.players[id].data.rendered_position = newRenderedPos;
     this.players[id].data.chunk_center = help.getChunkCenter(this.players[id].data.chunk);
+  }
+
+  attack(id) {
+    if (!this.players[id]) {
+      return;
+    }
+    if (this.isInCombat(id)) {
+      this.arenas[JSON.stringify(this.players[id].data.chunk)].attack(id);
+      return;
+    }
+  }
+
+  useUtility(id) {
+    if (!this.players[id]) {
+      return;
+    }
+    if (this.isInCombat(id)) {
+      this.arenas[JSON.stringify(this.players[id].data.chunk)].useUtility(id);
+      return;
+    }
   }
 
   /*

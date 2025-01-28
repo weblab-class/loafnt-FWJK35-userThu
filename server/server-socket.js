@@ -116,7 +116,18 @@ module.exports = {
         if (Game.gameMap[input.gameID]) {
           Game.gameMap[input.gameID].selectItem(input.userID, input.slotIdx);
         }
-      })
+      });
+
+      socket.on("attack", (input) => {
+        if (Game.gameMap[input.gameID]) {
+          Game.gameMap[input.gameID].attack(input.user_id);
+        }
+      });
+      socket.on("utility", (input) => {
+        if (Game.gameMap[input.gameID]) {
+          Game.gameMap[input.gameID].useUtility(input.user_id);
+        }
+      });
     });
   },
 

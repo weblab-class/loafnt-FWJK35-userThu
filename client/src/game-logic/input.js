@@ -1,7 +1,8 @@
-import { enterCombat, move } from "../client-socket";
+import { inventorySelect, enterInvisibleMaze, enterCombat, move } from "../client-socket";
 
 const pressedKeys = new Map();
 const singlePresses = new Set(["c"]);
+const inventoryKeys = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
 const sendInput = (gameID, userID, deltaT) => {
   let xcomp = 0;
@@ -25,16 +26,30 @@ const sendInput = (gameID, userID, deltaT) => {
   xcomp *= deltaT;
   ycomp *= deltaT;
 
+  if (pressedKeys.get("i")) {
+    enterInvisibleMaze(gameID, userID);
+  };
+
   if (pressedKeys.get("c")) {
     enterCombat(gameID, userID);
   }
+
+  inventoryKeys.forEach((key) => {
+    if (pressedKeys.get(key)) {
+      inventorySelect(gameID, userID, Number(key));
+    }
+  })
 
   move(gameID, userID, { x: xcomp, y: ycomp });
 
   singlePresses.forEach((key) => {
     pressedKeys.set(key, false);
   });
+  
+  
 };
+
+
 
 const setPressedKey = (e) => {
   if (e.type === "keydown" && !e.repeat) {

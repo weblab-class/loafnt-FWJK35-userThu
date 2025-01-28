@@ -1,6 +1,7 @@
 const seedrandom = require("seedrandom");
 const help = require("./helpers");
 const lobbyManager = require("./lobby-manager");
+const InvisibleMaze = require("./invisible-maze");
 
 const screenBorder = {
   width: 17,
@@ -63,45 +64,54 @@ class Game {
   }
 
   /*
-    Populates a player's data field, and spawns them in the world
+    Populates a player's data field, and spawns them in the world.
+
+    Parameters:
+    user (): The user to spawn.
   */
-  spawnPlayer(user) {
+    spawnPlayer(user) {
     if (!this.players.userid) {
-      this.players[user._id] = {
-        data: {
-          avatar_id: "witch_cat",
-          animation: "still", // unnecessary
-          position: { x: 0, y: 0 },
-          rendered_position: { x: 0, y: 0 },
-          camera_center: { x: 0, y: 0 },
-          chunk_center: { x: 0, y: 0 },
-          chunk: { x: 0, y: 0 },
-          speed: 10,
-          rendered_chunks: [
-            [
-              this.getMazeFromChunk({ x: -1, y: -1 }),
-              this.getMazeFromChunk({ x: 0, y: -1 }),
-              this.getMazeFromChunk({ x: 1, y: -1 }),
-            ],
-            [
-              this.getMazeFromChunk({ x: -1, y: 0 }),
-              this.getMazeFromChunk({ x: 0, y: 0 }),
-              this.getMazeFromChunk({ x: 1, y: 0 }),
-            ],
-            [
-              this.getMazeFromChunk({ x: -1, y: 1 }),
-              this.getMazeFromChunk({ x: 0, y: 1 }),
-              this.getMazeFromChunk({ x: 1, y: 1 }),
-            ],
-          ],
-        },
-        user: user,
+          this.players[user._id] = {
+            data: {
+                avatar_id: "witch_cat",                 // Sprite ID to be rendered
+                animation: "still",                     // Animation player is undergoing
+                position: { x: 0, y: 0 },               // Absolute position
+                rendered_position: { x: 0, y: 0 },      // Where the player is rendered on the user's screen
+                camera_center: { x: 0, y: 0 },
+                chunk_center: { x: 0, y: 0 },
+                chunk: { x: 0, y: 0 },
+                mode: {type: "normal", packet: null},
+                speed: 5,
+                health: [1, 1, 1],                      // Each element in the array represents a heart, and how full it is
+                rendered_chunks: [
+                    [
+                    this.getMazeFromChunk({ x: -1, y: -1 }),
+                    this.getMazeFromChunk({ x: 0, y: -1 }),
+                    this.getMazeFromChunk({ x: 1, y: -1 }),
+                    ],
+                    [
+                    this.getMazeFromChunk({ x: -1, y: 0 }),
+                    this.getMazeFromChunk({ x: 0, y: 0 }),
+                    this.getMazeFromChunk({ x: 1, y: 0 }),
+                    ],
+                    [
+                    this.getMazeFromChunk({ x: -1, y: 1 }),
+                    this.getMazeFromChunk({ x: 0, y: 1 }),
+                    this.getMazeFromChunk({ x: 1, y: 1 }),
+                    ],
+                ],
+                inventory: {
+                    selected: 0,
+                    inventory: [[{itemID: "lantern", itemObj: null}, null, null, null, null, null, null, null], ]
+                }
+            },
+            user: user,
         active: true,
-      };
+          };
     } else {
       this.players[user._id].active = true;
     }
-  }
+      }
 
   removePlayer(userid) {
     delete this.players[this.userid];
@@ -120,6 +130,15 @@ class Game {
     lobbyManager.deleteLobby(this.seed);
     clearInterval(this.interval);
     this.killer();
+  }
+
+  /*
+    Update the player's data to reflect selected item.
+  */
+  selectItem(userid, itemIdx) {
+    if (this.players[userid]) {
+        this.players[userid].data.inventory.selected = itemIdx-1;
+    }
   }
 
   /*
@@ -175,6 +194,51 @@ class Game {
     this.explored[JSON.stringify(chunk)][Math.floor(bitIndex / 32)] |= 1 << bitIndex % 32;
   }
 
+  getTileExplored(pos) {
+    const chunk = help.getChunkFromPos(pos);
+    const latticePoint = help.getLatticePoint(pos, chunk);
+    const bitIndex = latticePoint.x + latticePoint.y * chunkSize;
+    if (Object.hasOwn(this.explored, JSON.stringify(chunk))) {
+      return 1 & (this.explored[JSON.stringify(chunk)][Math.floor(bitIndex / 32)] >> bitIndex % 32);
+    }
+    return 0;
+  }
+
+  setTileExplored(pos, chunk) {
+    const latticePoint = help.getLatticePoint(pos, chunk);
+    const bitIndex = latticePoint.x + latticePoint.y * chunkSize;
+    this.explored[JSON.stringify(chunk)][Math.floor(bitIndex / 32)] |= 1 << bitIndex % 32;
+  }
+
+  /*
+    Given a player's ID, update the game state to reflect their intended mode.
+
+    Parameters:
+    id (String): The intended player's ID.
+    mode (String): Represents the player's new game mode.
+  */
+  changePlayerMode(id, mode) {
+    if (Object.hasOwn(this.players, id)) {
+        this.players[id].data.mode.type = mode;
+        if (mode === "invisible-maze") {
+            const invisibleMaze = new InvisibleMaze.InvisibleMaze({
+                mapSize: {height: 1, width: 1},
+                getMazeFromChunk: {func: this.getMazeFromChunk, seed: this.seed},
+                init_chunk: {x: 0, y: 0}
+            });
+            // TO-DO: Update mode with the relevant game packet lol
+            this.players[id].data.mode.packet = InvisibleMaze.getPacket();
+        }
+    };
+  };
+
+  /*
+    Given a player's ID and their intended direction, handle the logic to move them.
+
+    Parameters:
+    id (): The player's ID
+    dir (Object): Represents the player's change in position through X and Y components.
+  */
   movePlayer(id, dir) {
     if (!Object.hasOwn(this.players, id)) {
       return;
@@ -286,6 +350,35 @@ class Game {
       }
     }
 
+    //set explored tiles
+    if (!this.explored[JSON.stringify(playerChunk)]) {
+      this.explored[JSON.stringify(playerChunk)] = Array(Math.ceil(chunkSize ** 2 / 32)).fill(0);
+    }
+
+    this.setTileExplored(playerPos, playerChunk);
+
+    //put explored tiles in rendered chunk
+    for (let chunkydiff = -1; chunkydiff < 2; chunkydiff++) {
+      for (let chunkxdiff = -1; chunkxdiff < 2; chunkxdiff++) {
+        for (let y = 0; y < chunkSize; y++) {
+          for (let x = 0; x < chunkSize; x++) {
+            const isExplored =
+              this.getTileExplored(
+                help.addCoords(
+                  help.getChunkCenter(
+                    help.addCoords(playerChunk, { x: chunkxdiff, y: chunkydiff })
+                  ),
+                  { x: x * 2 - chunkSize + 1, y: y * 2 - chunkSize + 1 }
+                )
+              ) * 2;
+            this.players[id].data.rendered_chunks[chunkydiff + 1][chunkxdiff + 1][y * 2 + 1][
+              x * 2 + 1
+            ] = isExplored;
+          }
+        }
+      }
+    }
+
     //set camera
     const newRenderedPos = help.subtractCoords(playerPos, this.players[id].data.camera_center);
     if (newRenderedPos.x < -cameraBoxSize.width) {
@@ -320,8 +413,8 @@ class Game {
     maze (2D Array): 17x17 array, with each cell being a 0 or 1, indicating if a maze wall
     exists.
   */
-  getMazeFromChunk(chunk) {
-    const chunkSeed = this.seed + chunk.x + "|" + chunk.y;
+  getMazeFromChunk(chunk, seed=this.seed) {
+    const chunkSeed = seed + chunk.x + "|" + chunk.y;
     const chunkRandom = seedrandom(chunkSeed);
 
     //assign empty maze

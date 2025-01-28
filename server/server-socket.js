@@ -105,6 +105,18 @@ module.exports = {
           }
         }
       });
+
+      socket.on("enter-invisiblemaze", (input) => {
+        if (Game.gameMap[input.gameID]) {
+          Game.gameMap[input.gameID].changePlayerMode(input.userID, "invisible-maze");
+        }
+      });
+
+      socket.on("inventoryselect", (input) => {
+        if (Game.gameMap[input.gameID]) {
+          Game.gameMap[input.gameID].selectItem(input.userID, input.slotIdx);
+        }
+      })
     });
   },
 

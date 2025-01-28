@@ -33,9 +33,9 @@ let assetsMap = {
   enemies: {
     boss: {
       id: "boss",
-      spriteSize: 64,
-      imageSize: { width: 64, height: 64 },
-      blockSize: 4,
+      spriteSize: 128,
+      imageSize: { width: 128, height: 128 },
+      blockSize: 8,
       src: assetlist.boss,
       imgObj: null,
     },
@@ -71,6 +71,50 @@ let assetsMap = {
       spriteSize: 64,
       blockSize: 1,
       src: assetlist.pathtilemap,
+      imgObj: null,
+    },
+  },
+  UI: {
+    fullheart: {
+      id: "fullheart",
+      imageSize: { width: 32, height: 32 },
+      spriteSize: 32,
+      blockSize: 1,
+      src: assetlist.fullheart,
+      imgObj: null,
+    },
+    halfheart: {
+      id: "halfheart",
+      imageSize: { width: 32, height: 32 },
+      spriteSize: 32,
+      blockSize: 1,
+      src: assetlist.halfheart,
+      imgObj: null,
+    },
+    inventoryslot: {
+      id: "inventoryslot",
+      imageSize: { width: 32, height: 32 },
+      spriteSize: 32,
+      blockSize: 1,
+      src: assetlist.inventoryslot,
+      imgObj: null,
+    },
+    selectedslot: {
+      id: "selectedslot",
+      imageSize: { width: 32, height: 32 },
+      spriteSize: 32,
+      blockSize: 1,
+      src: assetlist.selectedslot,
+      imgObj: null,
+    },
+  },
+  items: {
+    lantern: {
+      id: "lantern",
+      imageSize: { width: 32, height: 32 },
+      spriteSize: 32,
+      blockSize: 1,
+      src: assetlist.lantern,
       imgObj: null,
     },
   },
@@ -119,6 +163,24 @@ const drawSprite = (sprite, asset, ctx) => {
   );
 };
 
+const drawPlayer = (player, ctx) => {
+  const itemRenderedPosition = player.rendered_position;
+  player.animation = 0;
+  player.scale = 1;
+  drawSprite(player, assetsMap.avatars[player.avatar_id], ctx);
+  // Draw the player's item
+  const itemData = player.inventory.inventory[0][player.inventory.selected];
+  if (itemData !== null) {
+    const itemAsset = assetsMap.items[itemData.itemID];
+    const itemSprite = {
+      rendered_position: { x: itemRenderedPosition.x - 0.5, y: itemRenderedPosition.y },
+      animation: 0,
+      scale: 1,
+    };
+    drawSprite(itemSprite, itemAsset, ctx);
+  }
+};
+
 //draws a fillable bar at a specified position
 /*
 Params:
@@ -149,12 +211,6 @@ const drawFillableBar = (bar, ctx) => {
     ((bar.size.width * blockSize - bar.border * 4) * bar.current) / bar.max,
     bar.size.height * blockSize - bar.border * 4
   );
-};
-
-const drawPlayer = (player, ctx) => {
-  player.animation = 0;
-  player.scale = 1;
-  drawSprite(player, assetsMap.avatars[player.avatar_id], ctx);
 };
 
 const drawEnemy = (enemy, ctx) => {
@@ -317,6 +373,91 @@ const drawTiles = (canvasState, offset, ctx) => {
   }
 };
 
+/*
+    Given the player's information, render the following UI features onto
+    the provided canvas context: health, inventory, gear
+*/
+const drawUI = (playerObj, ctx) => {
+  // Render the player's hearts
+  for (let heartIdx = 0; heartIdx < playerObj.health.length; heartIdx++) {
+    const heartVal = playerObj.health[heartIdx];
+    const padding = blockSize / 4;
+    const heartSize = (blockSize * 3) / 4; // Size of rendered heart
+    let heartImgSize; // Size of the actual image
+    let heartImg;
+    if (heartVal === 1) {
+      heartImg = assetsMap.UI["fullheart"].imgObj;
+      heartImgSize = assetsMap.UI["fullheart"].imageSize.width;
+    } else if (heartVal === 0.5) {
+      heartImg = assetsMap.UI["halfheart"].imgObj;
+      heartImgSize = assetsMap.UI["halfheart"].imageSize.width;
+    }
+    ctx.drawImage(
+      heartImg,
+      0,
+      0,
+      heartImgSize,
+      heartImgSize,
+      heartIdx * (heartSize + padding) + padding, //
+      padding,
+      heartSize,
+      heartSize
+    );
+  }
+  // Render the first line of the player's inventory
+  const inventoryRow = playerObj.inventory.inventory[0];
+  // Length of the rendered row in pixels
+  const rowLength = inventoryRow.length * blockSize;
+  // The leftmost coordinate of the row
+  const rowX = window.innerWidth / 2 - rowLength / 2;
+  // The topmost coordinate of the row
+  const rowY = window.innerHeight - (blockSize * 5) / 4;
+  for (let itemIdx = 0; itemIdx < inventoryRow.length; itemIdx++) {
+    // Render the inventory slot
+    const inventoryslotImg =
+      playerObj.inventory.selected === itemIdx
+        ? assetsMap.UI["selectedslot"]
+        : assetsMap.UI["inventoryslot"];
+    ctx.drawImage(
+      inventoryslotImg.imgObj,
+      0,
+      0,
+      inventoryslotImg.imageSize.width,
+      inventoryslotImg.imageSize.width,
+      rowX + itemIdx * blockSize,
+      rowY,
+      blockSize,
+      blockSize
+    );
+    if (inventoryRow[itemIdx] !== null) {
+      // Render the item
+      const item = inventoryRow[itemIdx];
+      if (assetsMap.items[item.itemID] !== undefined) {
+        const itemImg = assetsMap.items[item.itemID];
+        ctx.drawImage(
+          itemImg.imgObj,
+          0,
+          0,
+          itemImg.imageSize.width,
+          itemImg.imageSize.width,
+          rowX + blockSize * itemIdx,
+          rowY,
+          blockSize,
+          blockSize
+        );
+      }
+    }
+  }
+};
+
+/*
+    Given the player's information, render their inventory and player loadout onto
+    the provided canvas context. (This is the expanded inventory screen).
+*/
+const drawInventoryScreen = (playerObj, ctx) => {};
+
+const drawSelectedItem = (playerObj, ctx) => {};
+
 const drawArena = (canvasState, ctx) => {
   //render all projectiles
   Object.values(canvasState.arena.projectiles).forEach((proj) => {
@@ -382,6 +523,7 @@ const drawMaze = (canvasState, ctx) => {
     }
   });
   drawPlayer(canvasState.myplayerdata, ctx);
+  drawUI(canvasState.myplayerdata, ctx);
 };
 
 /*
@@ -391,20 +533,21 @@ const drawMaze = (canvasState, ctx) => {
     Params:
     playerObj (object): An object with the player information
     chunkBlockSize (int): The chunk's width/length in terms of game blocks (i.e 17)
+    mode (String): Indicate which canvas to render
 */
-const getMapToRender = (playerObj) => {
-  //create a single 2d array containing all blocks in the rendered area
+const getMapToRender = (playerObj, chunkBlockSize) => {
+  let rendered_chunks = playerObj.rendered_chunks;
+  if (playerObj.mode.type === "invisible-maze") rendered_chunks = playerObj.mode.packet.chunks;
+  // Create a single 2d array containing all blocks in the rendered area
   const combinedChunks = [];
   for (let chunkRow = 0; chunkRow < playerObj.rendered_chunks.length; chunkRow++) {
     for (let thisRow = 0; thisRow < playerObj.rendered_chunks[0][0].length; thisRow++) {
       const currentRow = [];
       for (let chunkCol = 0; chunkCol < playerObj.rendered_chunks.length; chunkCol++) {
         for (let thisCol = 0; thisCol < playerObj.rendered_chunks[0][0].length; thisCol++) {
-          //add cell to array
           const thisCell = playerObj.rendered_chunks[chunkRow][chunkCol][thisRow][thisCol];
           currentRow.push(thisCell);
         }
-        //remove chunk overlap at borders
         if (chunkCol < playerObj.rendered_chunks.length - 1) {
           currentRow.pop();
         }
@@ -416,7 +559,7 @@ const getMapToRender = (playerObj) => {
     }
   }
 
-  //relative coordinate of the camera's center to the chunk center
+  // Get the player's relative coordinates
   const relCoords = help.roundCoord(
     help.subtractCoords(playerObj.camera_center, playerObj.chunk_center)
   );
@@ -429,7 +572,7 @@ const getMapToRender = (playerObj) => {
     height: (Math.floor((screenBlockHeight - 1) / 2) + 1) * 2 + 1,
   };
 
-  //select desired rows and columns from combined chunks to render
+  // Select desired rows and columns from combined chunks to render
   for (let row = 0; row < combinedChunks.length; row++) {
     if (
       row - relCoords.y >= (combinedChunks.length - 1) / 2 - (screenBlockHeight + 1) / 2 &&
@@ -511,7 +654,10 @@ const getMapToRender = (playerObj) => {
     player information and combat state
 
     Params:
-    gamePacket (object): The game packet object that was received from the socket
+    gamePacket (Object): The game packet object that was received from the socket
+
+    Returns:
+    canvasState (Object):
 */
 const convertGameToCanvasState = (gamePacket) => {
   let incombat = false;
@@ -530,12 +676,12 @@ const convertGameToCanvasState = (gamePacket) => {
     });
   });
 
-  //player is exploring maze
+  // Player is exploring maze
   if (!incombat) {
     players = gamePacket.game.players;
     myplayerdata = players[gamePacket.recipientid].data;
     delete players[gamePacket.recipientid];
-    map = getMapToRender(myplayerdata);
+    map = getMapToRender(myplayerdata, gamePacket.game.chunkBlockSize);
 
     return {
       incombat: incombat,
@@ -545,7 +691,7 @@ const convertGameToCanvasState = (gamePacket) => {
       map: map,
     };
   }
-  //player is in arena combat
+  // Player is in arena combat
   else {
     myplayerdata = players[gamePacket.recipientid];
     return {
@@ -592,6 +738,16 @@ const loadAssets = async () => {
   loadedTerrain.forEach((asset) => {
     assetsMap.terrain[asset.id].imgObj = asset.imgObj;
   });
+  // load UI
+  const loadedUI = await Promise.all(Object.values(assetsMap.UI).map(loadAsset));
+  loadedUI.forEach((asset) => {
+    assetsMap.UI[asset.id].imgObj = asset.imgObj;
+  });
+  // load items
+  const loadedItems = await Promise.all(Object.values(assetsMap.items).map(loadAsset));
+  loadedItems.forEach((asset) => {
+    assetsMap.items[asset.id].imgObj = asset.imgObj;
+  });
 };
 
 // Call when game is started
@@ -604,8 +760,8 @@ loadAssets();
     gamePacket (object): The game packet object that was received from the socket
     canvasRed (Reference): The reference to the current canvas
     dimensions {
-      width: width of game canvas
-      height: height of game canvas
+      width: width of game canvas/user's screen
+      height: height of game canvas/user's screen
     }
 */
 export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
@@ -616,8 +772,13 @@ export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
   canvas.width = dimensions.width;
   canvas.height = dimensions.height;
 
+  /*
+        Calculate the dimensions of the screen in terms of game "blocks"
+        blockSize: The number of pixels in a game "block", which is dependent on the
+        user's screen.
+    */
   if (dimensions.width > dimensions.height) {
-    screenBlockWidth = (screenMinBlocks * dimensions.width) / dimensions.height;
+    screenBlockWidth = (screenMinBlocks * dimensions.width) / dimensions.height; // Can also think of blockSize * dimensions.width
     screenBlockHeight = screenMinBlocks;
     blockSize = dimensions.height / screenMinBlocks;
   } else {
@@ -625,6 +786,8 @@ export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
     screenBlockWidth = screenMinBlocks;
     blockSize = dimensions.width / screenMinBlocks;
   }
+  // playerSize (in terms of pixels): The player is equal to the size of one block
+  // const playerSize = blockSize * 1;
 
   canvasCenter = { x: screenBlockWidth / 2, y: screenBlockHeight / 2 };
 

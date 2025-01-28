@@ -1,6 +1,6 @@
-const Game = require("./game-logic");
-const Utilities = require("../client/src/utilities");
-require('dotenv').config();
+const User = require("./models/user");
+const common = require("./common");
+require("dotenv").config();
 
 const getRandomCode = (len) => {
   alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -9,6 +9,35 @@ const getRandomCode = (len) => {
     code = code + alphabet.charAt(Math.floor(Math.random() * alphabet.length));
   }
   return code;
+};
+
+const saveGame = (gameID, host) => {
+  returnPromise = new Promise((resolve, reject) => {
+    User.find({ googleid: host.googleid }).then((foundUsers) => {
+      let foundUser = foundUsers[0];
+      let foundGame;
+      if (foundUser.gamefiles === undefined || foundUser.gamefiles.length === 0) {
+        foundGame = JSON.stringify(common.gameMap[gameID]);
+        foundUser.gamefiles = [foundGame, "", "", "", ""];
+      } else {
+        // for (let fileIdx = 0; fileIdx < foundUser.gamefiles.length; fileIdx++) {
+        //   if (foundUser.gamefiles[fileIdx] === "") {
+        //     foundGame = JSON.stringify(common.gameMap[gameID]);
+        //     foundUser.gamefiles[fileIdx] = foundGame;
+        //     break;
+        //   }
+        // }
+        //always save to first slot for now
+        foundGame = JSON.stringify(common.gameMap[gameID]);
+        foundUser.gamefiles[0] = foundGame;
+      }
+
+      foundUser.save().then((result) => {
+        resolve({ seed: gameID, host: host });
+      });
+    });
+  });
+  return returnPromise;
 };
 
 class Lobby {
@@ -33,20 +62,20 @@ class Lobby {
   removePlayer(player) {
     this.players.delete(player.googleid);
     this.playersObj = Object.fromEntries(this.players);
-    if (this.players.size === 0) { // 
+    if (this.players.size === 0) {
+      //
       deleteLobby(this.code);
     }
   }
 
   deactivatePlayer(player) {
-    // deletes game
     if (this.started) {
       console.log(this.code);
-      console.log(Game.gameMap);
-      if (Game.gameMap[this.code] === undefined) {
+      console.log(common.gameMap);
+      if (common.gameMap[this.code] === undefined) {
         console.log("no such game");
-      };
-      Game.gameMap[this.code].setInactive(player._id);
+      }
+      common.gameMap[this.code].setInactive(player._id);
     }
   }
 
@@ -81,12 +110,14 @@ const deleteLobby = (code) => {
       allPlayers.delete(player);
     }
   });
+  console.log(common.gameMap);
   const lobby = lobbies.get(code);
-  const url = new URL("/api/savegame", process.env.BASE_URL);
-  Utilities.post(url, {host: lobby.leader, gameID: code}).then((result) => {
-    console.log(`Game [${result.seed}] has been saved successfully to player [${result.host.name}]`);
+  saveGame(lobby.code, lobby.leader).then((result) => {
+    console.log(
+      `Game [${result.seed}] has been saved successfully to player [${result.host.name}]`
+    );
+    lobbies.delete(code);
   });
-  lobbies.delete(code);
 };
 
 module.exports = {

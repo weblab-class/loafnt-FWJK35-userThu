@@ -3,11 +3,13 @@ const help = require("./helpers");
 const lobbyManager = require("./lobby-manager");
 const Arena = require("./arena");
 const InvisibleMaze = require("./invisible-maze");
+const common = require("./common");
 
 const screenBorder = {
   width: 17,
   height: 17,
 };
+let gameMap = common.gameMap;
 
 const fps = 60;
 
@@ -16,8 +18,6 @@ const playerSize = 0.5;
 const cameraBoxSize = { width: 2, height: 2 };
 
 help.setChunkSize(chunkSize);
-
-const gameMap = {};
 
 const dummyPlayer1 = {
   position: { x: 0, y: 0 },
@@ -118,6 +118,7 @@ class Game {
 
   removePlayer(userid) {
     delete this.players[this.userid];
+    console.log("deleting player");
     if (Object.keys(this.players).length === 0) {
       this.killSelf();
     }
@@ -588,7 +589,6 @@ class Game {
 }
 
 module.exports = {
-  gameMap,
   Game,
   fps,
 };

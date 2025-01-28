@@ -22,6 +22,7 @@ const router = express.Router();
 const socketManager = require("./server-socket");
 const lobbyManager = require("./lobby-manager");
 const game = require("./game-logic");
+const common = require("./common");
 
 router.post("/login", auth.login);
 router.post("/logout", auth.logout);
@@ -53,11 +54,11 @@ router.post("/storeuser", (req, res) => {
         thisuser = foundUsers[0];
         res.send(thisuser);
       } else {
-        User.find()
+        User.find();
         const newUser = new User({
           name: req.user.name,
           googleid: req.user.googleid,
-          gamefiles: ["", "", "", "", ""]
+          gamefiles: ["", "", "", "", ""],
         });
         newUser.save().then((user) => {
           res.send(user);
@@ -83,7 +84,7 @@ router.post("/joinlobby", (req, res) => {
         if (lobby.players.has(req.user.googleid)) {
           lobby.removePlayer(req.user);
           if (lobby.started) {
-            game.gameMap[code].setInactive(req.user._id);
+            common.gameMap[code].setInactive(req.user._id);
           }
         }
       });
@@ -97,7 +98,7 @@ router.post("/joinlobby", (req, res) => {
       });
       //spawn them if this game has already started
       if (lobby.started) {
-        game.gameMap[req.body.lobbycode].spawnPlayer(req.user);
+        common.gameMap[req.body.lobbycode].spawnPlayer(req.user);
       }
       res.send(lobby);
     } else {
@@ -130,32 +131,8 @@ router.get("/mylobbycode", (req, res) => {
 router.post("/activateplayer", (req, res) => {
   if (req.user) {
     socketManager.activatePlayer(req.user._id, req.body.gameID);
-    res.send({user: req.user._id, gameID: req.body.gameID});
+    res.send({ user: req.user._id, gameID: req.body.gameID });
   }
-});
-
-router.post("/savegame", (req, res) => {
-  const host = req.body.host;
-  User.find({googleid: host.googleid}).then((foundUsers) => {
-    let foundUser = foundUsers[0];
-    let foundGame;
-    if (foundUser.gamefiles === undefined || foundUser.gamefiles.length === 0) {
-      foundGame = JSON.stringify(game.gameMap[req.body.gameID]);
-      foundUser.gamefiles = [foundGame, "", "", "", ""];
-    } else {
-      for (let fileIdx = 0; fileIdx < foundUser.gamefiles.length; fileIdx++) {
-        if (foundUser.gamefiles[fileIdx] === "") {
-          foundGame = JSON.stringify(game.gameMap[req.body.gameID]);
-          foundUser.gamefiles[fileIdx] = foundGame;
-          break;
-        }
-      }
-    }
-    
-    foundUser.save();
-    res.send({seed: req.body.gameID, host: host});
-  });
-
 });
 
 // anything else falls to this "not found" case

@@ -1,6 +1,7 @@
 const seedrandom = require("seedrandom");
 const help = require("./helpers");
 const lobbyManager = require("./lobby-manager");
+const Arena = require("./arena");
 const InvisibleMaze = require("./invisible-maze");
 
 const screenBorder = {
@@ -9,6 +10,7 @@ const screenBorder = {
 };
 
 const fps = 60;
+Arena.fps = fps;
 
 const chunkSize = 8;
 const playerSize = 0.5;
@@ -69,52 +71,54 @@ class Game {
     Parameters:
     user (): The user to spawn.
   */
-    spawnPlayer(user) {
+  spawnPlayer(user) {
     if (!this.players.userid) {
-          this.players[user._id] = {
-            data: {
-                avatar_id: "witch_cat",                 // Sprite ID to be rendered
-                animation: "still",                     // Animation player is undergoing
-                position: { x: 0, y: 0 },               // Absolute position
-                rendered_position: { x: 0, y: 0 },      // Where the player is rendered on the user's screen
-                camera_center: { x: 0, y: 0 },
-                chunk_center: { x: 0, y: 0 },
-                chunk: { x: 0, y: 0 },
-                mode: {type: "normal", packet: null},
-                speed: 5,
-                health: [1, 1, 1],                      // Each element in the array represents a heart, and how full it is
-                rendered_chunks: [
-                    [
-                    this.getMazeFromChunk({ x: -1, y: -1 }),
-                    this.getMazeFromChunk({ x: 0, y: -1 }),
-                    this.getMazeFromChunk({ x: 1, y: -1 }),
-                    ],
-                    [
-                    this.getMazeFromChunk({ x: -1, y: 0 }),
-                    this.getMazeFromChunk({ x: 0, y: 0 }),
-                    this.getMazeFromChunk({ x: 1, y: 0 }),
-                    ],
-                    [
-                    this.getMazeFromChunk({ x: -1, y: 1 }),
-                    this.getMazeFromChunk({ x: 0, y: 1 }),
-                    this.getMazeFromChunk({ x: 1, y: 1 }),
-                    ],
-                ],
-                inventory: {
-                    selected: 0,
-                    inventory: [[{itemID: "lantern", itemObj: null}, null, null, null, null, null, null, null], ]
-                }
-            },
-            user: user,
+      this.players[user._id] = {
+        data: {
+          avatar_id: "witch_cat", // Sprite ID to be rendered
+          animation: "still", // Animation player is undergoing
+          position: { x: 0, y: 0 }, // Absolute position
+          rendered_position: { x: 0, y: 0 }, // Where the player is rendered on the user's screen
+          camera_center: { x: 0, y: 0 },
+          chunk_center: { x: 0, y: 0 },
+          chunk: { x: 0, y: 0 },
+          mode: { type: "normal", packet: null },
+          speed: 5,
+          health: [1, 1, 1], // Each element in the array represents a heart, and how full it is
+          rendered_chunks: [
+            [
+              this.getMazeFromChunk({ x: -1, y: -1 }),
+              this.getMazeFromChunk({ x: 0, y: -1 }),
+              this.getMazeFromChunk({ x: 1, y: -1 }),
+            ],
+            [
+              this.getMazeFromChunk({ x: -1, y: 0 }),
+              this.getMazeFromChunk({ x: 0, y: 0 }),
+              this.getMazeFromChunk({ x: 1, y: 0 }),
+            ],
+            [
+              this.getMazeFromChunk({ x: -1, y: 1 }),
+              this.getMazeFromChunk({ x: 0, y: 1 }),
+              this.getMazeFromChunk({ x: 1, y: 1 }),
+            ],
+          ],
+          inventory: {
+            selected: 0,
+            items: [
+              [{ itemID: "lantern", itemObj: null }, null, null, null, null, null, null, null],
+            ],
+          },
+        },
+        user: user,
         active: true,
-          };
+      };
     } else {
       this.players[user._id].active = true;
     }
-      }
+  }
 
   removePlayer(userid) {
-    delete this.players[userid];
+    delete this.players[this.userid];
     if (Object.keys(this.players).length === 0) {
       this.killSelf();
     }
@@ -137,7 +141,7 @@ class Game {
   */
   selectItem(userid, itemIdx) {
     if (this.players[userid]) {
-        this.players[userid].data.inventory.selected = itemIdx-1;
+      this.players[userid].data.inventory.selected = itemIdx - 1;
     }
   }
 
@@ -174,7 +178,7 @@ class Game {
   isInCombat(id) {
     return (
       Object.hasOwn(this.arenas, JSON.stringify(this.players[id].data.chunk)) &&
-      Object.hasOwn(this.arenas[JSON.stringify(this.players[id].data.chunk)].players, id)
+      this.arenas[JSON.stringify(this.players[id].data.chunk)].hasPlayer(id)
     );
   }
 
@@ -219,18 +223,18 @@ class Game {
   */
   changePlayerMode(id, mode) {
     if (Object.hasOwn(this.players, id)) {
-        this.players[id].data.mode.type = mode;
-        if (mode === "invisible-maze") {
-            const invisibleMaze = new InvisibleMaze.InvisibleMaze({
-                mapSize: {height: 1, width: 1},
-                getMazeFromChunk: {func: this.getMazeFromChunk, seed: this.seed},
-                init_chunk: {x: 0, y: 0}
-            });
-            // TO-DO: Update mode with the relevant game packet lol
-            this.players[id].data.mode.packet = InvisibleMaze.getPacket();
-        }
-    };
-  };
+      this.players[id].data.mode.type = mode;
+      if (mode === "invisible-maze") {
+        const invisibleMaze = new InvisibleMaze.InvisibleMaze({
+          mapSize: { height: 1, width: 1 },
+          getMazeFromChunk: { func: this.getMazeFromChunk, seed: this.seed },
+          init_chunk: { x: 0, y: 0 },
+        });
+        // TO-DO: Update mode with the relevant game packet lol
+        this.players[id].data.mode.packet = InvisibleMaze.getPacket();
+      }
+    }
+  }
 
   /*
     Given a player's ID and their intended direction, handle the logic to move them.
@@ -413,7 +417,7 @@ class Game {
     maze (2D Array): 17x17 array, with each cell being a 0 or 1, indicating if a maze wall
     exists.
   */
-  getMazeFromChunk(chunk, seed=this.seed) {
+  getMazeFromChunk(chunk, seed = this.seed) {
     const chunkSeed = seed + chunk.x + "|" + chunk.y;
     const chunkRandom = seedrandom(chunkSeed);
 
@@ -536,7 +540,7 @@ class Game {
   beginCombat(playerid) {
     const arenaId = JSON.stringify(this.players[playerid].data.chunk);
     if (!this.arenas[arenaId]) {
-      this.arenas[arenaId] = new Arena();
+      this.arenas[arenaId] = new Arena.Arena();
       this.arenas[arenaId].killer = () => {
         delete this.arenas[arenaId];
       };
@@ -549,95 +553,6 @@ class Game {
     if (this.arenas[arenaId]) {
       this.arenas[arenaId].removePlayer(playerid);
     }
-  }
-}
-
-class Arena {
-  players;
-  terrain;
-  enemies;
-  projectiles;
-  size;
-  time;
-  idcount;
-
-  killer;
-
-  constructor() {
-    this.players = {};
-    this.terrain = {};
-    this.enemies = {};
-    this.projectiles = {};
-    this.size = { width: 17, height: 17 };
-    this.time = 0;
-    this.idcount = 0;
-    this.spawnEnemy();
-  }
-
-  addPlayer(userid) {
-    this.players[userid] = {
-      position: { x: 0.0, y: 0.0 },
-      rendered_position: { x: 0.0, y: 0.0 },
-      health: 100.0,
-      avatar_id: "witch_cat",
-      speed: 7,
-    };
-  }
-
-  removePlayer(userid) {
-    delete this.players[userid];
-    if (Object.keys(this.players).length == 0) {
-      this.killer();
-    }
-  }
-
-  killSelf() {
-    this.killer();
-  }
-
-  movePlayer(id, inputDir) {
-    this.players[id].position = help.addCoords(
-      this.players[id].position,
-      help.scaleCoord(inputDir, this.players[id].speed)
-    );
-    //confine player to arena
-    if (this.players[id].position.x < -this.size.width / 2) {
-      this.players[id].position.x = -this.size.width / 2;
-    }
-    if (this.players[id].position.x > this.size.width / 2) {
-      this.players[id].position.x = this.size.width / 2;
-    }
-    if (this.players[id].position.y < -this.size.height / 2) {
-      this.players[id].position.y = -this.size.height / 2;
-    }
-    if (this.players[id].position.y > this.size.height / 2) {
-      this.players[id].position.y = this.size.height / 2;
-    }
-    this.players[id].rendered_position = this.players[id].position;
-  }
-
-  tickArena() {
-    Object.values(this.projectiles).forEach((proj) => {
-      proj.position = help.addCoords(proj.position, help.scaleCoord(proj.velocity, 1 / fps));
-    });
-  }
-
-  /*
-    Creates a new enemy at the center
-    {
-
-    }
-  */
-  spawnEnemy() {
-    this.idcount++;
-    this.enemies[this.idcount] = {
-      id: this.idcount,
-      position: { x: 0, y: 0 },
-      radius: 2,
-      maxhealth: 100.0,
-      health: 100.0,
-      type: "boss",
-    };
   }
 }
 

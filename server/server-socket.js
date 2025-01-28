@@ -63,8 +63,12 @@ const runGame = (gameId) => {
   });
 
   Game.gameMap[gameId].interval = setInterval(() => {
+    //tick each arena
+    Object.values(Game.gameMap[gameId].arenas).forEach((arena) => {
+      arena.tickArena();
+    });
     sendGameState(gameId);
-  }, 1000 / 60);
+  }, 1000 / Game.fps);
 };
 
 module.exports = {

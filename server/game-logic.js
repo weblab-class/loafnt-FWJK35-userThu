@@ -634,6 +634,7 @@ class Arena {
       id: this.idcount,
       position: { x: 0, y: 0 },
       radius: 2,
+      maxhealth: 100.0,
       health: 100.0,
       type: "boss",
     };

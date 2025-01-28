@@ -48,14 +48,16 @@ router.post("/initsocket", (req, res) => {
 router.post("/storeuser", (req, res) => {
   if (req.user) {
     User.find({ googleid: req.user.googleid }).then((foundUsers) => {
-      //user exists
+      // user already exists
       if (foundUsers.length > 0) {
         thisuser = foundUsers[0];
         res.send(thisuser);
       } else {
+        User.find()
         const newUser = new User({
           name: req.user.name,
           googleid: req.user.googleid,
+          gamefiles: ["", "", "", "", ""]
         });
         newUser.save().then((user) => {
           res.send(user);
@@ -123,6 +125,37 @@ router.get("/mylobbycode", (req, res) => {
     }
   }
   return res.status(500).send("Player not logged in");
+});
+
+router.post("/activateplayer", (req, res) => {
+  if (req.user) {
+    socketManager.activatePlayer(req.user._id, req.body.gameID);
+    res.send({user: req.user._id, gameID: req.body.gameID});
+  }
+});
+
+router.post("/savegame", (req, res) => {
+  const host = req.body.host;
+  User.find({googleid: host.googleid}).then((foundUsers) => {
+    let foundUser = foundUsers[0];
+    let foundGame;
+    if (foundUser.gamefiles === undefined || foundUser.gamefiles.length === 0) {
+      foundGame = JSON.stringify(game.gameMap[req.body.gameID]);
+      foundUser.gamefiles = [foundGame, "", "", "", ""];
+    } else {
+      for (let fileIdx = 0; fileIdx < foundUser.gamefiles.length; fileIdx++) {
+        if (foundUser.gamefiles[fileIdx] === "") {
+          foundGame = JSON.stringify(game.gameMap[req.body.gameID]);
+          foundUser.gamefiles[fileIdx] = foundGame;
+          break;
+        }
+      }
+    }
+    
+    foundUser.save();
+    res.send({seed: req.body.gameID, host: host});
+  });
+
 });
 
 // anything else falls to this "not found" case

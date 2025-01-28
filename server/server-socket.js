@@ -6,6 +6,8 @@ let io;
 const userToSocketMap = {}; // maps user ID to socket object
 const socketToUserMap = {}; // maps socket ID to user object
 
+const activePlayers = {};
+
 const getAllConnectedUsers = () => Object.values(socketToUserMap);
 const getSocketFromUserID = (userid) => userToSocketMap[userid];
 const getUserFromSocketID = (socketid) => socketToUserMap[socketid];
@@ -45,30 +47,60 @@ const sendGameState = (gameId) => {
   });
 };
 
-// Called when server socket receives a request
-const runGame = (gameId) => {
+const startGame = (gameId) => {
+  // Update the lobby associated with the game 
+  const lobby = LobbyManager.findLobbyByCode(gameId);
+  
+  lobby.players.forEach((player) => {
+    const socket = getSocketFromUserID(player._id);
+    if (socket) {
+      getSocketFromUserID(player._id).emit("launchgame");
+    };
+  });
+  // Create a new game
+  Game.gameMap[gameId] = new Game.Game(gameId, LobbyManager.findLobbyByCode(gameId));
+  // Add a killer function for when the game calls killSelf()
   Game.gameMap[gameId].killer = () => {
+    console.log("im killing myself");
     delete Game.gameMap[gameId];
   };
-  Object.values(Game.gameMap[gameId].players).forEach((player) => {
-    Object.values(Game.gameMap).forEach((game) => {
-      if (game.seed !== gameId) {
-        game.removePlayer(player.user._id);
-      }
-    });
-    const socket = getSocketFromUserID(player.user._id);
-    if (socket) {
-      getSocketFromUserID(player.user._id).emit("launchgame");
-    }
-  });
 
-  Game.gameMap[gameId].interval = setInterval(() => {
+  // Keep track of every active player server-side
+  // Object.values(Game.gameMap[gameId].players).forEach((player) => {
+  //   activePlayers[player.user._id] = gameId;
+  // });
+}
+
+// Called when server socket receives a request
+const runGame = (gameId) => {
+  const lobby = LobbyManager.findLobbyByCode(gameId);
+  lobby.started = true;
+  const game = Game.gameMap[gameId];
+  // Iterate through the players in the current game
+  // Object.values(game.players).forEach((player) => {
+  //   // Scan through every active game besides the current one to set the player inactive
+  //   Object.values(Game.gameMap).forEach((game) => {
+  //     if (game.seed !== gameId) {
+  //       game.setInactive(player.user._id);
+  //     }
+  //   });
+  //   const socket = getSocketFromUserID(player.user._id);
+  //   if (socket) {
+  //     getSocketFromUserID(player.user._id).emit("launchgame");
+  //   }
+  // });
+
+  game.interval = setInterval(() => {
     //tick each arena
-    Object.values(Game.gameMap[gameId].arenas).forEach((arena) => {
+    Object.values(game.arenas).forEach((arena) => {
       arena.tickArena();
     });
     sendGameState(gameId);
   }, 1000 / Game.fps);
+};
+
+const activatePlayer = (userID, gameID) => {
+  activePlayers[userID] = gameID;
 };
 
 module.exports = {
@@ -79,15 +111,24 @@ module.exports = {
       console.log(`socket has connected ${socket.id}`);
       socket.on("disconnect", (reason) => {
         const user = getUserFromSocketID(socket.id);
+        // this is called when a socket dismounts even from lobby page
+        if (user !== undefined && user._id in activePlayers) {
+          const gameSeed = activePlayers[user._id];
+          if (gameSeed in Game.gameMap) {
+            Game.gameMap[gameSeed].setInactive(user._id);
+          }
+        }
+
         removeUser(user, socket);
+        
       });
       // Server receives request from client to run game
       socket.on("rungame", (gameId) => {
+        // If there are no active games with the same gameID, create new one
         if (Game.gameMap[gameId] === undefined) {
-          LobbyManager.findLobbyByCode(gameId).started = true;
-          Game.gameMap[gameId] = new Game.Game(gameId, LobbyManager.findLobbyByCode(gameId));
-          runGame(gameId);
+          startGame(gameId);
         }
+        runGame(gameId);
       });
 
       socket.on("move", (input) => {
@@ -133,7 +174,7 @@ module.exports = {
 
   addUser: addUser,
   removeUser: removeUser,
-
+  activatePlayer: activatePlayer,
   getSocketFromUserID: getSocketFromUserID,
   getUserFromSocketID: getUserFromSocketID,
   getSocketFromSocketID: getSocketFromSocketID,

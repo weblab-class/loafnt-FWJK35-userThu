@@ -127,6 +127,18 @@ class Game {
     if (this.players[userid]) {
       this.players[userid].active = false;
     }
+    // Assume it is an empty lobby
+    let emptyLobby = true;
+    for (const player in this.players) {
+      if (player.active === true) {
+        emptyLobby = false;
+        break;
+      }
+    }
+    if (emptyLobby) {
+      lobbyManager.deleteLobby(this.seed);
+      clearInterval(this.interval);
+    }
   }
 
   killSelf() {

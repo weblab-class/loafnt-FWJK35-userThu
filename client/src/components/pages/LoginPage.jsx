@@ -30,7 +30,7 @@ const LoginPage = () => {
             <img className="log-image" />
           </div>
           <div className="small-container">
-            <img className="title" />
+            <h1 className="title">Evergreen Escape</h1>
             <div className="lobby">
               {user ? (
                 <div className="lobby-controls">

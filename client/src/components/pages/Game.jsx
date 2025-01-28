@@ -2,18 +2,29 @@ import Canvas from "../modules/Canvas";
 import { UserContext } from "../App";
 import { useState, useEffect, useContext, useCallback } from "react";
 import { sendInput, setPressedKey } from "../../game-logic/input";
-import { get } from "../../utilities";
+import { get, post } from "../../utilities";
 import "./Game.css";
+
+
 
 const Game = () => {
   const [gameID, setGameID] = useState("");
   const { user, handleLogin, handleLogout } = useContext(UserContext);
 
   useEffect(() => {
-    get("/api/mylobbycode").then((result) => {
+    get("/api/mylobbycode", {gameID: gameID}).then((result) => {
       setGameID(result.code);
+      console.log(`Game set ${result.code}`);
     });
   }, []);
+
+  useEffect(() => {
+    if (gameID !== "") {
+      post("/api/activateplayer", {gameID: gameID}).then((result) => {
+        console.log(`User [${result.user}] is active on Game [${result.gameID}]`);
+      });
+    }
+  }, [gameID])
 
   useEffect(() => {
     const processInput = (e) => {

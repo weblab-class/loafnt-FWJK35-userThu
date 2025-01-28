@@ -1,4 +1,6 @@
 const Game = require("./game-logic");
+const Utilities = require("../client/src/utilities");
+require('dotenv').config();
 
 const getRandomCode = (len) => {
   alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -31,13 +33,19 @@ class Lobby {
   removePlayer(player) {
     this.players.delete(player.googleid);
     this.playersObj = Object.fromEntries(this.players);
-    if (this.players.size === 0) {
+    if (this.players.size === 0) { // 
       deleteLobby(this.code);
     }
   }
 
   deactivatePlayer(player) {
+    // deletes game
     if (this.started) {
+      console.log(this.code);
+      console.log(Game.gameMap);
+      if (Game.gameMap[this.code] === undefined) {
+        console.log("no such game");
+      };
       Game.gameMap[this.code].setInactive(player._id);
     }
   }
@@ -49,7 +57,7 @@ class Lobby {
   }
 }
 
-let lobbies = new Map();
+let lobbies = new Map(); // Change to objects
 let allPlayers = new Map();
 
 const createNewLobby = (leader) => {
@@ -66,11 +74,17 @@ const findLobbyOfPlayer = (googleid) => {
   return findLobbyByCode(allPlayers.get(googleid));
 };
 
+// lobby has leader property with googleid of the host
 const deleteLobby = (code) => {
   allPlayers.forEach((player, lobbycode) => {
     if (lobbycode === code) {
       allPlayers.delete(player);
     }
+  });
+  const lobby = lobbies.get(code);
+  const url = new URL("/api/savegame", process.env.BASE_URL);
+  Utilities.post(url, {host: lobby.leader, gameID: code}).then((result) => {
+    console.log(`Game [${result.seed}] has been saved successfully to player [${result.host.name}]`);
   });
   lobbies.delete(code);
 };

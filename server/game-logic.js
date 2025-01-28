@@ -8,6 +8,8 @@ const screenBorder = {
   height: 17,
 };
 
+const fps = 60;
+
 const chunkSize = 8;
 const playerSize = 0.5;
 const cameraBoxSize = { width: 2, height: 2 };
@@ -556,6 +558,9 @@ class Arena {
   enemies;
   projectiles;
   size;
+  time;
+  idcount;
+
   killer;
 
   constructor() {
@@ -564,6 +569,9 @@ class Arena {
     this.enemies = {};
     this.projectiles = {};
     this.size = { width: 17, height: 17 };
+    this.time = 0;
+    this.idcount = 0;
+    this.spawnEnemy();
   }
 
   addPlayer(userid) {
@@ -607,9 +615,33 @@ class Arena {
     }
     this.players[id].rendered_position = this.players[id].position;
   }
+
+  tickArena() {
+    Object.values(this.projectiles).forEach((proj) => {
+      proj.position = help.addCoords(proj.position, help.scaleCoord(proj.velocity, 1 / fps));
+    });
+  }
+
+  /*
+    Creates a new enemy at the center
+    {
+
+    }
+  */
+  spawnEnemy() {
+    this.idcount++;
+    this.enemies[this.idcount] = {
+      id: this.idcount,
+      position: { x: 0, y: 0 },
+      radius: 2,
+      health: 100.0,
+      type: "boss",
+    };
+  }
 }
 
 module.exports = {
   gameMap,
   Game,
+  fps,
 };

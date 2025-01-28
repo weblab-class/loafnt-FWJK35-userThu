@@ -168,16 +168,20 @@ const drawPlayer = (player, ctx) => {
   player.animation = 0;
   player.scale = 1;
   drawSprite(player, assetsMap.avatars[player.avatar_id], ctx);
+
   // Draw the player's item
-  const itemData = player.inventory.inventory[0][player.inventory.selected];
-  if (itemData !== null) {
-    const itemAsset = assetsMap.items[itemData.itemID];
-    const itemSprite = {
-      rendered_position: { x: itemRenderedPosition.x - 0.5, y: itemRenderedPosition.y },
-      animation: 0,
-      scale: 1,
-    };
-    drawSprite(itemSprite, itemAsset, ctx);
+
+  if (player.inventory) {
+    const itemData = player.inventory.items[0][player.inventory.selected];
+    if (itemData !== null) {
+      const itemAsset = assetsMap.items[itemData.itemID];
+      const itemSprite = {
+        rendered_position: { x: itemRenderedPosition.x - 0.5, y: itemRenderedPosition.y },
+        animation: 0,
+        scale: 1,
+      };
+      drawSprite(itemSprite, itemAsset, ctx);
+    }
   }
 };
 

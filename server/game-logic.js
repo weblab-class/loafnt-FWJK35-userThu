@@ -69,49 +69,51 @@ class Game {
     Parameters:
     user (): The user to spawn.
   */
-    spawnPlayer(user) {
+  spawnPlayer(user) {
     if (!this.players.userid) {
-          this.players[user._id] = {
-            data: {
-                avatar_id: "witch_cat",                 // Sprite ID to be rendered
-                animation: "still",                     // Animation player is undergoing
-                position: { x: 0, y: 0 },               // Absolute position
-                rendered_position: { x: 0, y: 0 },      // Where the player is rendered on the user's screen
-                camera_center: { x: 0, y: 0 },
-                chunk_center: { x: 0, y: 0 },
-                chunk: { x: 0, y: 0 },
-                mode: {type: "normal", packet: null},
-                speed: 5,
-                health: [1, 1, 1],                      // Each element in the array represents a heart, and how full it is
-                rendered_chunks: [
-                    [
-                    this.getMazeFromChunk({ x: -1, y: -1 }),
-                    this.getMazeFromChunk({ x: 0, y: -1 }),
-                    this.getMazeFromChunk({ x: 1, y: -1 }),
-                    ],
-                    [
-                    this.getMazeFromChunk({ x: -1, y: 0 }),
-                    this.getMazeFromChunk({ x: 0, y: 0 }),
-                    this.getMazeFromChunk({ x: 1, y: 0 }),
-                    ],
-                    [
-                    this.getMazeFromChunk({ x: -1, y: 1 }),
-                    this.getMazeFromChunk({ x: 0, y: 1 }),
-                    this.getMazeFromChunk({ x: 1, y: 1 }),
-                    ],
-                ],
-                inventory: {
-                    selected: 0,
-                    inventory: [[{itemID: "lantern", itemObj: null}, null, null, null, null, null, null, null], ]
-                }
-            },
-            user: user,
+      this.players[user._id] = {
+        data: {
+          avatar_id: "witch_cat", // Sprite ID to be rendered
+          animation: "still", // Animation player is undergoing
+          position: { x: 0, y: 0 }, // Absolute position
+          rendered_position: { x: 0, y: 0 }, // Where the player is rendered on the user's screen
+          camera_center: { x: 0, y: 0 },
+          chunk_center: { x: 0, y: 0 },
+          chunk: { x: 0, y: 0 },
+          mode: { type: "normal", packet: null },
+          speed: 5,
+          health: [1, 1, 1], // Each element in the array represents a heart, and how full it is
+          rendered_chunks: [
+            [
+              this.getMazeFromChunk({ x: -1, y: -1 }),
+              this.getMazeFromChunk({ x: 0, y: -1 }),
+              this.getMazeFromChunk({ x: 1, y: -1 }),
+            ],
+            [
+              this.getMazeFromChunk({ x: -1, y: 0 }),
+              this.getMazeFromChunk({ x: 0, y: 0 }),
+              this.getMazeFromChunk({ x: 1, y: 0 }),
+            ],
+            [
+              this.getMazeFromChunk({ x: -1, y: 1 }),
+              this.getMazeFromChunk({ x: 0, y: 1 }),
+              this.getMazeFromChunk({ x: 1, y: 1 }),
+            ],
+          ],
+          inventory: {
+            selected: 0,
+            items: [
+              [{ itemID: "lantern", itemObj: null }, null, null, null, null, null, null, null],
+            ],
+          },
+        },
+        user: user,
         active: true,
-          };
+      };
     } else {
       this.players[user._id].active = true;
     }
-      }
+  }
 
   removePlayer(userid) {
     delete this.players[this.userid];
@@ -137,7 +139,7 @@ class Game {
   */
   selectItem(userid, itemIdx) {
     if (this.players[userid]) {
-        this.players[userid].data.inventory.selected = itemIdx-1;
+      this.players[userid].data.inventory.selected = itemIdx - 1;
     }
   }
 
@@ -219,18 +221,18 @@ class Game {
   */
   changePlayerMode(id, mode) {
     if (Object.hasOwn(this.players, id)) {
-        this.players[id].data.mode.type = mode;
-        if (mode === "invisible-maze") {
-            const invisibleMaze = new InvisibleMaze.InvisibleMaze({
-                mapSize: {height: 1, width: 1},
-                getMazeFromChunk: {func: this.getMazeFromChunk, seed: this.seed},
-                init_chunk: {x: 0, y: 0}
-            });
-            // TO-DO: Update mode with the relevant game packet lol
-            this.players[id].data.mode.packet = InvisibleMaze.getPacket();
-        }
-    };
-  };
+      this.players[id].data.mode.type = mode;
+      if (mode === "invisible-maze") {
+        const invisibleMaze = new InvisibleMaze.InvisibleMaze({
+          mapSize: { height: 1, width: 1 },
+          getMazeFromChunk: { func: this.getMazeFromChunk, seed: this.seed },
+          init_chunk: { x: 0, y: 0 },
+        });
+        // TO-DO: Update mode with the relevant game packet lol
+        this.players[id].data.mode.packet = InvisibleMaze.getPacket();
+      }
+    }
+  }
 
   /*
     Given a player's ID and their intended direction, handle the logic to move them.
@@ -413,7 +415,7 @@ class Game {
     maze (2D Array): 17x17 array, with each cell being a 0 or 1, indicating if a maze wall
     exists.
   */
-  getMazeFromChunk(chunk, seed=this.seed) {
+  getMazeFromChunk(chunk, seed = this.seed) {
     const chunkSeed = seed + chunk.x + "|" + chunk.y;
     const chunkRandom = seedrandom(chunkSeed);
 
@@ -624,9 +626,7 @@ class Arena {
           shape: "circle",
           radius: 0.5,
           center: { x: 0, y: 0 },
-          onCollision: (collisionPoint, collisionEntity) => {
-            console.log("collided player", collisionPoint);
-          },
+          onCollision: (collisionPoint, collisionEntity) => {},
         },
       ],
       avatar_id: "witch_cat",
@@ -851,9 +851,7 @@ class Arena {
           shape: "circle",
           radius: 2,
           center: { x: 0, y: 0 },
-          onCollision: (collisionPoint, collisionEntity) => {
-            console.log("collided enemy", collisionPoint);
-          },
+          onCollision: (collisionPoint, collisionEntity) => {},
         },
       ],
       nextattack: { time: this.time + 0.5 * fps, type: "shoot1" },
@@ -876,9 +874,7 @@ class Arena {
           shape: "circle",
           radius: 0.25,
           center: { x: 0, y: 0 },
-          onCollision: (collisionPoint, collisionEntity) => {
-            console.log("collided proj", collisionPoint);
-          },
+          onCollision: (collisionPoint, collisionEntity) => {},
         },
       ],
     };

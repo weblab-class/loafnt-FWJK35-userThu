@@ -29,6 +29,14 @@ const getLatticePoint = (coord, chunk) => {
   return latticePoint;
 };
 
+const getMagnitude = (vector) => {
+  return Math.sqrt(vector.x ** 2 + vector.y ** 2);
+};
+
+const getNormalized = (vector) => {
+  return scaleCoord(vector, 1 / getMagnitude(vector));
+};
+
 const getChunkFromPos = (pos) => {
   return {
     x: Math.floor((pos.x + chunkSize) / (chunkSize * 2)),
@@ -51,6 +59,8 @@ module.exports = {
   scaleCoord,
   roundCoord,
   getLatticePoint,
+  getMagnitude,
+  getNormalized,
   getChunkFromPos,
   getChunkCenter,
   getChunkRelativePos,

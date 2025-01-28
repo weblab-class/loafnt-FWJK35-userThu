@@ -40,6 +40,16 @@ let assetsMap = {
       imgObj: null,
     },
   },
+  projectiles: {
+    bullet: {
+      id: "bullet",
+      spriteSize: 16,
+      imageSize: { width: 16, height: 16 },
+      blockSize: 1,
+      src: assetlist.bullet,
+      imgObj: null,
+    },
+  },
   terrain: {
     tree: {
       id: "tree",
@@ -169,6 +179,13 @@ const drawEnemy = (enemy, ctx) => {
     ctx
   );
   drawSprite(enemy, assetsMap.enemies[enemy.type], ctx);
+};
+
+const drawProjectile = (proj, ctx) => {
+  proj.rendered_position = proj.position;
+  proj.animation = 0;
+  proj.scale = 1;
+  drawSprite(proj, assetsMap.projectiles[proj.type], ctx);
 };
 
 const drawBranchTile = (tile, ctx) => {
@@ -301,6 +318,11 @@ const drawTiles = (canvasState, offset, ctx) => {
 };
 
 const drawArena = (canvasState, ctx) => {
+  //render all projectiles
+  Object.values(canvasState.arena.projectiles).forEach((proj) => {
+    drawProjectile(proj, ctx);
+  });
+
   //render all enemies
   Object.values(canvasState.arena.enemies).forEach((enemy) => {
     drawEnemy(enemy, ctx);
@@ -499,11 +521,13 @@ const convertGameToCanvasState = (gamePacket) => {
   let myarena;
 
   Object.values(gamePacket.game.arenas).forEach((arena) => {
-    if (Object.hasOwn(arena.players, gamePacket.recipientid)) {
-      incombat = true;
-      players = arena.players;
-      myarena = arena;
-    }
+    Object.values(arena.players).forEach((player) => {
+      if (player.userid === gamePacket.recipientid) {
+        incombat = true;
+        players = arena.players;
+        myarena = arena;
+      }
+    });
   });
 
   //player is exploring maze
@@ -550,6 +574,13 @@ const loadAssets = async () => {
   loadedPlayers.forEach((asset) => {
     assetsMap.avatars[asset.id].imgObj = asset.imgObj;
   });
+
+  //load enemies
+  const loadedProjectiles = await Promise.all(Object.values(assetsMap.projectiles).map(loadAsset));
+  loadedProjectiles.forEach((asset) => {
+    assetsMap.projectiles[asset.id].imgObj = asset.imgObj;
+  });
+
   //load enemies
   const loadedEnemies = await Promise.all(Object.values(assetsMap.enemies).map(loadAsset));
   loadedEnemies.forEach((asset) => {

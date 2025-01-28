@@ -751,7 +751,7 @@ export const drawCanvas = (gamePacket, canvasRef, dimensions) => {
         blockSize = dimensions.width / screenMinBlocks;
     }
     // playerSize (in terms of pixels): The player is equal to the size of one block
-    playerSize = blockSize * 1;
+    // const playerSize = blockSize * 1;
 
     canvasCenter = { x: screenBlockWidth / 2, y: screenBlockHeight / 2 };
 

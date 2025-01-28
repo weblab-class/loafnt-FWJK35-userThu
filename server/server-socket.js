@@ -1,5 +1,6 @@
 const Game = require("./game-logic");
 const LobbyManager = require("./lobby-manager");
+const common = require("./common");
 
 let io;
 
@@ -33,10 +34,10 @@ const removeUser = (user, socket) => {
 
 // Emits Game object to client sockets listening for that specific game
 const sendGameState = (gameId) => {
-  Object.values(Game.gameMap[gameId].players).forEach((player) => {
+  Object.values(common.gameMap[gameId].players).forEach((player) => {
     if (player.active) {
       //delete server-stored information
-      let gameObj = Object.assign({}, Game.gameMap[gameId]);
+      let gameObj = Object.assign({}, common.gameMap[gameId]);
       delete gameObj.explored;
       let gamePacket = { game: gameObj, recipientid: player.user._id };
       const socket = getSocketFromUserID(player.user._id);
@@ -48,38 +49,38 @@ const sendGameState = (gameId) => {
 };
 
 const startGame = (gameId) => {
-  // Update the lobby associated with the game 
+  // Update the lobby associated with the game
   const lobby = LobbyManager.findLobbyByCode(gameId);
-  
+
   lobby.players.forEach((player) => {
     const socket = getSocketFromUserID(player._id);
     if (socket) {
       getSocketFromUserID(player._id).emit("launchgame");
-    };
+    }
   });
   // Create a new game
-  Game.gameMap[gameId] = new Game.Game(gameId, LobbyManager.findLobbyByCode(gameId));
+  common.gameMap[gameId] = new Game.Game(gameId, LobbyManager.findLobbyByCode(gameId));
   // Add a killer function for when the game calls killSelf()
-  Game.gameMap[gameId].killer = () => {
+  common.gameMap[gameId].killer = () => {
     console.log("im killing myself");
-    delete Game.gameMap[gameId];
+    delete common.gameMap[gameId];
   };
 
   // Keep track of every active player server-side
-  // Object.values(Game.gameMap[gameId].players).forEach((player) => {
+  // Object.values(common.gameMap[gameId].players).forEach((player) => {
   //   activePlayers[player.user._id] = gameId;
   // });
-}
+};
 
 // Called when server socket receives a request
 const runGame = (gameId) => {
   const lobby = LobbyManager.findLobbyByCode(gameId);
   lobby.started = true;
-  const game = Game.gameMap[gameId];
+  const game = common.gameMap[gameId];
   // Iterate through the players in the current game
   // Object.values(game.players).forEach((player) => {
   //   // Scan through every active game besides the current one to set the player inactive
-  //   Object.values(Game.gameMap).forEach((game) => {
+  //   Object.values(common.gameMap).forEach((game) => {
   //     if (game.seed !== gameId) {
   //       game.setInactive(player.user._id);
   //     }
@@ -114,59 +115,58 @@ module.exports = {
         // this is called when a socket dismounts even from lobby page
         if (user !== undefined && user._id in activePlayers) {
           const gameSeed = activePlayers[user._id];
-          if (gameSeed in Game.gameMap) {
-            Game.gameMap[gameSeed].setInactive(user._id);
+          if (gameSeed in common.gameMap) {
+            common.gameMap[gameSeed].setInactive(user._id);
           }
         }
 
         removeUser(user, socket);
-        
       });
       // Server receives request from client to run game
       socket.on("rungame", (gameId) => {
         // If there are no active games with the same gameID, create new one
-        if (Game.gameMap[gameId] === undefined) {
+        if (common.gameMap[gameId] === undefined) {
           startGame(gameId);
         }
         runGame(gameId);
       });
 
       socket.on("move", (input) => {
-        if (Game.gameMap[input.gameID]) {
-          Game.gameMap[input.gameID].movePlayer(input.user_id, input.dir);
+        if (common.gameMap[input.gameID]) {
+          common.gameMap[input.gameID].movePlayer(input.user_id, input.dir);
         }
       });
 
       socket.on("entercombat", (input) => {
-        if (Game.gameMap[input.gameID]) {
-          if (!Game.gameMap[input.gameID].isInCombat(input.user_id)) {
-            Game.gameMap[input.gameID].beginCombat(input.user_id);
+        if (common.gameMap[input.gameID]) {
+          if (!common.gameMap[input.gameID].isInCombat(input.user_id)) {
+            common.gameMap[input.gameID].beginCombat(input.user_id);
           } else {
-            Game.gameMap[input.gameID].leaveCombat(input.user_id);
+            common.gameMap[input.gameID].leaveCombat(input.user_id);
           }
         }
       });
 
       socket.on("enter-invisiblemaze", (input) => {
-        if (Game.gameMap[input.gameID]) {
-          Game.gameMap[input.gameID].changePlayerMode(input.userID, "invisible-maze");
+        if (common.gameMap[input.gameID]) {
+          common.gameMap[input.gameID].changePlayerMode(input.userID, "invisible-maze");
         }
       });
 
       socket.on("inventoryselect", (input) => {
-        if (Game.gameMap[input.gameID]) {
-          Game.gameMap[input.gameID].selectItem(input.userID, input.slotIdx);
+        if (common.gameMap[input.gameID]) {
+          common.gameMap[input.gameID].selectItem(input.userID, input.slotIdx);
         }
       });
 
       socket.on("attack", (input) => {
-        if (Game.gameMap[input.gameID]) {
-          Game.gameMap[input.gameID].attack(input.user_id);
+        if (common.gameMap[input.gameID]) {
+          common.gameMap[input.gameID].attack(input.user_id);
         }
       });
       socket.on("utility", (input) => {
-        if (Game.gameMap[input.gameID]) {
-          Game.gameMap[input.gameID].useUtility(input.user_id);
+        if (common.gameMap[input.gameID]) {
+          common.gameMap[input.gameID].useUtility(input.user_id);
         }
       });
     });

@@ -1,5 +1,5 @@
-const Game = require("./game-logic");
 const User = require("./models/user");
+const common = require("./common");
 require("dotenv").config();
 
 const getRandomCode = (len) => {
@@ -12,25 +12,29 @@ const getRandomCode = (len) => {
 };
 
 const saveGame = (gameID, host) => {
-  returnPromise = new Promise();
-  User.find({ googleid: host.googleid }).then((foundUsers) => {
-    let foundUser = foundUsers[0];
-    let foundGame;
-    if (foundUser.gamefiles === undefined || foundUser.gamefiles.length === 0) {
-      foundGame = JSON.stringify(game.gameMap[gameID]);
-      foundUser.gamefiles = [foundGame, "", "", "", ""];
-    } else {
-      for (let fileIdx = 0; fileIdx < foundUser.gamefiles.length; fileIdx++) {
-        if (foundUser.gamefiles[fileIdx] === "") {
-          foundGame = JSON.stringify(game.gameMap[gameID]);
-          foundUser.gamefiles[fileIdx] = foundGame;
-          break;
-        }
+  returnPromise = new Promise((resolve, reject) => {
+    User.find({ googleid: host.googleid }).then((foundUsers) => {
+      let foundUser = foundUsers[0];
+      let foundGame;
+      if (foundUser.gamefiles === undefined || foundUser.gamefiles.length === 0) {
+        foundGame = JSON.stringify(common.gameMap[gameID]);
+        foundUser.gamefiles = [foundGame, "", "", "", ""];
+      } else {
+        // for (let fileIdx = 0; fileIdx < foundUser.gamefiles.length; fileIdx++) {
+        //   if (foundUser.gamefiles[fileIdx] === "") {
+        //     foundGame = JSON.stringify(common.gameMap[gameID]);
+        //     foundUser.gamefiles[fileIdx] = foundGame;
+        //     break;
+        //   }
+        // }
+        //always save to first slot for now
+        foundGame = JSON.stringify(common.gameMap[gameID]);
+        foundUser.gamefiles[0] = foundGame;
       }
-    }
 
-    foundUser.save().then((result) => {
-      returnPromise.resolve();
+      foundUser.save().then((result) => {
+        resolve({ seed: gameID, host: host });
+      });
     });
   });
   return returnPromise;
@@ -65,14 +69,13 @@ class Lobby {
   }
 
   deactivatePlayer(player) {
-    // deletes game
     if (this.started) {
       console.log(this.code);
-      console.log(Game.gameMap);
-      if (Game.gameMap[this.code] === undefined) {
+      console.log(common.gameMap);
+      if (common.gameMap[this.code] === undefined) {
         console.log("no such game");
       }
-      Game.gameMap[this.code].setInactive(player._id);
+      common.gameMap[this.code].setInactive(player._id);
     }
   }
 
@@ -107,8 +110,9 @@ const deleteLobby = (code) => {
       allPlayers.delete(player);
     }
   });
+  console.log(common.gameMap);
   const lobby = lobbies.get(code);
-  saveGame(lobby.code, lobby.leader).then(() => {
+  saveGame(lobby.code, lobby.leader).then((result) => {
     console.log(
       `Game [${result.seed}] has been saved successfully to player [${result.host.name}]`
     );

@@ -22,6 +22,7 @@ const router = express.Router();
 const socketManager = require("./server-socket");
 const lobbyManager = require("./lobby-manager");
 const game = require("./game-logic");
+const common = require("./common");
 
 router.post("/login", auth.login);
 router.post("/logout", auth.logout);
@@ -83,7 +84,7 @@ router.post("/joinlobby", (req, res) => {
         if (lobby.players.has(req.user.googleid)) {
           lobby.removePlayer(req.user);
           if (lobby.started) {
-            game.gameMap[code].setInactive(req.user._id);
+            common.gameMap[code].setInactive(req.user._id);
           }
         }
       });
@@ -97,7 +98,7 @@ router.post("/joinlobby", (req, res) => {
       });
       //spawn them if this game has already started
       if (lobby.started) {
-        game.gameMap[req.body.lobbycode].spawnPlayer(req.user);
+        common.gameMap[req.body.lobbycode].spawnPlayer(req.user);
       }
       res.send(lobby);
     } else {

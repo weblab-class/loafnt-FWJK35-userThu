@@ -10,7 +10,6 @@ const screenBorder = {
 };
 
 const fps = 60;
-Arena.fps = fps;
 
 const chunkSize = 8;
 const playerSize = 0.5;
@@ -540,7 +539,7 @@ class Game {
   beginCombat(playerid) {
     const arenaId = JSON.stringify(this.players[playerid].data.chunk);
     if (!this.arenas[arenaId]) {
-      this.arenas[arenaId] = new Arena.Arena();
+      this.arenas[arenaId] = new Arena.Arena(fps);
       this.arenas[arenaId].killer = () => {
         delete this.arenas[arenaId];
       };

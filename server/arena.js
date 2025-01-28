@@ -1,4 +1,3 @@
-let fps;
 const help = require("./helpers");
 
 class Arena {
@@ -8,11 +7,13 @@ class Arena {
   projectiles;
   size;
   time;
+  fps;
   idcount;
 
   killer;
 
-  constructor() {
+  constructor(fps) {
+    this.fps = fps;
     this.players = {};
     this.terrain = {};
     this.enemies = {};
@@ -224,7 +225,7 @@ class Arena {
     this.time += 1;
     //move all projectiles
     Object.values(this.projectiles).forEach((proj) => {
-      proj.position = help.addCoords(proj.position, help.scaleCoord(proj.velocity, 1 / fps));
+      proj.position = help.addCoords(proj.position, help.scaleCoord(proj.velocity, 1 / this.fps));
     });
 
     let hitboxes = [];
@@ -267,7 +268,28 @@ class Arena {
     Object.values(this.enemies).forEach((enemy) => {
       if (this.time >= enemy.nextattack.time) {
         this.performAttack(enemy.id, enemy.nextattack.type);
-        enemy.nextattack = { time: this.time + 2 * fps, type: "shoot1" };
+        //get new random attack
+        const attackInd = Math.floor(enemy.possibleattacks.length * Math.random());
+        const attack = enemy.possibleattacks[attackInd];
+        enemy.nextattack = { time: this.time + attack.duration * this.fps, type: attack.name };
+      }
+    });
+
+    //update all animations
+    Object.values(this.enemies).forEach((enemy) => {
+      if (this.time >= enemy.animation.nextframe) {
+        enemy.animation.frame += 1;
+
+        //loop or end animation
+        if (enemy.animation.frame >= enemy.animations[enemy.animation.seq].frames.length) {
+          enemy.animation.frame = 0;
+          //set to idle animation if doesnt repeat
+          if (!enemy.animations[enemy.animation.seq].repeat) {
+            enemy.animation.seq = "idle";
+          }
+        }
+        enemy.animation.nextframe =
+          this.time + enemy.animations[enemy.animation.seq].speed * this.fps;
       }
     });
   }
@@ -293,6 +315,13 @@ class Arena {
       maxhealth: 100.0,
       health: 100.0,
       type: "boss",
+
+      animations: {
+        idle: { frames: [0, 1, 2], speed: 0.25, repeat: true },
+        spitting: { frames: [3, 4, 5], speed: 0.25, repeat: false },
+      },
+      animation: { seq: "idle", frame: 0, nextframe: 0 },
+
       hitboxes: [
         {
           shape: "circle",
@@ -301,9 +330,23 @@ class Arena {
           onCollision: (collisionPoint, collisionEntity) => {},
         },
       ],
-      nextattack: { time: this.time + 0.5 * fps, type: "shoot1" },
+      possibleattacks: [{ name: "shoot1per", duration: 2 }],
+      nextattack: { time: this.time + 1 * this.fps, type: "shoot1per" },
     };
   }
+
+  /*
+    Projectile: {
+        position: {x: value, y: value},
+        velocity: {x: value, y: value},
+        source: value,
+        damage: value,
+        type: String,
+        radius: value,
+        lifetime: value(ticks)
+    
+    }
+  */
 
   spawnProjectile(position, velocity, source, damage, type, radius, lifetime) {
     this.idcount++;
@@ -319,7 +362,7 @@ class Arena {
       hitboxes: [
         {
           shape: "circle",
-          radius: 0.25,
+          radius: radius,
           center: { x: 0, y: 0 },
           onCollision: (collisionPoint, collisionEntity) => {},
         },
@@ -330,7 +373,13 @@ class Arena {
   performAttack(enemyid, attackname) {
     const thisEnemy = this.enemies[enemyid];
     const attacks = {
-      shoot1: () => {
+      shoot1per: () => {
+        thisEnemy.animation = {
+          seq: "spitting",
+          frame: 0,
+          nextframe: this.time + thisEnemy.animations["spitting"].speed * this.fps,
+        };
+        //shoot a bullet at each player
         Object.values(this.players).forEach((player) => {
           this.spawnProjectile(
             thisEnemy.position,
@@ -351,6 +400,5 @@ class Arena {
 }
 
 module.exports = {
-  fps,
   Arena,
 };

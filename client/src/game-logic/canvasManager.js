@@ -33,9 +33,9 @@ let assetsMap = {
   enemies: {
     boss: {
       id: "boss",
-      spriteSize: 128,
-      imageSize: { width: 128, height: 128 },
-      blockSize: 8,
+      spriteSize: 64,
+      imageSize: { width: 192, height: 192 },
+      blockSize: 4,
       src: assetlist.boss,
       imgObj: null,
     },
@@ -219,7 +219,9 @@ const drawFillableBar = (bar, ctx) => {
 
 const drawEnemy = (enemy, ctx) => {
   enemy.rendered_position = Object.assign({}, enemy.position);
-  enemy.animation = 0;
+
+  enemy.animation = enemy.animations[enemy.animation.seq].frames[enemy.animation.frame];
+
   enemy.scale = 1;
   drawFillableBar(
     {

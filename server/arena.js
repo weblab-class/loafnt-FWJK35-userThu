@@ -54,7 +54,7 @@ class Arena {
       return this.terrain[entityid];
     }
     if (this.players[entityid]) {
-      return this.enemies[entityid];
+      return this.players[entityid];
     }
     return undefined;
   }
@@ -292,6 +292,14 @@ class Arena {
           this.time + enemy.animations[enemy.animation.seq].speed * this.fps;
       }
     });
+
+    //kill all expired projectiles
+    Object.values(this.projectiles).forEach((projectile) => {
+      if (this.time > projectile.deathtime) {
+        projectile.onDeath(projectile.id);
+        this.deleteProjectile(projectile.id);
+      }
+    });
   }
 
   /*
@@ -330,7 +338,10 @@ class Arena {
           onCollision: (collisionPoint, collisionEntity) => {},
         },
       ],
-      possibleattacks: [{ name: "shoot1per", duration: 2 }],
+      possibleattacks: [
+        { name: "shoot1per", duration: 2 },
+        { name: "shootring", duration: 2 },
+      ],
       nextattack: { time: this.time + 1 * this.fps, type: "shoot1per" },
     };
   }
@@ -339,27 +350,12 @@ class Arena {
     Projectile: {
         position: {x: value, y: value},
         velocity: {x: value, y: value},
-        source: value,
+        source: value (id),
         damage: value,
         type: String,
-        radius: value,
-        lifetime: value(ticks)
-    
-    }
-  */
-
-  spawnProjectile(position, velocity, source, damage, type, radius, lifetime) {
-    this.idcount++;
-    this.projectiles[this.idcount] = {
-      id: this.idcount,
-      class: "projectile",
-      position: position,
-      velocity: velocity,
-      source: source,
-      damage: damage,
-      type: type,
-      lifetime: lifetime,
-      hitboxes: [
+        lifetime: value,
+        onDeath: function,
+        hitboxes: [
         {
           shape: "circle",
           radius: radius,
@@ -367,7 +363,32 @@ class Arena {
           onCollision: (collisionPoint, collisionEntity) => {},
         },
       ],
+    }
+  */
+
+  spawnProjectile(projectile) {
+    this.idcount++;
+    const bulletId = this.idcount;
+    this.projectiles[bulletId] = {
+      id: bulletId,
+      class: "projectile",
+      position: projectile.position,
+      velocity: projectile.velocity,
+      source: projectile.source,
+      damage: projectile.damage,
+      type: projectile.type,
+      deathtime: this.time + projectile.lifetime * this.fps,
+      onDeath: projectile.onDeath,
+      hitboxes: projectile.hitboxes,
     };
+    return bulletId;
+  }
+
+  deleteProjectile(bulletId) {
+    if (this.projectiles[bulletId]) {
+      this.projectiles[bulletId].onDeath();
+      delete this.projectiles[bulletId];
+    }
   }
 
   performAttack(enemyid, attackname) {
@@ -381,18 +402,65 @@ class Arena {
         };
         //shoot a bullet at each player
         Object.values(this.players).forEach((player) => {
-          this.spawnProjectile(
-            thisEnemy.position,
-            help.scaleCoord(
+          const bulletId = this.spawnProjectile({
+            position: thisEnemy.position,
+            velocity: help.scaleCoord(
               help.getNormalized(help.subtractCoords(player.position, thisEnemy.position)),
               4
             ),
-            thisEnemy.id,
-            10.0,
-            "bullet",
-            0.25
-          );
+            source: thisEnemy.id,
+            damage: 10,
+            type: "bullet",
+            lifetime: 5,
+            onDeath: (myid) => {},
+            dieOnCollision: true,
+            hitboxes: [
+              {
+                shape: "circle",
+                radius: 0.4,
+                center: { x: 0, y: 0 },
+                onCollision: (collisionPoint, collisionEntity) => {
+                  if (collisionEntity.class === "player" || collisionEntity.class === "terrain") {
+                    this.deleteProjectile(bulletId);
+                  }
+                },
+              },
+            ],
+          });
         });
+      },
+      //shoot a ring of bullets
+      shootring: () => {
+        thisEnemy.animation = {
+          seq: "spitting",
+          frame: 0,
+          nextframe: this.time + thisEnemy.animations["spitting"].speed * this.fps,
+        };
+        //shoot a bullet at each player
+        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+          const bulletId = this.spawnProjectile({
+            position: thisEnemy.position,
+            velocity: help.scaleCoord(help.getVectorFromAngle(angle), 4),
+            source: thisEnemy.id,
+            damage: 10,
+            type: "bullet",
+            lifetime: 5,
+            onDeath: () => {},
+            dieOnCollision: true,
+            hitboxes: [
+              {
+                shape: "circle",
+                radius: 0.4,
+                center: { x: 0, y: 0 },
+                onCollision: (collisionPoint, collisionEntity) => {
+                  if (collisionEntity.class === "player" || collisionEntity.class === "terrain") {
+                    this.deleteProjectile(bulletId);
+                  }
+                },
+              },
+            ],
+          });
+        }
       },
     };
     attacks[attackname]();

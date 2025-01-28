@@ -37,6 +37,10 @@ const getNormalized = (vector) => {
   return scaleCoord(vector, 1 / getMagnitude(vector));
 };
 
+const getVectorFromAngle = (angle) => {
+  return { x: Math.cos(angle), y: Math.sin(angle) };
+};
+
 const getChunkFromPos = (pos) => {
   return {
     x: Math.floor((pos.x + chunkSize) / (chunkSize * 2)),
@@ -61,6 +65,7 @@ module.exports = {
   getLatticePoint,
   getMagnitude,
   getNormalized,
+  getVectorFromAngle,
   getChunkFromPos,
   getChunkCenter,
   getChunkRelativePos,

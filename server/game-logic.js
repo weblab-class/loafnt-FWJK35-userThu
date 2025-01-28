@@ -273,15 +273,18 @@ class Game {
       return chunk <= compressedRight && chunk >= compressedLeft;
     };
 
-    const newPosXY = help.addCoords(playerPos, help.scaleCoord(dir, this.players[id].data.speed));
+    const newPosXY = help.addCoords(
+      playerPos,
+      help.scaleCoord(dir, this.players[id].data.speed / fps)
+    );
     const newPosX = help.addCoords(
       playerPos,
-      help.scaleCoord({ x: dir.x, y: 0 }, this.players[id].data.speed)
+      help.scaleCoord({ x: dir.x, y: 0 }, this.players[id].data.speed / fps)
     );
 
     const newPosY = help.addCoords(
       playerPos,
-      help.scaleCoord({ x: 0, y: dir.y }, this.players[id].data.speed)
+      help.scaleCoord({ x: 0, y: dir.y }, this.players[id].data.speed / fps)
     );
 
     const checkNoCollisions = (newPos) => {

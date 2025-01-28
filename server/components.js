@@ -41,6 +41,8 @@ const useWeapon = (arena, playerid) => {
   attacks[arena.getEntity(playerid).build.weapon]();
 };
 
+const useUtility = (arena, playerid) => {};
+
 module.exports = {
   useWeapon,
 };

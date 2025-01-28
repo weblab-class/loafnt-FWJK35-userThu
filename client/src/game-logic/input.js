@@ -30,8 +30,6 @@ const sendInput = (gameID, userID, deltaT) => {
     xcomp *= Math.SQRT1_2;
     ycomp *= Math.SQRT1_2;
   }
-  xcomp *= deltaT;
-  ycomp *= deltaT;
 
   if (pressedKeys.get("i")) {
     enterInvisibleMaze(gameID, userID);

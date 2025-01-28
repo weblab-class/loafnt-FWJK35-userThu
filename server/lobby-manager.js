@@ -70,8 +70,6 @@ class Lobby {
 
   deactivatePlayer(player) {
     if (this.started) {
-      console.log(this.code);
-      console.log(common.gameMap);
       if (common.gameMap[this.code] === undefined) {
         console.log("no such game");
       }
@@ -110,14 +108,15 @@ const deleteLobby = (code) => {
       allPlayers.delete(player);
     }
   });
-  console.log(common.gameMap);
   const lobby = lobbies.get(code);
-  saveGame(lobby.code, lobby.leader).then((result) => {
-    console.log(
-      `Game [${result.seed}] has been saved successfully to player [${result.host.name}]`
-    );
-    lobbies.delete(code);
-  });
+  if (lobby) {
+    saveGame(lobby.code, lobby.leader).then((result) => {
+      console.log(
+        `Game [${result.seed}] has been saved successfully to player [${result.host.name}]`
+      );
+      lobbies.delete(code);
+    });
+  }
 };
 
 module.exports = {

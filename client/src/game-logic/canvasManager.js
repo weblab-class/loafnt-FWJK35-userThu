@@ -409,7 +409,7 @@ const drawUI = (playerObj, ctx) => {
     );
   }
   // Render the first line of the player's inventory
-  const inventoryRow = playerObj.inventory.inventory[0];
+  const inventoryRow = playerObj.inventory.items[0];
   // Length of the rendered row in pixels
   const rowLength = inventoryRow.length * blockSize;
   // The leftmost coordinate of the row

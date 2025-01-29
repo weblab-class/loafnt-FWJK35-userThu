@@ -151,6 +151,9 @@ class Game {
             mazesprintspeed: 8,
             combatdamage: 1.0,
             armor: 100,
+            xp: 0,
+            level: 1,
+            xpneeded: 64,
           },
         },
         user: user,
@@ -396,7 +399,15 @@ class Game {
       this.explored[JSON.stringify(playerChunk)] = Array(Math.ceil(chunkSize ** 2 / 32)).fill(0);
     }
 
+    if (!this.getTileExplored(playerPos)) {
+      this.players[id].data.stats.xp += 1;
+    }
+
     this.setTileExplored(playerPos, playerChunk);
+    while (this.players[id].data.stats.xp >= this.players[id].data.stats.xpneeded) {
+      this.players[id].data.stats.xp -= this.players[id].data.stats.xpneeded;
+      this.players[id].data.stats.xpneeded *= 1.1;
+    }
 
     //put explored tiles in rendered chunk
     for (let chunkydiff = -1; chunkydiff < 2; chunkydiff++) {

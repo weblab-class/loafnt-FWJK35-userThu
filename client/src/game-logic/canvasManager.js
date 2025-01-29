@@ -473,6 +473,20 @@ const drawMaze = (canvasState, ctx) => {
     }
   });
   drawPlayer(canvasState.myplayerdata, ctx);
+  drawFillableBar(
+    {
+      max: canvasState.myplayerdata.stats.xpneeded,
+      current: canvasState.myplayerdata.stats.xp,
+      color: "#65545f",
+      border: 2,
+      size: {
+        width: 4,
+        height: 0.5,
+      },
+      rendered_position: { x: -canvasCenter.x + 4, y: -canvasCenter.y + 1 },
+    },
+    ctx
+  );
   //drawUI(canvasState.myplayerdata, ctx);
 };
 

@@ -25,6 +25,7 @@ let canvasCenter = { x: 0, y: 0 };
   }
 */
 import assetsMap from "../public/assets/asset-map";
+import { addCoords, subtractCoords, roundCoord, coordDist } from "../game-logic/helpers";
 
 /*
 Params:
@@ -45,7 +46,7 @@ NOTE: all sprites are assumed to be square lmao
 */
 const drawSprite = (sprite, asset, ctx) => {
   //translate rendered position so it is relative to top left
-  sprite.rendered_position = help.addCoords(sprite.rendered_position, canvasCenter);
+  sprite.rendered_position = addCoords(sprite.rendered_position, canvasCenter);
   //get position in source image of current animation
   const spriteX = sprite.animation % (asset.imageSize.width / asset.spriteSize);
   const spriteY = Math.floor(sprite.animation / (asset.imageSize.width / asset.spriteSize));
@@ -70,24 +71,45 @@ const drawSprite = (sprite, asset, ctx) => {
 };
 
 const drawPlayer = (player, ctx) => {
-  const itemRenderedPosition = player.rendered_position;
   player.animation = 0;
   player.scale = 1;
   drawSprite(player, assetsMap.avatars[player.avatar_id], ctx);
-
-  // Draw the player's item
-
-  if (player.inventory) {
-    const itemData = player.inventory.items[0][player.inventory.selected];
-    if (itemData !== null) {
-      const itemAsset = assetsMap.items[itemData.itemID];
-      const itemSprite = {
-        rendered_position: { x: itemRenderedPosition.x - 0.5, y: itemRenderedPosition.y },
-        animation: 0,
-        scale: 1,
-      };
-      drawSprite(itemSprite, itemAsset, ctx);
-    }
+  if (player.incombat) {
+    //draw health and stamina bars
+    drawFillableBar(
+      {
+        max: player.stats.maxhealth,
+        current: player.stats.health,
+        color: "#a83433",
+        border: 1.5,
+        size: {
+          width: 1.5,
+          height: 0.25,
+        },
+        rendered_position: addCoords(player.position, {
+          x: 0,
+          y: -1.2,
+        }),
+      },
+      ctx
+    );
+    drawFillableBar(
+      {
+        max: player.stats.maxstamina,
+        current: player.stats.stamina,
+        color: "#c8a861",
+        border: 1.5,
+        size: {
+          width: 1.5,
+          height: 0.25,
+        },
+        rendered_position: addCoords(player.position, {
+          x: 0,
+          y: -0.8,
+        }),
+      },
+      ctx
+    );
   }
 };
 
@@ -105,16 +127,26 @@ bar: {
 ctx: context                                  -- Game canvas context
 */
 const drawFillableBar = (bar, ctx) => {
-  bar.rendered_position = help.addCoords(bar.rendered_position, canvasCenter);
-  ctx.lineWidth = bar.border;
-  ctx.strokeStyle = bar.color;
-  ctx.fillStyle = bar.color;
+  bar.rendered_position = addCoords(bar.rendered_position, canvasCenter);
+
+  ctx.lineWidth = bar.border * 2;
+  ctx.strokeStyle = "#000000";
   ctx.strokeRect(
     (bar.rendered_position.x - bar.size.width / 2) * blockSize,
     (bar.rendered_position.y - bar.size.height / 2) * blockSize,
     bar.size.width * blockSize,
     bar.size.height * blockSize
   );
+  ctx.lineWidth = bar.border * 1;
+  ctx.strokeStyle = bar.color;
+  ctx.strokeRect(
+    (bar.rendered_position.x - bar.size.width / 2) * blockSize,
+    (bar.rendered_position.y - bar.size.height / 2) * blockSize,
+    bar.size.width * blockSize,
+    bar.size.height * blockSize
+  );
+  ctx.fillStyle = bar.color;
+
   ctx.fillRect(
     (bar.rendered_position.x - bar.size.width / 2) * blockSize + bar.border * 2,
     (bar.rendered_position.y - bar.size.height / 2) * blockSize + bar.border * 2,
@@ -139,7 +171,7 @@ const drawEnemy = (enemy, ctx) => {
         width: assetsMap.enemies[enemy.type].blockSize,
         height: assetsMap.enemies[enemy.type].blockSize / 8,
       },
-      rendered_position: help.addCoords(enemy.rendered_position, {
+      rendered_position: addCoords(enemy.rendered_position, {
         x: 0,
         y: (assetsMap.enemies[enemy.type].blockSize / 2) * -1.25,
       }),
@@ -158,14 +190,14 @@ const drawProjectile = (proj, ctx) => {
 
 const drawBranchTile = (tile, ctx) => {
   tile.animation = tile.id;
-  tile.rendered_position = help.subtractCoords({ x: tile.x + 0.5, y: tile.y + 0.5 }, canvasCenter);
+  tile.rendered_position = subtractCoords({ x: tile.x + 0.5, y: tile.y + 0.5 }, canvasCenter);
   tile.scale = tile.size;
   drawSprite(tile, assetsMap.terrain.branchtiles, ctx);
 };
 
 const drawPathTile = (tile, ctx) => {
   tile.animation = tile.id;
-  tile.rendered_position = help.subtractCoords({ x: tile.x + 0.5, y: tile.y + 0.5 }, canvasCenter);
+  tile.rendered_position = subtractCoords({ x: tile.x + 0.5, y: tile.y + 0.5 }, canvasCenter);
   tile.scale = tile.size;
   drawSprite(tile, assetsMap.terrain.pathtiles, ctx);
 };
@@ -200,9 +232,9 @@ const drawTiles = (canvasState, offset, ctx) => {
       }
       const tileid = tileidy * 4 + tileidx;
 
-      const tileCoord = help.addCoords(
+      const tileCoord = addCoords(
         canvasState.myplayerdata.camera_center,
-        help.subtractCoords(help.addCoords({ x: col, y: row }, offset), {
+        subtractCoords(addCoords({ x: col, y: row }, offset), {
           x: (map[0].length - 1) / 2,
           y: (map.length - 1) / 2,
         })
@@ -219,12 +251,12 @@ const drawTiles = (canvasState, offset, ctx) => {
           return 1 - (dist - minDist) / (maxDist - minDist);
         };
 
-        let tileDist = help.coordDist(tileCoord, canvasState.myplayerdata.position);
+        let tileDist = coordDist(tileCoord, canvasState.myplayerdata.position);
 
         let maxSize = getSize(tileDist, 5, 8);
 
         Object.values(canvasState.otherplayers).forEach((player) => {
-          tileDist = help.coordDist(tileCoord, player.data.position);
+          tileDist = coordDist(tileCoord, player.data.position);
           const thisSize = getSize(tileDist, 3, 5);
           if (thisSize > maxSize) {
             maxSize = thisSize;
@@ -285,91 +317,6 @@ const drawTiles = (canvasState, offset, ctx) => {
   }
 };
 
-/*
-    Given the player's information, render the following UI features onto
-    the provided canvas context: health, inventory, gear
-*/
-const drawUI = (playerObj, ctx) => {
-  // Render the player's hearts
-  for (let heartIdx = 0; heartIdx < playerObj.health.length; heartIdx++) {
-    const heartVal = playerObj.health[heartIdx];
-    const padding = blockSize / 4;
-    const heartSize = (blockSize * 3) / 4; // Size of rendered heart
-    let heartImgSize; // Size of the actual image
-    let heartImg;
-    if (heartVal === 1) {
-      heartImg = assetsMap.UI["fullheart"].imgObj;
-      heartImgSize = assetsMap.UI["fullheart"].imageSize.width;
-    } else if (heartVal === 0.5) {
-      heartImg = assetsMap.UI["halfheart"].imgObj;
-      heartImgSize = assetsMap.UI["halfheart"].imageSize.width;
-    }
-    ctx.drawImage(
-      heartImg,
-      0,
-      0,
-      heartImgSize,
-      heartImgSize,
-      heartIdx * (heartSize + padding) + padding, //
-      padding,
-      heartSize,
-      heartSize
-    );
-  }
-  // Render the first line of the player's inventory
-  const inventoryRow = playerObj.inventory.items[0];
-  // Length of the rendered row in pixels
-  const rowLength = inventoryRow.length * blockSize;
-  // The leftmost coordinate of the row
-  const rowX = window.innerWidth / 2 - rowLength / 2;
-  // The topmost coordinate of the row
-  const rowY = window.innerHeight - (blockSize * 5) / 4;
-  for (let itemIdx = 0; itemIdx < inventoryRow.length; itemIdx++) {
-    // Render the inventory slot
-    const inventoryslotImg =
-      playerObj.inventory.selected === itemIdx
-        ? assetsMap.UI["selectedslot"]
-        : assetsMap.UI["inventoryslot"];
-    ctx.drawImage(
-      inventoryslotImg.imgObj,
-      0,
-      0,
-      inventoryslotImg.imageSize.width,
-      inventoryslotImg.imageSize.width,
-      rowX + itemIdx * blockSize,
-      rowY,
-      blockSize,
-      blockSize
-    );
-    if (inventoryRow[itemIdx] !== null) {
-      // Render the item
-      const item = inventoryRow[itemIdx];
-      if (assetsMap.items[item.itemID] !== undefined) {
-        const itemImg = assetsMap.items[item.itemID];
-        ctx.drawImage(
-          itemImg.imgObj,
-          0,
-          0,
-          itemImg.imageSize.width,
-          itemImg.imageSize.width,
-          rowX + blockSize * itemIdx,
-          rowY,
-          blockSize,
-          blockSize
-        );
-      }
-    }
-  }
-};
-
-/*
-    Given the player's information, render their inventory and player loadout onto
-    the provided canvas context. (This is the expanded inventory screen).
-*/
-const drawInventoryScreen = (playerObj, ctx) => {};
-
-const drawSelectedItem = (playerObj, ctx) => {};
-
 const drawArena = (canvasState, ctx) => {
   //render all projectiles
   Object.values(canvasState.arena.projectiles).forEach((proj) => {
@@ -383,11 +330,12 @@ const drawArena = (canvasState, ctx) => {
 
   //render all players
   Object.values(canvasState.players).forEach((player) => {
+    player.incombat = true;
     drawPlayer(player, ctx);
   });
 
   //draw borders
-  ctx.fillStyle = "#000000";
+  ctx.fillStyle = "#3E3038";
   //left border
   ctx.fillRect(
     0,
@@ -417,6 +365,15 @@ const drawArena = (canvasState, ctx) => {
     -((screenBlockHeight - canvasState.arena.size.height) / 2) * blockSize
   );
 
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 5;
+  ctx.strokeRect(
+    ((screenBlockWidth - canvasState.arena.size.width) / 2) * blockSize,
+    ((screenBlockHeight - canvasState.arena.size.height) / 2) * blockSize,
+    canvasState.arena.size.width * blockSize,
+    canvasState.arena.size.height * blockSize
+  );
+
   //Arena UI
   //targeted enemy UI
   if (canvasState.myplayerdata.targetid != 0) {
@@ -434,26 +391,89 @@ const drawArena = (canvasState, ctx) => {
       }
     });
   }
+  //component frame UI
+  //render vertically
+  if (screenBlockWidth > screenBlockHeight) {
+    let anchor = { x: 2 - canvasCenter.x, y: canvasCenter.y - 6 };
+    let sprite = {
+      rendered_position: anchor,
+      animation: 0,
+      scale: 1,
+    };
+    drawSprite(sprite, assetsMap.UI.componentframe, ctx);
+    sprite.rendered_position = Object.assign({}, anchor);
+    drawSprite(sprite, assetsMap.components.weapons[canvasState.myplayerdata.build.weapon], ctx);
+
+    sprite.animation = 1;
+    sprite.rendered_position = addCoords(anchor, { x: 0, y: 2 });
+    drawSprite(sprite, assetsMap.UI.componentframe, ctx);
+
+    sprite.animation = 0;
+    sprite.rendered_position = addCoords(anchor, { x: 0, y: 2 });
+    drawSprite(
+      sprite,
+      assetsMap.components.chargeups[canvasState.myplayerdata.build.chargeup],
+      ctx
+    );
+
+    sprite.animation = 2;
+    sprite.rendered_position = addCoords(anchor, { x: 0, y: 4 });
+    drawSprite(sprite, assetsMap.UI.componentframe, ctx);
+
+    sprite.animation = 0;
+    sprite.rendered_position = addCoords(anchor, { x: 0, y: 4 });
+    drawSprite(sprite, assetsMap.components.utilities[canvasState.myplayerdata.build.utility], ctx);
+  } else {
+    let anchor = { x: 2 - canvasCenter.x, y: canvasCenter.y - 2 };
+    let sprite = {
+      rendered_position: anchor,
+      animation: 0,
+      scale: 1,
+    };
+    drawSprite(sprite, assetsMap.UI.componentframe, ctx);
+    sprite.rendered_position = Object.assign({}, anchor);
+    drawSprite(sprite, assetsMap.components.weapons[canvasState.myplayerdata.build.weapon], ctx);
+
+    sprite.animation = 1;
+    sprite.rendered_position = addCoords(anchor, { x: 2, y: 0 });
+    drawSprite(sprite, assetsMap.UI.componentframe, ctx);
+
+    sprite.animation = 0;
+    sprite.rendered_position = addCoords(anchor, { x: 2, y: 0 });
+    drawSprite(
+      sprite,
+      assetsMap.components.chargeups[canvasState.myplayerdata.build.chargeup],
+      ctx
+    );
+
+    sprite.animation = 2;
+    sprite.rendered_position = addCoords(anchor, { x: 4, y: 0 });
+    drawSprite(sprite, assetsMap.UI.componentframe, ctx);
+
+    sprite.animation = 0;
+    sprite.rendered_position = addCoords(anchor, { x: 4, y: 0 });
+    drawSprite(sprite, assetsMap.components.utilities[canvasState.myplayerdata.build.utility], ctx);
+  }
 };
 
 const drawMaze = (canvasState, ctx) => {
   const playerPos = canvasState.myplayerdata.camera_center;
-  drawTiles(canvasState, help.subtractCoords(help.roundCoord(playerPos), playerPos), ctx);
+  drawTiles(canvasState, subtractCoords(roundCoord(playerPos), playerPos), ctx);
 
   Object.values(canvasState.otherplayers).forEach((player) => {
     if (
-      help.coordDist(canvasState.myplayerdata.position, player.data.position) <
+      coordDist(canvasState.myplayerdata.position, player.data.position) <
       canvasState.chunkblocksize * 2
     ) {
-      player.data.rendered_position = help.addCoords(
+      player.data.rendered_position = addCoords(
         canvasState.myplayerdata.rendered_position,
-        help.subtractCoords(player.data.position, canvasState.myplayerdata.position)
+        subtractCoords(player.data.position, canvasState.myplayerdata.position)
       );
       drawPlayer(player.data, ctx);
     }
   });
   drawPlayer(canvasState.myplayerdata, ctx);
-  drawUI(canvasState.myplayerdata, ctx);
+  //drawUI(canvasState.myplayerdata, ctx);
 };
 
 /*
@@ -490,9 +510,7 @@ const getMapToRender = (playerObj, chunkBlockSize) => {
   }
 
   // Get the player's relative coordinates
-  const relCoords = help.roundCoord(
-    help.subtractCoords(playerObj.camera_center, playerObj.chunk_center)
-  );
+  const relCoords = roundCoord(subtractCoords(playerObj.camera_center, playerObj.chunk_center));
 
   const mapToRender = [];
 
@@ -682,6 +700,21 @@ const loadAssets = async () => {
   loadedUI.forEach((asset) => {
     assetsMap.UI[asset.id].imgObj = asset.imgObj;
   });
+
+  //load components
+  let loadedComps = await Promise.all(Object.values(assetsMap.components.weapons).map(loadAsset));
+  loadedComps.forEach((asset) => {
+    assetsMap.components.weapons[asset.id].imgObj = asset.imgObj;
+  });
+  loadedComps = await Promise.all(Object.values(assetsMap.components.chargeups).map(loadAsset));
+  loadedComps.forEach((asset) => {
+    assetsMap.components.chargeups[asset.id].imgObj = asset.imgObj;
+  });
+  loadedComps = await Promise.all(Object.values(assetsMap.components.utilities).map(loadAsset));
+  loadedComps.forEach((asset) => {
+    assetsMap.components.utilities[asset.id].imgObj = asset.imgObj;
+  });
+
   // load items
   const loadedItems = await Promise.all(Object.values(assetsMap.items).map(loadAsset));
   loadedItems.forEach((asset) => {

@@ -256,6 +256,14 @@ let assetsMap = {
       src: target,
       imgObj: null,
     },
+    componentframe: {
+      id: "componentframe",
+      imageSize: { width: 72, height: 24 },
+      spriteSize: 24,
+      blockSize: 1.5,
+      src: componentframe,
+      imgObj: null,
+    },
   },
   components: {
     weapons: {

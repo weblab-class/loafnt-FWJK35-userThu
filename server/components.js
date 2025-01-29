@@ -6,7 +6,7 @@ const useWeapon = (arena, playerid) => {
   const attacks = {
     singlebullet: () => {
       const cost = 20;
-      if (thisPlayer.stamina >= cost) {
+      if (thisPlayer.stats.stamina >= cost) {
         const bulletId = arena.spawnProjectile({
           position: thisPlayer.position,
           velocity: help.scaleCoord(
@@ -42,7 +42,7 @@ const useWeapon = (arena, playerid) => {
         });
       }
 
-      thisPlayer.stamina -= cost;
+      thisPlayer.stats.stamina -= cost;
     },
   };
   console.log;
@@ -54,9 +54,9 @@ const useUtility = (arena, playerid) => {
   const utilities = {
     dash: () => {
       const cost = 5;
-      if (help.getMagnitude(thisPlayer.inputdir) > 0 && thisPlayer.stamina >= cost) {
+      if (help.getMagnitude(thisPlayer.inputdir) > 0 && thisPlayer.stats.stamina >= cost) {
         thisPlayer.velocity = help.scaleCoord(thisPlayer.inputdir, thisPlayer.speed * 2);
-        thisPlayer.stamina -= cost;
+        thisPlayer.stats.stamina -= cost;
       }
     },
   };

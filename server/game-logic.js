@@ -45,7 +45,7 @@ class Game {
   arenas;
   currLobby;
 
-  constructor(seed, lobby, jsonObj=null) {
+  constructor(seed, lobby, jsonObj = null) {
     if (jsonObj === null) {
       this.chunkBlockSize = chunkSize * 2 + 1;
       this.seed = seed;
@@ -66,7 +66,6 @@ class Game {
     } else {
       this.convertJSONtoGame(lobby, jsonObj);
     }
-    
   }
 
   /*
@@ -129,7 +128,6 @@ class Game {
               utilities: "dash",
             },
           },
-          health: [1, 1, 1], // Each element in the array represents a heart, and how full it is
           rendered_chunks: [
             [
               this.getMazeFromChunk({ x: -1, y: -1 }),
@@ -147,11 +145,12 @@ class Game {
               this.getMazeFromChunk({ x: 1, y: 1 }),
             ],
           ],
-          inventory: {
-            selected: 0,
-            items: [
-              [{ itemID: "lantern", itemObj: null }, null, null, null, null, null, null, null],
-            ],
+          stats: {
+            maxhealth: 100.0,
+            maxstamina: 100.0,
+            mazesprintspeed: 8,
+            combatdamage: 1.0,
+            armor: 100,
           },
         },
         user: user,
@@ -632,7 +631,7 @@ class Game {
         delete this.arenas[arenaId];
       };
     }
-    this.arenas[arenaId].addPlayer(playerid);
+    this.arenas[arenaId].addPlayer(this.players[playerid]);
   }
 
   leaveCombat(playerid) {

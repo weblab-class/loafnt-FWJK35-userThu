@@ -60,22 +60,28 @@ class Arena {
     return undefined;
   }
 
-  addPlayer(userid) {
+  addPlayer(player) {
     this.idcount++;
+    console.log(player);
     this.players[this.idcount] = {
       id: this.idcount,
-      userid: userid,
+      userid: player.user._id,
       class: "player",
-      position: { x: 0.0, y: 0.0 },
+      position: { x: -2.0, y: -2.0 },
       velocity: { x: 0.0, y: 0.0 },
       acceleration: 80,
       deceleration: 20,
       inputdir: { x: 0.0, y: 0.0 },
       rendered_position: { x: 0.0, y: 0.0 },
-      health: 100.0,
-      maxhealth: 100.0,
-      stamina: 100.0,
-      maxstamina: 100.0,
+      stats: {
+        health: player.data.stats.maxhealth,
+        maxhealth: player.data.stats.maxhealth,
+        stamina: player.data.stats.maxstamina,
+        maxstamina: player.data.stats.maxstamina,
+        damagemodifier: player.data.stats.combatdamage,
+        armor: player.data.stats.armor,
+      },
+
       hitboxes: [
         {
           shape: "circle",
@@ -85,12 +91,12 @@ class Arena {
           onCollision: (collisionPoint, collisionEntity) => {},
         },
       ],
-      avatar_id: "witch_cat",
+      avatar_id: player.data.avatar_id,
       speed: 7,
       build: {
-        weapon: "singlebullet",
-        chargeup: "time",
-        utility: "dash",
+        weapon: player.data.components.equipped.weapons,
+        chargeup: player.data.components.equipped.chargeups,
+        utility: player.data.components.equipped.utilities,
       },
       targetid: 0,
     };
@@ -278,7 +284,6 @@ class Arena {
           player.velocity = { x: 0, y: 0 };
         }
       }
-      console.log(help.getMagnitude(player.velocity));
 
       //move player by velocity
       player.position = help.addCoords(

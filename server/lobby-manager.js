@@ -21,6 +21,7 @@ const loadGame = (host) => {
         // so the gameFile looks like "{name: val, game: null}"
         const gameFile = JSON.parse(foundGameFiles[host.slotKey]);
         const gameJSON = (gameFile.game === null) ? undefined : gameFile.game;
+        // Clear Arena
         resolve({game: gameJSON});
       } else {
         reject(`User with [googleid]: [${host.user.googleid}] not found.`);
@@ -40,6 +41,7 @@ const saveGame = (gameID, host) => {
       // MUST: Clear the interval which is needed to call JSON.stringify()
       const gameToSave = common.gameMap[gameID];
       clearInterval(gameToSave.interval);
+      gameToSave.arenas = {};
       parsedGameFile.game = gameToSave;
       foundUser.gamefiles[host.slotKey] = JSON.stringify(parsedGameFile);
 

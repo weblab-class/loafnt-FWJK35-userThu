@@ -183,7 +183,11 @@ const drawEnemy = (enemy, ctx) => {
 
 const drawProjectile = (proj, ctx) => {
   proj.rendered_position = proj.position;
-  proj.animation = 0;
+  if (proj.animation) {
+    proj.animation = proj.animations[proj.animation.seq].frames[proj.animation.frame];
+  } else {
+    proj.animation = 0;
+  }
   proj.scale = 1;
   drawSprite(proj, assetsMap.projectiles[proj.type], ctx);
 };

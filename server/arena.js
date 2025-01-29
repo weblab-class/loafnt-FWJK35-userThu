@@ -63,7 +63,11 @@ class Arena {
                   this.getEntity(collisionEntity.source) &&
                   this.getEntity(collisionEntity.source).class === "player"
                 ) {
-                  this.enemies[bossid].health -= collisionEntity.damage;
+                  if (!collisionEntity.collided[bossid]) {
+                    this.enemies[bossid].health -= collisionEntity.damage;
+
+                    collisionEntity.collided[bossid] = true;
+                  }
                 }
               }
             },
@@ -107,7 +111,11 @@ class Arena {
                     this.getEntity(collisionEntity.source) &&
                     this.getEntity(collisionEntity.source).class === "player"
                   ) {
-                    this.enemies[minionid].health -= collisionEntity.damage;
+                    if (!collisionEntity.collided[minionid]) {
+                      this.enemies[minionid].health -= collisionEntity.damage;
+
+                      collisionEntity.collided[minionid] = true;
+                    }
                   }
                 }
                 if (collisionEntity.class === "enemy") {
@@ -191,29 +199,34 @@ class Arena {
           center: { x: 0, y: 0 },
           onCollision: (collisionPoint, collisionEntity) => {
             const thisPlayer = this.players[playerId];
+            const armorRed = 100 / thisPlayer.stats.armor;
             if (collisionEntity.class === "projectile") {
               if (
                 this.getEntity(collisionEntity.source) &&
                 this.getEntity(collisionEntity.source).class === "enemy"
               ) {
-                thisPlayer.stats.health -= collisionEntity.damage;
-                //bounce player away from bullet
-                thisPlayer.velocity = help.addCoords(
-                  thisPlayer.velocity,
-                  help.scaleCoord(
-                    help.getNormalized(help.subtractCoords(thisPlayer.position, collisionPoint)),
-                    20
-                  )
-                );
+                if (!collisionEntity.collided[playerId]) {
+                  thisPlayer.stats.health -= collisionEntity.damage * armorRed;
+                  //bounce player away from bullet
+                  thisPlayer.velocity = help.addCoords(
+                    thisPlayer.velocity,
+                    help.scaleCoord(
+                      help.getNormalized(help.subtractCoords(thisPlayer.position, collisionPoint)),
+                      20
+                    )
+                  );
+
+                  collisionEntity.collided[playerId] = true;
+                }
               }
             }
             if (collisionEntity.class === "enemy") {
-              thisPlayer.stats.health -= collisionEntity.difficulty * 5;
+              thisPlayer.stats.health -= collisionEntity.difficulty * 5 * armorRed;
               thisPlayer.velocity = help.addCoords(
                 thisPlayer.velocity,
                 help.scaleCoord(
                   help.getNormalized(help.subtractCoords(thisPlayer.position, collisionPoint)),
-                  10
+                  5
                 )
               );
             }
@@ -610,11 +623,29 @@ class Arena {
           this.time + enemy.animations[enemy.animation.seq].speed * this.fps;
       }
     });
+    Object.values(this.projectiles).forEach((proj) => {
+      if (proj.animation) {
+        console.log(proj);
+        if (this.time >= proj.animation.nextframe) {
+          proj.animation.frame += 1;
+
+          //loop or end animation
+          if (proj.animation.frame >= proj.animations[proj.animation.seq].frames.length) {
+            proj.animation.frame = 0;
+            //set to idle animation if doesnt repeat
+            if (!proj.animations[proj.animation.seq].repeat) {
+              proj.animation.seq = "idle";
+            }
+          }
+          proj.animation.nextframe =
+            this.time + proj.animations[proj.animation.seq].speed * this.fps;
+        }
+      }
+    });
 
     //kill all expired projectiles
     Object.values(this.projectiles).forEach((projectile) => {
       if (this.time > projectile.deathtime) {
-        projectile.onDeath(projectile.id);
         this.deleteProjectile(projectile.id);
       }
     });
@@ -714,7 +745,12 @@ class Arena {
       onDeath: projectile.onDeath,
       dieOnCollision: projectile.dieOnCollision,
       hitboxes: projectile.hitboxes,
+      collided: {},
     };
+    if (projectile.animation) {
+      this.projectiles[bulletId].animations = projectile.animations;
+      this.projectiles[bulletId].animation = projectile.animation;
+    }
     //assign this bullet to its owner
     Object.values(this.projectiles[bulletId].hitboxes).forEach((hitbox) => {
       hitbox.ownerid = bulletId;
@@ -724,7 +760,7 @@ class Arena {
 
   deleteProjectile(bulletId) {
     if (this.projectiles[bulletId]) {
-      this.projectiles[bulletId].onDeath();
+      this.projectiles[bulletId].onDeath(bulletId);
       delete this.projectiles[bulletId];
     }
   }

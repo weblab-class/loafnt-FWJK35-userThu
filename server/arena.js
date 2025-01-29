@@ -69,7 +69,7 @@ class Arena {
       position: { x: 0.0, y: 0.0 },
       velocity: { x: 0.0, y: 0.0 },
       acceleration: 80,
-      deceleration: 80,
+      deceleration: 20,
       inputdir: { x: 0.0, y: 0.0 },
       rendered_position: { x: 0.0, y: 0.0 },
       health: 100.0,
@@ -140,6 +140,7 @@ class Arena {
 
   useUtility(userid) {
     const id = this.getIdOfUser(userid);
+    Component.useUtility(this, id);
   }
 
   checkCollisions(hitboxes) {
@@ -236,20 +237,27 @@ class Arena {
     Object.values(this.projectiles).forEach((proj) => {
       proj.position = help.addCoords(proj.position, help.scaleCoord(proj.velocity, 1 / this.fps));
     });
-    //move all players
 
+    //move all players
     Object.values(this.players).forEach((player) => {
       //accelerate in direction of input
 
       if (help.getMagnitude(player.inputdir) > 0) {
-        player.velocity = help.addCoords(
-          player.velocity,
-          help.scaleCoord(player.inputdir, player.acceleration / this.fps)
-        );
-        // player.velocity = help.scaleCoord(
-        //   help.getNormalized(help.addCoords(player.velocity, help.scaleCoord(player.inputdir, 1))),
-        //   help.getMagnitude(player.velocity) + player.acceleration / this.fps
-        // );
+        //accelerate in direction
+        if (help.getMagnitude(player.velocity) < player.speed) {
+          player.velocity = help.addCoords(
+            player.velocity,
+            help.scaleCoord(player.inputdir, player.acceleration / this.fps)
+          );
+        }
+        //redirect velocity
+        else {
+          player.velocity = help.scaleCoord(
+            help.getNormalized(help.addCoords(player.velocity, player.inputdir)),
+            help.getMagnitude(player.velocity)
+          );
+        }
+
         //if going too fast, decelerate
         if (help.getMagnitude(player.velocity) > player.speed) {
           player.velocity = help.scaleCoord(
@@ -261,15 +269,16 @@ class Arena {
           );
         }
       } else {
-        if (help.getMagnitude(player.velocity) > player.deceleration / this.fps) {
+        if (help.getMagnitude(player.velocity) > (player.deceleration * 2) / this.fps) {
           player.velocity = help.scaleCoord(
             help.getNormalized(player.velocity),
-            help.getMagnitude(player.velocity) - player.deceleration / this.fps
+            help.getMagnitude(player.velocity) - player.acceleration / this.fps
           );
         } else {
           player.velocity = { x: 0, y: 0 };
         }
       }
+      console.log(help.getMagnitude(player.velocity));
 
       //move player by velocity
       player.position = help.addCoords(

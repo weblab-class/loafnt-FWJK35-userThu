@@ -11,26 +11,37 @@ const getRandomCode = (len) => {
   return code;
 };
 
+const loadGame = (host) => {
+  returnPromise = new Promise((resolve, reject) => {
+    User.find({googleid: host.user.googleid}).then((foundUsers) => {
+      if (foundUsers) {
+        const foundUser = foundUsers[0];
+        let foundGameFiles = foundUser.gamefiles;
+        // By this point, the User will have named the file at the specified slot
+        // so the gameFile looks like "{name: val, game: null}"
+        const gameFile = JSON.parse(foundGameFiles[host.slotKey]);
+        const gameJSON = (gameFile.game === null) ? undefined : gameFile.game;
+        resolve({game: gameJSON});
+      } else {
+        reject(`User with [googleid]: [${host.user.googleid}] not found.`);
+      }
+    });
+  }); 
+  return returnPromise;
+}
+
 const saveGame = (gameID, host) => {
   returnPromise = new Promise((resolve, reject) => {
-    User.find({ googleid: host.googleid }).then((foundUsers) => {
+    User.find({ googleid: host.user.googleid }).then((foundUsers) => {
       let foundUser = foundUsers[0];
-      let foundGame;
-      if (foundUser.gamefiles === undefined || foundUser.gamefiles.length === 0) {
-        foundGame = JSON.stringify(common.gameMap[gameID]);
-        foundUser.gamefiles = [foundGame, "", "", "", ""];
-      } else {
-        // for (let fileIdx = 0; fileIdx < foundUser.gamefiles.length; fileIdx++) {
-        //   if (foundUser.gamefiles[fileIdx] === "") {
-        //     foundGame = JSON.stringify(common.gameMap[gameID]);
-        //     foundUser.gamefiles[fileIdx] = foundGame;
-        //     break;
-        //   }
-        // }
-        //always save to first slot for now
-        foundGame = JSON.stringify(common.gameMap[gameID]);
-        foundUser.gamefiles[0] = foundGame;
-      }
+      
+      // gamefile: {name: val, game: null}
+      const parsedGameFile = JSON.parse(foundUser.gamefiles[host.slotKey]);
+      // MUST: Clear the interval which is needed to call JSON.stringify()
+      const gameToSave = common.gameMap[gameID];
+      clearInterval(gameToSave.interval);
+      parsedGameFile.game = gameToSave;
+      foundUser.gamefiles[host.slotKey] = JSON.stringify(parsedGameFile);
 
       foundUser.save().then((result) => {
         resolve({ seed: gameID, host: host });
@@ -40,11 +51,22 @@ const saveGame = (gameID, host) => {
   return returnPromise;
 };
 
+/*
+  Properties:
+  leader: {
+    slotKey: (int), 
+    user: {
+      _id: (String),
+      name: (String),
+      googleid: (String)
+    }
+  }
+*/
 class Lobby {
   code;
   players;
   playersObj;
-  leader;
+  leader; 
   started;
 
   constructor(lobbiesList, leader) {
@@ -109,19 +131,19 @@ const deleteLobby = (code) => {
     }
   });
   const lobby = lobbies.get(code);
-  if (lobby) {
-    saveGame(lobby.code, lobby.leader).then((result) => {
-      console.log(
-        `Game [${result.seed}] has been saved successfully to player [${result.host.name}]`
-      );
-      lobbies.delete(code);
-    });
-  }
+  saveGame(lobby.code, lobby.leader).then((result) => {
+    console.log(
+      `Game [${result.seed}] has been saved successfully to player [${result.host.user.name}]`
+    );
+    lobbies.delete(code);
+    common.gameMap[code].killer();
+  });
 };
 
 module.exports = {
   Lobby,
   lobbies,
+  loadGame,
   findLobbyByCode,
   findLobbyOfPlayer,
   createNewLobby,

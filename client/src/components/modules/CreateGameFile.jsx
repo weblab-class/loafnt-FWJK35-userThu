@@ -27,11 +27,11 @@ const CreateGameFile = (props) => {
             <input
                 type="text"
                 value={value}
-                placeholder="Game Name"
+                placeholder="Enter Game Name"
                 onChange={handleChange}
                 onKeyDown={handleInput}
             />
-            <button onClick={handleBackClick}>Back</button>
+            {/* <button onClick={handleBackClick}>Back</button> */}
             <button onClick={handleDoneClick}>Done</button>
         </>
     );

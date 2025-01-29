@@ -43,23 +43,47 @@ class Game {
   interval;
   killer;
   arenas;
+  currLobby;
 
-  constructor(seed, lobby) {
-    this.chunkBlockSize = chunkSize * 2 + 1;
-    this.seed = seed;
-    this.players = {};
+  constructor(seed, lobby, jsonObj=null) {
+    if (jsonObj === null) {
+      this.chunkBlockSize = chunkSize * 2 + 1;
+      this.seed = seed;
+      this.players = {};
+      if (lobby) {
+        Array.from(lobby.players.values()).forEach((user) => {
+          this.spawnPlayer(user);
+        });
+        this.currLobby = lobby.code;
+      }
+      this.arenas = {};
+      this.explored = {};
+      this.explored[JSON.stringify({ x: 0, y: 0 })] = Array(Math.ceil(chunkSize ** 2 / 32)).fill(0);
+      this.setTileExplored({ x: -1, y: -1 }, { x: 0, y: 0 });
+      this.setTileExplored({ x: 1, y: -1 }, { x: 0, y: 0 });
+      this.setTileExplored({ x: -1, y: 1 }, { x: 0, y: 0 });
+      this.setTileExplored({ x: 1, y: 1 }, { x: 0, y: 0 });
+    } else {
+      this.convertJSONtoGame(lobby, jsonObj);
+    }
+    
+  }
+
+  /*
+    Convert a JSON object from a loaded game file into a Game object
+  */
+  convertJSONtoGame(lobby, jsonObj) {
+    this.seed = jsonObj.seed;
+    this.players = jsonObj.players;
+    this.chunkBlockSize = jsonObj.chunkBlockSize;
+    this.explored = jsonObj.explored;
+    this.arenas = jsonObj.arenas;
     if (lobby) {
       Array.from(lobby.players.values()).forEach((user) => {
-        this.spawnPlayer(user);
+        this.players[user._id].active = true;
       });
+      this.currLobby = lobby.code;
     }
-    this.arenas = {};
-    this.explored = {};
-    this.explored[JSON.stringify({ x: 0, y: 0 })] = Array(Math.ceil(chunkSize ** 2 / 32)).fill(0);
-    this.setTileExplored({ x: -1, y: -1 }, { x: 0, y: 0 });
-    this.setTileExplored({ x: 1, y: -1 }, { x: 0, y: 0 });
-    this.setTileExplored({ x: -1, y: 1 }, { x: 0, y: 0 });
-    this.setTileExplored({ x: 1, y: 1 }, { x: 0, y: 0 });
   }
 
   /*
@@ -140,7 +164,6 @@ class Game {
 
   removePlayer(userid) {
     delete this.players[this.userid];
-    console.log("deleting player");
     if (Object.keys(this.players).length === 0) {
       this.killSelf();
     }
@@ -159,15 +182,12 @@ class Game {
       }
     }
     if (emptyLobby) {
-      lobbyManager.deleteLobby(this.seed);
-      clearInterval(this.interval);
+      lobbyManager.deleteLobby(this.currLobby);
     }
   }
 
   killSelf() {
     lobbyManager.deleteLobby(this.seed);
-    clearInterval(this.interval);
-    this.killer();
   }
 
   /*

@@ -4,12 +4,12 @@ const GameFile = (props) => {
     return (
         <>
         <div onClick={() => {
-            props.handleClick(props.key);
+            props.handleClick(props.slotKey);
         }}>
             {
-                props.gameFile.name === undefined || props.gameFile === ""?
+                props.gameName === undefined || props.gameName === ""?
                 (<><h1>New Game</h1></>) : 
-                (<><h1>${props.gameFile.name}</h1></>)
+                (<><h1>{props.gameName}</h1></>)
             }
             
         </div>

@@ -62,7 +62,7 @@ const LobbyPage = () => {
             <div>Lobby not found!</div>
           )}
         </div>
-        {myLobby && user && myLobby.leader.googleid === user.googleid ? (
+        {myLobby && user && myLobby.leader.user.googleid === user.googleid ? (
           <StartGame lobbycode={props.lobbycode} />
         ) : (
           <></>

@@ -51,45 +51,40 @@ const sendGameState = (gameId) => {
 const startGame = (gameId) => {
   // Update the lobby associated with the game
   const lobby = LobbyManager.findLobbyByCode(gameId);
-
+  
+  // emit "launchgame" event, players in lobby redirected to /game page
   lobby.players.forEach((player) => {
     const socket = getSocketFromUserID(player._id);
     if (socket) {
       getSocketFromUserID(player._id).emit("launchgame");
-    }
+    };
   });
-  // Create a new game
-  common.gameMap[gameId] = new Game.Game(gameId, LobbyManager.findLobbyByCode(gameId));
-  // Add a killer function for when the game calls killSelf()
-  common.gameMap[gameId].killer = () => {
-    console.log("im killing myself");
-    delete common.gameMap[gameId];
-  };
 
-  // Keep track of every active player server-side
-  // Object.values(common.gameMap[gameId].players).forEach((player) => {
-  //   activePlayers[player.user._id] = gameId;
-  // });
-};
+  // Fetch the game at the host's specified game slot
+  let loadedGame;
+  LobbyManager.loadGame(lobby.leader).then((result) => {
+    loadedGame = result.game;
+    // // If it is an empty save file, create a new game
+    if (loadedGame === undefined) {
+      common.gameMap[gameId] = new Game.Game(gameId, LobbyManager.findLobbyByCode(gameId));
+    } else {
+      common.gameMap[gameId] = new Game.Game(null, LobbyManager.findLobbyByCode(gameId), loadedGame);
+    }
+    // Add a killer function for when the game calls killSelf()
+    common.gameMap[gameId].killer = () => {
+      delete common.gameMap[gameId];
+    };
+
+    runGame(gameId);
+  })
+  
+}
 
 // Called when server socket receives a request
 const runGame = (gameId) => {
   const lobby = LobbyManager.findLobbyByCode(gameId);
   lobby.started = true;
   const game = common.gameMap[gameId];
-  // Iterate through the players in the current game
-  // Object.values(game.players).forEach((player) => {
-  //   // Scan through every active game besides the current one to set the player inactive
-  //   Object.values(common.gameMap).forEach((game) => {
-  //     if (game.seed !== gameId) {
-  //       game.setInactive(player.user._id);
-  //     }
-  //   });
-  //   const socket = getSocketFromUserID(player.user._id);
-  //   if (socket) {
-  //     getSocketFromUserID(player.user._id).emit("launchgame");
-  //   }
-  // });
 
   game.interval = setInterval(() => {
     //tick each arena
@@ -128,7 +123,6 @@ module.exports = {
         if (common.gameMap[gameId] === undefined) {
           startGame(gameId);
         }
-        runGame(gameId);
       });
 
       socket.on("move", (input) => {

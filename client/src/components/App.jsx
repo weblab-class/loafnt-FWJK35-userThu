@@ -10,6 +10,8 @@ import { socket } from "../client-socket";
 import { get, post } from "../utilities";
 
 export const UserContext = createContext(null);
+// Lobby ID
+export const LobbyContext = createContext("");
 
 /**
  * Define the "App" component

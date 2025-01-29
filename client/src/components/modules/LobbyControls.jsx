@@ -1,31 +1,39 @@
-import React, { useContext } from "react";
+import React, { useState, useContext } from "react";
+import {Link} from "react-router-dom";
 import { GoogleLogin, googleLogout } from "@react-oauth/google";
 
 import "../../utilities.css";
 import "./LobbyControls.css";
-import { UserContext } from "../App";
+import { UserContext, LobbyContext } from "../App";
 import { get, post } from "../../utilities";
 import { socket, runGame } from "../../client-socket";
 
-const CreateLobby = () => {
+const CreateLobby = (props) => {
   const createLobby = () => {
     post("/api/newlobby").then((lobby) => {
-      window.location.assign(
-        window.location.protocol + "//" + window.location.host + "/lobby/" + lobby.code
-      );
+      // pass lobby
+      console.log(lobby);
+      // setLobbyID(lobby.code);
+      // console.log(lobbyID);
+      props.handleNewLobby(lobby.code);
+      // window.location.assign(
+      //   window.location.protocol + "//" + window.location.host + "/lobby/" + lobby.code
+      //   window.location.protocol + "//" + window.location.host + "/selectgame"
+      // );
     });
   };
 
   return (
     <>
+      {/* add GameFilesPage */}
       <button
         className="create-lobby"
         onClick={() => {
           createLobby();
-        }}
-      >
+        }}>
         Create Lobby
       </button>
+      
     </>
   );
 };

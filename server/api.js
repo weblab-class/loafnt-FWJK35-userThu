@@ -58,7 +58,7 @@ router.post("/storeuser", (req, res) => {
         const newUser = new User({
           name: req.user.name,
           googleid: req.user.googleid,
-          gamefiles: ["", "", "", "", ""],
+          gamefiles: ["", "", "", "", ""] // gamefile is "{fileName: "Epic Game", game: JSON.stringify(gameObj)}""
         });
         newUser.save().then((user) => {
           res.send(user);
@@ -70,7 +70,7 @@ router.post("/storeuser", (req, res) => {
 
 router.post("/newlobby", (req, res) => {
   if (req.user) {
-    const thislobby = lobbyManager.createNewLobby(req.user);
+    const thislobby = lobbyManager.createNewLobby({slotKey: undefined, user: req.user});
     res.send(thislobby);
   }
 });
@@ -131,9 +131,80 @@ router.get("/mylobbycode", (req, res) => {
 router.post("/activateplayer", (req, res) => {
   if (req.user) {
     socketManager.activatePlayer(req.user._id, req.body.gameID);
-    res.send({ user: req.user._id, gameID: req.body.gameID });
+    res.send({user: req.user._id, gameID: req.body.gameID});
   }
 });
+
+// router.get("/gamefile", (req, res) => {
+//   const host = req.body.host
+//   User.find({googleid: host.user.googleid}).then((foundUsers) => {
+//     if (foundUsers) {
+//       const foundUser = foundUsers[0];
+//       const foundGame = foundUser.gamefiles[host.slotKey];
+//       const parsedGame = {name: foundGame.name, game: JSON.parse(foundGame.game)};
+//       res.send(parsedGame);
+//     }
+//   })
+// })
+
+/*
+  Request is made when a user is selecting a game file in GameFilesPage.jsx
+*/
+router.get("/gamefiles", (req, res) => {
+  if (req.user) {
+    User.find({googleid: req.user.googleid}).then((foundUsers) => {
+      const foundUser = foundUsers[0];
+      if (foundUser) {
+        /*
+          A new player's gamefiles looks like: 
+          ["", "", "", "", ""]
+          
+          A returning player's gamefiles looks like:
+          ["{name: val, game: {...}}", ...]
+        */
+        const gameFiles = foundUser.gamefiles.map((gameFile) => {
+          if (gameFile !== "") {
+            return JSON.parse(gameFile);
+          } else {
+            return "";
+          }
+          
+        })
+        res.send(gameFiles);
+      }
+    });
+  }
+});
+
+/*
+  req.body: {
+    lobbyID: (String), 
+    slotKey: (int)
+  }
+*/
+router.post("/gameslot", (req, res) => {
+  if (req.user) {
+    const lobby = lobbyManager.findLobbyByCode(req.body.lobbyID);
+    lobby.leader.slotKey = req.body.slotKey;
+    res.send({lobbyID: req.body.lobbyID, slotKey: req.body.slotKey});
+  }
+});
+
+/*
+  Request made when a user creates a new game in an empty slot.
+*/
+router.post("/initgameslot", (req, res) => {
+  if (req.user) {
+    User.find({googleid: req.user.googleid}).then((foundUsers) => {
+      const foundUser = foundUsers[0];
+      // NOTE: The game field is not populated until the user dismounts from Game.jsx
+      foundUser.gamefiles[req.body.slotKey] = `{"name": "${req.body.gameName}", "game": null}`;
+      foundUser.save().then((result) => {
+        res.send({slotKey: req.body.slotKey, gameFile: result.gamefiles[req.body.slotKey]});
+      });
+    });
+  }
+})
 
 // anything else falls to this "not found" case
 router.all("*", (req, res) => {

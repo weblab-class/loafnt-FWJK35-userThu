@@ -114,6 +114,28 @@ const drawPlayer = (player, ctx) => {
   }
 };
 
+const drawBossIndicator = (player, ctx) => {
+  if (player.bossLoc) {
+    // Calculate scalar
+    const screenDiagonal = help.getMagnitude({x: screenBlockWidth-3, y: screenBlockHeight-3}) / 2;
+    const distance = help.getMagnitude(help.subtractCoords(player.bossLoc, player.position));
+    if (distance > screenBlockHeight/2) {
+      let indicatorPos = help.scaleCoord(help.getNormalized(help.subtractCoords(player.bossLoc, player.position)), screenDiagonal);
+      // clamp
+      indicatorPos.x = Math.min(screenBlockWidth / 2 - 1.5, Math.max(-screenBlockWidth / 2 + 1.5, indicatorPos.x));
+      indicatorPos.y = Math.min(screenBlockHeight / 2 - 1.5, Math.max(-screenBlockHeight / 2 + 1.5, indicatorPos.y));
+
+      const sprite = {
+        rendered_position: indicatorPos,
+        animation: 0,
+        scale: 0.2
+      }
+      const asset = assetsMap.enemies["boss"];
+      drawSprite(sprite, asset, ctx);
+    }
+  }
+}
+
 //draws a fillable bar at a specified position
 /*
 Params:
@@ -530,6 +552,7 @@ const drawMaze = (canvasState, ctx) => {
     },
     ctx
   );
+  drawBossIndicator(canvasState.myplayerdata, ctx);
   //drawUI(canvasState.myplayerdata, ctx);
 };
 
@@ -543,8 +566,6 @@ const drawMaze = (canvasState, ctx) => {
     mode (String): Indicate which canvas to render
 */
 const getMapToRender = (playerObj) => {
-  let rendered_chunks = playerObj.rendered_chunks;
-  if (playerObj.mode.type === "invisible-maze") rendered_chunks = playerObj.mode.packet.chunks;
   // Create a single 2d array containing all blocks in the rendered area
   const combinedChunks = [];
   for (let chunkRow = 0; chunkRow < playerObj.rendered_chunks.length; chunkRow++) {

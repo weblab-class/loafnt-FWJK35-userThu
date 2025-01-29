@@ -2,7 +2,6 @@ const seedrandom = require("seedrandom");
 const help = require("./helpers");
 const lobbyManager = require("./lobby-manager");
 const Arena = require("./arena");
-const InvisibleMaze = require("./invisible-maze");
 const common = require("./common");
 
 const screenBorder = {
@@ -158,6 +157,7 @@ class Game {
             level: 1,
             xpneeded: 64,
           },
+          bossLoc: undefined,
         },
         user: user,
         active: true,
@@ -267,28 +267,6 @@ class Game {
   }
 
   /*
-    Given a player's ID, update the game state to reflect their intended mode.
-
-    Parameters:
-    id (String): The intended player's ID.
-    mode (String): Represents the player's new game mode.
-  */
-  changePlayerMode(id, mode) {
-    if (Object.hasOwn(this.players, id)) {
-      this.players[id].data.mode.type = mode;
-      if (mode === "invisible-maze") {
-        const invisibleMaze = new InvisibleMaze.InvisibleMaze({
-          mapSize: { height: 1, width: 1 },
-          getMazeFromChunk: { func: this.getMazeFromChunk, seed: this.seed },
-          init_chunk: { x: 0, y: 0 },
-        });
-        // TO-DO: Update mode with the relevant game packet lol
-        this.players[id].data.mode.packet = InvisibleMaze.getPacket();
-      }
-    }
-  }
-
-  /*
     Given a player's ID and their intended direction, handle the logic to move them.
 
     Parameters:
@@ -303,6 +281,8 @@ class Game {
       this.arenas[JSON.stringify(this.players[id].data.chunk)].movePlayer(id, dir);
       return;
     }
+
+    this.getPlayerDirFromBoss();
 
     let playerPos = this.players[id].data.position;
     let playerChunk = this.players[id].data.chunk;
@@ -475,8 +455,9 @@ class Game {
             difficulty: help.getMagnitude(this.players[id].data.chunk) / 5,
             cleared: false,
             onclear: undefined,
+            location: help.roundCoord(this.players[id].data.position),
           };
-          if (this.holes.won % 2 === 0 && this.holes.won !== 0) {
+          if (this.holes.won === 0) {
             newhole.boss = true;
             newhole.difficulty = 1 + (this.holes.bossesbeat * 1) / 3;
           }
@@ -643,6 +624,13 @@ class Game {
     if (!this.arenas[arenaId]) {
       const onClear = () => {
         this.holes.generated[arenaId].cleared = true;
+        // Defeated a boss
+        if (this.holes.generated[arenaId].boss) {
+          this.holes.bossesbeat += 1;
+          this.holes.won = 0;
+        } else {
+          this.holes.won += 1;
+        }
       };
       this.holes.generated[arenaId].onclear = onClear;
       this.arenas[arenaId] = new Arena.Arena(fps, this.holes.generated[arenaId]);
@@ -661,6 +649,20 @@ class Game {
     const arenaId = JSON.stringify(this.players[playerid].data.chunk);
     if (this.arenas[arenaId]) {
       this.arenas[arenaId].removePlayer(playerid);
+    }
+  }
+
+  getPlayerDirFromBoss() {
+    let bossLoc;
+    for (const hole of Object.values(this.holes.generated)) {
+      if (hole.boss) {
+        bossLoc = hole.location
+        break;
+      }
+    };
+    
+    for (const id of Object.keys(this.players)) {
+      this.players[id].data.bossLoc = bossLoc;
     }
   }
 }

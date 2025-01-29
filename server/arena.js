@@ -28,7 +28,7 @@ class Arena {
     this.gendata = gendata;
     this.onclear = gendata.onclear;
     if (gendata.boss) {
-      const bossid = this.spawnEnemy({
+      const bossid = this.spawnEnemy({ 
         position: { x: 0, y: 0 },
         velocity: { x: 0, y: 0 },
         maxhealth: 100 * gendata.difficulty,
@@ -73,7 +73,7 @@ class Arena {
             },
           },
         ],
-        possibleattacks: [
+        possibleattacks: [//TODO check this out
           { name: "shoot1per", duration: 1 },
           { name: "shootring", duration: 2 },
         ],
@@ -777,7 +777,7 @@ class Arena {
   performAttack(enemyid, attackname) {
     const thisEnemy = this.enemies[enemyid];
     const attacks = {
-      shoot1per: () => {
+      shoot1per: () => { //TODO check this out
         thisEnemy.animation = {
           seq: "attack1",
           frame: 0,

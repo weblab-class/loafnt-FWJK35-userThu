@@ -141,12 +141,6 @@ module.exports = {
         }
       });
 
-      socket.on("enter-invisiblemaze", (input) => {
-        if (common.gameMap[input.gameID]) {
-          common.gameMap[input.gameID].changePlayerMode(input.userID, "invisible-maze");
-        }
-      });
-
       socket.on("inventoryselect", (input) => {
         if (common.gameMap[input.gameID]) {
           common.gameMap[input.gameID].selectItem(input.userID, input.slotIdx);

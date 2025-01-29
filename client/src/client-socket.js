@@ -18,10 +18,6 @@ const enterCombat = (gameID, user_id) => {
   socket.emit("entercombat", { gameID: gameID, user_id: user_id });
 };
 
-const enterInvisibleMaze = (gameID, userID) => {
-  socket.emit("enter-invisiblemaze", { gameID: gameID, userID: userID });
-};
-
 const inventorySelect = (gameID, userID, slotIdx) => {
   socket.emit("inventoryselect", { gameID: gameID, userID: userID, slotIdx: slotIdx });
 };
@@ -43,7 +39,6 @@ export {
   runGame,
   move,
   enterCombat,
-  enterInvisibleMaze,
   inventorySelect,
   attack,
   utility,

@@ -84,7 +84,7 @@ const useWeapon = (arena, playerid) => {
         thisPlayer.stats.stamina -= cost;
       }
     },
-    launchbomb: () => {
+    launchbomb: () => { //TODO check this out
       const cost = 20;
       if (thisPlayer.stats.stamina >= cost) {
         const bulletId = arena.spawnProjectile({

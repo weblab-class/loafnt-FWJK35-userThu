@@ -1,6 +1,5 @@
 import {
   inventorySelect,
-  enterInvisibleMaze,
   enterCombat,
   move,
   attack,
@@ -31,10 +30,6 @@ const sendInput = (gameID, userID, deltaT) => {
   if (Math.abs(xcomp) + Math.abs(ycomp) === 2) {
     xcomp *= Math.SQRT1_2;
     ycomp *= Math.SQRT1_2;
-  }
-
-  if (pressedKeys.get("i")) {
-    enterInvisibleMaze(gameID, userID);
   }
 
   // if (pressedKeys.get("c")) {

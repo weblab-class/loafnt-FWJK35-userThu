@@ -655,7 +655,7 @@ class Game {
   getPlayerDirFromBoss() {
     let bossLoc;
     for (const hole of Object.values(this.holes.generated)) {
-      if (hole.boss) {
+      if (hole.boss && !hole.cleared) {
         bossLoc = hole.location
         break;
       }

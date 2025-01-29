@@ -1,7 +1,4 @@
-import goob from "./sprites/goob2.png";
 import tree from "./tree.png";
-import branchtilemap from "./branch_tilemap.png";
-import pathtilemap from "./path_tilemap.png";
 import fullheart from "./fullheart.png";
 import halfheart from "./halfheart.png";
 
@@ -9,12 +6,35 @@ import inventoryslot from "./inventoryslot.png";
 import selectedslot from "./selectedslot.png";
 
 import lantern from "./lantern.png";
-import boss from "./badguy.png";
-import bullet from "./attacks/bullet.png";
+
 import target from "./target.png";
 
 import componentframe from "./icon/frame.png";
 
+// environment
+import branchtilemap from "./environment/branch_tilemap.png";
+import pathtilemap from "./environment/path_tilemap.png";
+import hole from "./environment/hole.png";
+
+// sprites
+import goob from "./sprites/goob2.png";
+import boss from "./sprites/badguy.png";
+import ratking from "./sprites/ratking.png";
+import slimeking from "./sprites/slimeking.png";
+import mushroom from "./sprites/mushroom.png";
+import slime from "./sprites/slime.png";
+import rat from "./sprites/rat.png";
+
+// attacks
+import bullet from "./attacks/bullet.png";
+import smallbullet from "./attacks/small_bullet.png";
+import bomb from "./attacks/bomb.png";
+import acornbullet from "./attacks/acorn_bullet.png";
+import acornbomb from "./attacks/acorn_bomb.png";
+import slimebullet from "./attacks/slimebullet.png";
+import slimebomb from "./attacks/slimebomb.png";
+
+// icons
 import singlebullet from "./icon/single_bullet.png";
 import spraybullet from "./icon/spray_bullet.png";
 import launchbomb from "./icon/bomb_icon.png";
@@ -25,7 +45,7 @@ import stillbased from "./icon/stand.png";
 
 import dash from "./icon/dash.png";
 import heal from "./icon/heal.png";
-import shield from "./icon/shield_icon.png";
+import shield from "./icon/shield.png";
 
 import defaultweapon from "./icon/generic_weapon.png";
 import defaultchargeup from "./icon/generic_charging.png";
@@ -61,8 +81,56 @@ let assetsMap = {
       src: boss,
       imgObj: null,
     },
+    ratking: {
+      id: "ratking",
+      spriteSize: 64,
+      imageSize: { width: 192, height: 256 },
+      blockSize: 4,
+      src: ratking,
+      imgObj: null,
+    },
+    slimeking: {
+      id: "slimeking",
+      spriteSize: 64,
+      imageSize: { width: 128, height: 256 },
+      blockSize: 4,
+      src: slimeking,
+      imgObj: null,
+    },
+    mushroom: {
+      id: "mushroom",
+      spriteSize: 32,
+      imageSize: { width: 96, height: 32 },
+      blockSize: 2,
+      src: mushroom,
+      imgObj: null,
+    },
+    slime: {
+      id: "slime",
+      spriteSize: 32,
+      imageSize: { width: 64, height: 64 },
+      blockSize: 2,
+      src: slime,
+      imgObj: null,
+    },
+    rat: {
+      id: "rat",
+      spriteSize: 32,
+      imageSize: { width: 64, height: 64 },
+      blockSize: 2,
+      src: rat,
+      imgObj: null,
+    },
   },
   projectiles: {
+    smallbullet: {
+      id: "smallbullet",
+      spriteSize: 8,
+      imageSize: { width: 8, height: 8 },
+      blockSize: 1,
+      src: smallbullet,
+      imgObj: null,
+    },
     bullet: {
       id: "bullet",
       spriteSize: 16,
@@ -71,6 +139,48 @@ let assetsMap = {
       src: bullet,
       imgObj: null,
     },
+    bomb: {
+      id: "bomb",
+      spriteSize: 32,
+      imageSize: { width: 96, height: 64 },
+      blockSize: 2,
+      src: bomb,
+      imgObj: null,
+    },
+    acornbullet: {
+      id: "acornbullet",
+      spriteSize: 16,
+      imageSize: { width: 16, height: 16 },
+      blockSize: 1,
+      src: acornbullet,
+      imgObj: null,
+    },
+    acornbomb: {
+      id: "acornbomb",
+      spriteSize: 32,
+      imageSize: { width: 96, height: 64 },
+      blockSize: 2,
+      src: acornbomb,
+      imgObj: null,
+    },
+    slimebullet: {
+      id: "slimebullet",
+      spriteSize: 16,
+      imageSize: { width: 16, height: 16 },
+      blockSize: 1,
+      src: slimebullet,
+      imgObj: null,
+    },
+    slimebomb: {
+      id: "slimebomb",
+      spriteSize: 32,
+      imageSize: { width: 96, height: 64 },
+      blockSize: 2,
+      src: slimebomb,
+      imgObj: null,
+    },
+    
+    
   },
   terrain: {
     tree: {
@@ -95,6 +205,15 @@ let assetsMap = {
       src: pathtilemap,
       imgObj: null,
     },
+    hole: {
+      id: "hole",
+      imageSize: { width: 16, height: 16 },
+      spriteSize: 16,
+      blockSize: 1,
+      src: hole,
+      imgObj: null,
+    },
+
   },
   UI: {
     fullheart: {

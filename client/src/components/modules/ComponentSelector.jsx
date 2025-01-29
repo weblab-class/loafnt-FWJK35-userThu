@@ -6,24 +6,35 @@ import selectComponent from "../../game-logic/input";
 const ComponentButton = (props) => {
   return (
     <>
-      {props.unlocked ? (
-        <button
-          key={`${props.compType}.${props.compName}-button`}
-          className="component-choice"
-          style={{
-            backgroundImage: `url(${assetsMap.components[props.compType][props.compName].src})`,
-          }}
-          onClick={props.onClick}
-        />
-      ) : (
-        <div
-          key={`${props.compType}.${props.compName}-div`}
-          className="component-choice"
-          style={{
-            backgroundImage: `url(${assetsMap.components[props.compType][props.compName].src})`,
-          }}
-        ></div>
-      )}
+      <div
+        className="component-slot"
+        style={{
+          backgroundImage: `url(${
+            props.selected ? assetsMap.UI.selectedslot.src : assetsMap.UI.inventoryslot.src
+          })`,
+        }}
+      >
+        {props.unlocked ? (
+          <button
+            key={`${props.compType}.${props.compName}-button`}
+            className="component-icon"
+            style={{
+              backgroundImage: `url(${assetsMap.components[props.compType][props.compName].src})`,
+            }}
+            onClick={props.onClick}
+          />
+        ) : (
+          <button
+            key={`${props.compType}.${props.compName}-div`}
+            className="component-icon"
+            style={{
+              backgroundImage: `url(${assetsMap.components[props.compType][props.compName].src})`,
+              opacity: 0.25,
+            }}
+            onClick={() => {}}
+          />
+        )}
+      </div>
     </>
   );
 };
@@ -32,7 +43,7 @@ const ComponentSelector = (props) => {
   return (
     <>
       <div className="component-selector">
-        {Object.keys(props.unlocked).map((classname) => (
+        {Object.keys(props.components.unlocked).map((classname) => (
           <div className="component-row" key={`${classname}-row`}>
             <ComponentButton
               key={`${classname}-default`}
@@ -41,7 +52,7 @@ const ComponentSelector = (props) => {
               onClick={() => {}}
               unlocked={false}
             />
-            {Object.keys(props.unlocked[classname]).map((componentname) => (
+            {Object.keys(props.components.unlocked[classname]).map((componentname) => (
               <ComponentButton
                 key={`${classname}.${componentname}-compchoice`}
                 compType={classname}
@@ -49,7 +60,8 @@ const ComponentSelector = (props) => {
                 onClick={() => {
                   selectComponent(props.gameID, props.userID, classname, componentname);
                 }}
-                unlocked={props.unlocked[classname][componentname]}
+                unlocked={props.components.unlocked[classname][componentname]}
+                selected={props.components.equipped[classname] === componentname}
               />
             ))}
           </div>

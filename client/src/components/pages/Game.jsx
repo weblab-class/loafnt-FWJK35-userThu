@@ -11,15 +11,15 @@ const Game = () => {
   const [gameID, setGameID] = useState("");
   const { user, handleLogin, handleLogout } = useContext(UserContext);
   const [showComponents, setShowComponents] = useState(false);
-  const [unlocked, setUnlocked] = useState({});
+  const [components, setComponents] = useState({});
 
   useEffect(() => {
     get("/api/mylobbycode", { gameID: gameID }).then((result) => {
       setGameID(result.code);
       console.log(`Game set ${result.code}`);
     });
-    setUnlockUpdate((unlocks) => {
-      setUnlocked(unlocks);
+    setUnlockUpdate((component) => {
+      setComponents(component);
     });
   }, []);
 
@@ -63,7 +63,7 @@ const Game = () => {
     <div className="overall">
       <Canvas gameID={gameID} />
       {showComponents ? (
-        <ComponentSelector gameID={gameID} userID={user?._id} unlocked={unlocked} />
+        <ComponentSelector gameID={gameID} userID={user?._id} components={components} />
       ) : (
         <></>
       )}

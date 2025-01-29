@@ -1,7 +1,7 @@
 import help from "./helpers";
 
 let blockSize = 32;
-let unlocked = {};
+let components = {};
 let unlockUpdate = () => {};
 const setUnlockUpdate = (func) => {
   unlockUpdate = func;
@@ -595,10 +595,10 @@ const convertGameToCanvasState = (gamePacket) => {
   let players;
   let map;
   let myarena;
-  let nowunlocked = gamePacket.game.players[gamePacket.recipientid].data.components.unlocked;
-  if (nowunlocked !== unlocked) {
-    unlockUpdate(nowunlocked);
-    unlocked = nowunlocked;
+  let nowcomponents = gamePacket.game.players[gamePacket.recipientid].data.components;
+  if (nowcomponents !== components) {
+    unlockUpdate(nowcomponents);
+    components = nowcomponents;
   }
 
   Object.values(gamePacket.game.arenas).forEach((arena) => {

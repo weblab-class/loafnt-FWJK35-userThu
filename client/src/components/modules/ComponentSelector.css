@@ -1,23 +1,29 @@
 .component-selector {
-  background-color: chocolate;
+  background-color: #543133;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: auto;
   height: auto;
-  padding: 2%;
+  border: 5px solid black;
 }
 .component-row {
   display: flex;
   flex-direction: right;
 }
 
-.component-choice {
-  background-color: white;
+.component-slot {
+  display: inline;
+  background-color: transparent;
+  background-size: contain;
+}
+
+.component-icon {
+  background-color: transparent;
   background-size: cover;
   display: inline;
-  width: 50px;
-  height: 50px;
+  width: 5vw;
+  height: 5vw;
   border: 0px solid black;
 }

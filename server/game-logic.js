@@ -90,7 +90,7 @@ class Game {
               },
               chargeups: {
                 timebased: true,
-                movebased: false,
+                movebased: true,
                 stillbased: false,
               },
               utilities: {

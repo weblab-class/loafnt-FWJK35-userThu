@@ -75,12 +75,12 @@ const LobbyPage = () => {
             </div>
             
           </div>
-          <div className="character-selection-container">
+          {/* <div className="character-selection-container">
             <h2 id="char-select-text">character selection</h2>
           </div>
           <div className="character-display-container">
             <h2 id="char-display-text">Goob</h2>
-          </div>
+          </div> */}
         </div>
       </div>
     </>

@@ -11,6 +11,7 @@ class Arena {
   fps;
   idcount;
   gendata;
+  onclear;
 
   killer;
 
@@ -25,6 +26,7 @@ class Arena {
     this.idcount = 0;
     console.log(gendata);
     this.gendata = gendata;
+    this.onclear = gendata.onclear;
     if (gendata.boss) {
       if (gendata.enemytype === "rat") {
         const bossid = this.spawnEnemy({
@@ -106,18 +108,13 @@ class Arena {
     return undefined;
   }
 
-  addPlayer(player) {
-    this.idcount++;
-    this.players[this.idcount] = {
-      id: this.idcount,
+  addPlayer(player, onDeath) {
+    const playerId = this.spawnPlayer({
       userid: player.user._id,
-      class: "player",
       position: { x: -2.0, y: -2.0 },
       velocity: { x: 0.0, y: 0.0 },
       acceleration: 80,
       deceleration: 20,
-      inputdir: { x: 0.0, y: 0.0 },
-      rendered_position: { x: 0.0, y: 0.0 },
       stats: {
         health: player.data.stats.maxhealth,
         maxhealth: player.data.stats.maxhealth,
@@ -126,14 +123,39 @@ class Arena {
         damagemodifier: player.data.stats.combatdamage,
         armor: player.data.stats.armor,
       },
-
       hitboxes: [
         {
           shape: "circle",
           radius: 0.5,
           center: { x: 0, y: 0 },
-          ownerid: this.idcount,
-          onCollision: (collisionPoint, collisionEntity) => {},
+          onCollision: (collisionPoint, collisionEntity) => {
+            const thisPlayer = this.players[playerId];
+            if (collisionEntity.class === "projectile") {
+              if (
+                this.getEntity(collisionEntity.source) &&
+                this.getEntity(collisionEntity.source).class === "enemy"
+              ) {
+                thisPlayer.stats.health -= collisionEntity.damage;
+                //bounce player away from bullet
+                thisPlayer.velocity = help.addCoords(
+                  thisPlayer.velocity,
+                  help.scaleCoord(
+                    help.getNormalized(help.subtractCoords(thisPlayer.position, collisionPoint)),
+                    20
+                  )
+                );
+              }
+            }
+            if (collisionEntity.class === "enemy") {
+              thisPlayer.velocity = help.addCoords(
+                thisPlayer.velocity,
+                help.scaleCoord(
+                  help.getNormalized(help.subtractCoords(thisPlayer.position, collisionPoint)),
+                  10
+                )
+              );
+            }
+          },
         },
       ],
       avatar_id: player.data.avatar_id,
@@ -143,8 +165,40 @@ class Arena {
         chargeup: player.data.components.equipped.chargeups,
         utility: player.data.components.equipped.utilities,
       },
+      onDeath: onDeath,
+    });
+  }
+
+  spawnPlayer(player) {
+    this.idcount++;
+    const playerId = this.idcount;
+    this.players[playerId] = {
+      id: playerId,
+      userid: player.userid,
+      class: "player",
+      position: player.position,
+      velocity: player.velocity,
+      acceleration: player.acceleration,
+      deceleration: player.deceleration,
+      inputdir: { x: 0.0, y: 0.0 },
+      rendered_position: { x: 0.0, y: 0.0 },
+      stats: player.stats,
+      hitboxes: player.hitboxes,
+      avatar_id: player.avatar_id,
+      speed: player.speed,
+      build: player.build,
+      onDeath: player.onDeath,
       targetid: 0,
     };
+    Object.values(this.players[playerId].hitboxes).forEach((hitbox) => {
+      hitbox.ownerid = playerId;
+    });
+    return playerId;
+  }
+
+  killPlayer(playerid) {
+    this.players[playerid].onDeath();
+    this.removePlayer(this.players[playerid].userid);
   }
 
   removePlayer(userid) {
@@ -371,6 +425,32 @@ class Arena {
       player.rendered_position = player.position;
     });
 
+    //recharge player staminas
+    Object.values(this.players).forEach((player) => {
+      if (player.build.chargeup === "timebased") {
+        player.stats.stamina += (player.stats.maxstamina * 0.01) / this.fps;
+      }
+      const playerSpeed = help.getMagnitude(player.velocity);
+      if (player.build.chargeup === "movebased") {
+        //charge if moving
+        if (playerSpeed > 1) {
+          player.stats.stamina +=
+            (player.stats.maxstamina * 0.05 * (playerSpeed / player.speed)) / this.fps;
+        } else {
+          player.stats.stamina -= (player.stats.maxstamina * 0.2) / this.fps;
+        }
+      }
+      if (player.build.chargeup === "stillbased") {
+        if (playerSpeed < 1) {
+          player.stats.stamina += (player.stats.maxstamina * 0.3) / this.fps;
+        } else {
+          player.stats.stamina -= (player.stats.maxstamina * 0.3) / this.fps;
+        }
+      }
+      //clamp between 0 and max
+      player.stats.stamina = Math.max(0, Math.min(player.stats.stamina, player.stats.maxstamina));
+    });
+
     let hitboxes = [];
     //assign hitboxes for all enemies, players, projectiles, and terrain
     const assignHitboxes = (list) => {
@@ -443,6 +523,29 @@ class Arena {
         this.deleteProjectile(projectile.id);
       }
     });
+
+    //kill dead enemies
+    Object.values(this.enemies).forEach((enemy) => {
+      if (enemy.health <= 0) {
+        this.deleteEnemy(enemy.id);
+      }
+    });
+
+    //kill dead players
+    Object.values(this.players).forEach((player) => {
+      if (player.stats.health <= 0) {
+        this.killPlayer(player.id);
+      }
+    });
+
+    //win condition if all enemies dead
+    if (Object.values(this.enemies).length === 0) {
+      this.onclear();
+      //remove all players
+      Object.values(this.players).forEach((player) => {
+        this.removePlayer(player.userid);
+      });
+    }
   }
 
   /*
@@ -473,6 +576,9 @@ class Arena {
       possibleattacks: enemy.possibleattacks,
       nextattack: enemy.nextattack,
     };
+    Object.values(this.enemies[enemyId].hitboxes).forEach((hitbox) => {
+      hitbox.ownerid = enemyId;
+    });
     return enemyId;
   }
 
@@ -524,6 +630,12 @@ class Arena {
     if (this.projectiles[bulletId]) {
       this.projectiles[bulletId].onDeath();
       delete this.projectiles[bulletId];
+    }
+  }
+
+  deleteEnemy(enemyId) {
+    if (this.enemies[enemyId]) {
+      delete this.enemies[enemyId];
     }
   }
 

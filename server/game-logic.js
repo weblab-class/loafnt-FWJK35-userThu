@@ -51,12 +51,6 @@ class Game {
       this.chunkBlockSize = chunkSize * 2 + 1;
       this.seed = seed;
       this.players = {};
-      if (lobby) {
-        Array.from(lobby.players.values()).forEach((user) => {
-          this.spawnPlayer(user);
-        });
-        this.currLobby = lobby.code;
-      }
       this.arenas = {};
       this.explored = {};
       this.holes = { won: 0, bossesbeat: 0, generated: {} };
@@ -65,6 +59,12 @@ class Game {
       this.setTileExplored({ x: 1, y: -1 }, { x: 0, y: 0 });
       this.setTileExplored({ x: -1, y: 1 }, { x: 0, y: 0 });
       this.setTileExplored({ x: 1, y: 1 }, { x: 0, y: 0 });
+      if (lobby) {
+        Array.from(lobby.players.values()).forEach((user) => {
+          this.spawnPlayer(user);
+        });
+        this.currLobby = lobby.code;
+      }
     } else {
       this.convertJSONtoGame(lobby, jsonObj);
     }
@@ -111,18 +111,18 @@ class Game {
             unlocked: {
               weapons: {
                 singlebullet: true,
-                spraybullet: false,
-                launchbomb: false,
+                spraybullet: true,
+                launchbomb: true,
               },
               chargeups: {
                 timebased: true,
                 movebased: true,
-                stillbased: false,
+                stillbased: true,
               },
               utilities: {
                 dash: true,
-                heal: false,
-                shield: false,
+                heal: true,
+                shield: true,
               },
             },
             equipped: {
@@ -464,6 +464,8 @@ class Game {
             boss: false,
             enemytype: enemytype,
             difficulty: help.getMagnitude(this.players[id].data.chunk) / 5,
+            cleared: false,
+            onclear: undefined,
           };
           if (this.holes.won % 2 === 0 && this.holes.won !== 0) {
             newhole.boss = true;
@@ -471,7 +473,6 @@ class Game {
           }
           newhole.boss = true;
           newhole.enemytype = "rat";
-
           this.holes.generated[JSON.stringify(this.players[id].data.chunk)] = newhole;
         }
 
@@ -616,10 +617,16 @@ class Game {
       mz([chunkSize - 1, chunkSize], 0);
       mz([chunkSize, chunkSize - 1], 0);
     } else {
-      const holeSeed = seedrandom(this.seed + chunk.x + "|" + chunk.y);
-      const holex = Math.floor(holeSeed() * chunkSize);
-      const holey = Math.floor(holeSeed() * chunkSize);
-      mz([holex * 2 + 1, holey * 2 + 1], 3);
+      //generate non-cleared holes
+      if (
+        !this.holes.generated[JSON.stringify(chunk)] ||
+        !this.holes.generated[JSON.stringify(chunk)].cleared
+      ) {
+        const holeSeed = seedrandom(this.seed + chunk.x + "|" + chunk.y);
+        const holex = Math.floor(holeSeed() * chunkSize);
+        const holey = Math.floor(holeSeed() * chunkSize);
+        mz([holex * 2 + 1, holey * 2 + 1], 3);
+      }
     }
     return maze;
   }
@@ -627,12 +634,21 @@ class Game {
   beginCombat(playerid) {
     const arenaId = JSON.stringify(this.players[playerid].data.chunk);
     if (!this.arenas[arenaId]) {
+      const onClear = () => {
+        this.holes.generated[arenaId].cleared = true;
+      };
+      this.holes.generated[arenaId].onclear = onClear;
       this.arenas[arenaId] = new Arena.Arena(fps, this.holes.generated[arenaId]);
       this.arenas[arenaId].killer = () => {
         delete this.arenas[arenaId];
       };
     }
-    this.arenas[arenaId].addPlayer(this.players[playerid]);
+    this.arenas[arenaId].addPlayer(this.players[playerid], () => {
+      console.log("die");
+      this.players[playerid].data.position = { x: 0, y: 0 };
+      this.players[playerid].data.camera_center = { x: 0, y: 0 };
+      this.players[playerid].data.rendered_position = { x: 0, y: 0 };
+    });
   }
 
   leaveCombat(playerid) {

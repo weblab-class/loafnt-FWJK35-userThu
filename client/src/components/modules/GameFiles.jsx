@@ -43,7 +43,8 @@ const GameFiles = (props) => {
     }
 
     // GameFile components
-    let gameFileComps = [];
+    let gameFileCompsOne = [];
+    let gameFileCompsTwo = [];
     if (gameFiles.length > 0) {
         for (let key = 0; key < gameFiles.length; key++) {
             let gameName;
@@ -52,18 +53,26 @@ const GameFiles = (props) => {
             } else {
                 gameName = gameFiles[key].name
             }
-            gameFileComps.push((<GameFile key={key} slotKey={key} gameName={gameName} handleClick={chooseFile}/>));
+            if (key < 2) {
+                gameFileCompsOne.push((<GameFile key={key} slotKey={key} gameName={gameName} handleClick={chooseFile}/>));
+            } else {
+                gameFileCompsTwo.push((<GameFile key={key} slotKey={key} gameName={gameName} handleClick={chooseFile}/>));
+            }
+            
         }
     }
 
     return (
         <>
-        <div>
             {slotKey === -1 ?
-            (<>{gameFileComps}</>) :
+            (<>
+                <div className="gamefiles-container">
+                    <div className="gamefile-list-one">{gameFileCompsOne}</div>
+                    <div className="gamefile-list-two">{gameFileCompsTwo}</div>
+                </div>
+            </>) :
             (<><CreateGameFile onSubmit={handleNewGameFile}/></>)
             }
-        </div>
         </>
     );
 }

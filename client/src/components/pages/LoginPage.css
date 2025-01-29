@@ -62,7 +62,7 @@
 .log-image {
   content: url("../../assets/pixel-trunk.png");
   height: 100vh;
-  width: 30vw;
+  width: 32vw;
 }
 
 .login-button {
@@ -125,4 +125,52 @@
 .create-lobby:hover {
   background-color: #EBCCB3;
   color: #241D0D;
+}
+
+
+.gamefiles-container {
+  height: 100vh;
+  width: 68%;
+  display: flex;
+  justify-content: end;
+}
+
+.gamefile-img {
+  content: url("../../assets/pixel-leaf.png");
+  height: 100%;
+  filter: drop-shadow(8px 8px #241D0D);
+}
+
+.gamefile-content {
+  position: absolute;
+}
+
+.gamefile {
+  /* flex: 1; */
+  height: 30%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Dedicool";
+  color:#776239;
+  font-size: 1.5rem;
+}
+
+.gamefile-img:hover {
+  content: url("../../assets/pixel-leaf-hover.png");
+}
+
+.gamefile:hover {
+  color:#241D0D;
+}
+
+.gamefile-list-one,
+.gamefile-list-two {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }

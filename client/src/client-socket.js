@@ -18,10 +18,6 @@ const enterCombat = (gameID, user_id) => {
   socket.emit("entercombat", { gameID: gameID, user_id: user_id });
 };
 
-const inventorySelect = (gameID, userID, slotIdx) => {
-  socket.emit("inventoryselect", { gameID: gameID, userID: userID, slotIdx: slotIdx });
-};
-
 const attack = (gameID, user_id) => {
   socket.emit("attack", { gameID: gameID, user_id: user_id });
 };
@@ -39,7 +35,6 @@ export {
   runGame,
   move,
   enterCombat,
-  inventorySelect,
   attack,
   utility,
   component,

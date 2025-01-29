@@ -1,5 +1,4 @@
 import {
-  inventorySelect,
   enterCombat,
   move,
   attack,
@@ -9,7 +8,6 @@ import {
 
 const pressedKeys = new Map();
 const singlePresses = new Set(["c", "i", " ", "shift", "e"]);
-const inventoryKeys = ["1", "2", "3", "4", "5", "6", "7", "8"];
 let openComponentSelect;
 
 const sendInput = (gameID, userID, deltaT) => {
@@ -50,11 +48,6 @@ const sendInput = (gameID, userID, deltaT) => {
     }
   }
 
-  inventoryKeys.forEach((key) => {
-    if (pressedKeys.get(key)) {
-      inventorySelect(gameID, userID, Number(key));
-    }
-  });
 
   move(gameID, userID, { x: xcomp, y: ycomp });
 

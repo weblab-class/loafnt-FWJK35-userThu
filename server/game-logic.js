@@ -198,11 +198,11 @@ class Game {
   /*
     Update the player's data to reflect selected item.
   */
-  selectItem(userid, itemIdx) {
-    if (this.players[userid]) {
-      this.players[userid].data.inventory.selected = itemIdx - 1;
-    }
-  }
+  // selectItem(userid, itemIdx) {
+  //   if (this.players[userid]) {
+  //     this.players[userid].data.inventory.selected = itemIdx - 1;
+  //   }
+  // }
 
   setComponent(userid, type, name) {
     if (this.players[userid]) {
@@ -457,7 +457,7 @@ class Game {
             onclear: undefined,
             location: help.roundCoord(this.players[id].data.position),
           };
-          if (this.holes.won === 0) {
+          if (this.holes.won === 2) {
             newhole.boss = true;
             newhole.difficulty = 1 + (this.holes.bossesbeat * 1) / 3;
           }

@@ -141,12 +141,6 @@ module.exports = {
         }
       });
 
-      socket.on("inventoryselect", (input) => {
-        if (common.gameMap[input.gameID]) {
-          common.gameMap[input.gameID].selectItem(input.userID, input.slotIdx);
-        }
-      });
-
       socket.on("attack", (input) => {
         if (common.gameMap[input.gameID]) {
           common.gameMap[input.gameID].attack(input.user_id);

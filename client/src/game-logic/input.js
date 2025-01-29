@@ -37,9 +37,9 @@ const sendInput = (gameID, userID, deltaT) => {
     enterInvisibleMaze(gameID, userID);
   }
 
-  if (pressedKeys.get("c")) {
-    enterCombat(gameID, userID);
-  }
+  // if (pressedKeys.get("c")) {
+  //   enterCombat(gameID, userID);
+  // }
 
   if (pressedKeys.get(" ")) {
     attack(gameID, userID);

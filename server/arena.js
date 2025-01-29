@@ -13,7 +13,7 @@ class Arena {
 
   killer;
 
-  constructor(fps) {
+  constructor(fps, gendata) {
     this.fps = fps;
     this.players = {};
     this.terrain = {};
@@ -23,6 +23,7 @@ class Arena {
     this.time = 0;
     this.idcount = 0;
     this.spawnEnemy();
+    console.log(gendata);
   }
 
   /*
@@ -62,7 +63,6 @@ class Arena {
 
   addPlayer(player) {
     this.idcount++;
-    console.log(player);
     this.players[this.idcount] = {
       id: this.idcount,
       userid: player.user._id,

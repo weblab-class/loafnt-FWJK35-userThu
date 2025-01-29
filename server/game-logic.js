@@ -43,6 +43,7 @@ class Game {
   interval;
   killer;
   arenas;
+  holes;
   currLobby;
 
   constructor(seed, lobby, jsonObj = null) {
@@ -58,6 +59,7 @@ class Game {
       }
       this.arenas = {};
       this.explored = {};
+      this.holes = { won: 0, generated: {} };
       this.explored[JSON.stringify({ x: 0, y: 0 })] = Array(Math.ceil(chunkSize ** 2 / 32)).fill(0);
       this.setTileExplored({ x: -1, y: -1 }, { x: 0, y: 0 });
       this.setTileExplored({ x: 1, y: -1 }, { x: 0, y: 0 });
@@ -77,6 +79,7 @@ class Game {
     this.chunkBlockSize = jsonObj.chunkBlockSize;
     this.explored = jsonObj.explored;
     this.arenas = jsonObj.arenas;
+    this.holes = jsonObj.holes;
     if (lobby) {
       Array.from(lobby.players.values()).forEach((user) => {
         this.players[user._id].active = true;
@@ -207,7 +210,6 @@ class Game {
       if (comps.unlocked[type][name]) {
         comps.equipped[type] = name;
       }
-      console.log(comps);
     }
   }
 
@@ -246,22 +248,6 @@ class Game {
       Object.hasOwn(this.arenas, JSON.stringify(this.players[id].data.chunk)) &&
       this.arenas[JSON.stringify(this.players[id].data.chunk)].hasPlayer(id)
     );
-  }
-
-  getTileExplored(pos) {
-    const chunk = help.getChunkFromPos(pos);
-    const latticePoint = help.getLatticePoint(pos, chunk);
-    const bitIndex = latticePoint.x + latticePoint.y * chunkSize;
-    if (Object.hasOwn(this.explored, JSON.stringify(chunk))) {
-      return 1 & (this.explored[JSON.stringify(chunk)][Math.floor(bitIndex / 32)] >> bitIndex % 32);
-    }
-    return 0;
-  }
-
-  setTileExplored(pos, chunk) {
-    const latticePoint = help.getLatticePoint(pos, chunk);
-    const bitIndex = latticePoint.x + latticePoint.y * chunkSize;
-    this.explored[JSON.stringify(chunk)][Math.floor(bitIndex / 32)] |= 1 << bitIndex % 32;
   }
 
   getTileExplored(pos) {
@@ -423,38 +409,16 @@ class Game {
                   { x: x * 2 - chunkSize + 1, y: y * 2 - chunkSize + 1 }
                 )
               ) * 2;
-            this.players[id].data.rendered_chunks[chunkydiff + 1][chunkxdiff + 1][y * 2 + 1][
-              x * 2 + 1
-            ] = isExplored;
-          }
-        }
-      }
-    }
 
-    //set explored tiles
-    if (!this.explored[JSON.stringify(playerChunk)]) {
-      this.explored[JSON.stringify(playerChunk)] = Array(Math.ceil(chunkSize ** 2 / 32)).fill(0);
-    }
-
-    this.setTileExplored(playerPos, playerChunk);
-
-    //put explored tiles in rendered chunk
-    for (let chunkydiff = -1; chunkydiff < 2; chunkydiff++) {
-      for (let chunkxdiff = -1; chunkxdiff < 2; chunkxdiff++) {
-        for (let y = 0; y < chunkSize; y++) {
-          for (let x = 0; x < chunkSize; x++) {
-            const isExplored =
-              this.getTileExplored(
-                help.addCoords(
-                  help.getChunkCenter(
-                    help.addCoords(playerChunk, { x: chunkxdiff, y: chunkydiff })
-                  ),
-                  { x: x * 2 - chunkSize + 1, y: y * 2 - chunkSize + 1 }
-                )
-              ) * 2;
-            this.players[id].data.rendered_chunks[chunkydiff + 1][chunkxdiff + 1][y * 2 + 1][
-              x * 2 + 1
-            ] = isExplored;
+            if (
+              this.players[id].data.rendered_chunks[chunkydiff + 1][chunkxdiff + 1][y * 2 + 1][
+                x * 2 + 1
+              ] === 0
+            ) {
+              this.players[id].data.rendered_chunks[chunkydiff + 1][chunkxdiff + 1][y * 2 + 1][
+                x * 2 + 1
+              ] = isExplored;
+            }
           }
         }
       }
@@ -491,6 +455,28 @@ class Game {
     if (this.isInCombat(id)) {
       this.arenas[JSON.stringify(this.players[id].data.chunk)].attack(id);
       return;
+    } else {
+      if (this.getPlayerMapData(id, help.roundCoord(this.players[id].data.position)) === 3) {
+        console.log(this.holes);
+        if (!this.holes.generated[JSON.stringify(this.players[id].data.chunk)]) {
+          //generate boss hole
+          if (this.holes.won % 2 === 0 && this.holes.won !== 0) {
+            const enemytype = ["rat", "slime"][Math.floor(Math.random() * 2)];
+            this.holes.generated[JSON.stringify(this.players[id].data.chunk)] = {
+              boss: true,
+              enemytype: enemytype,
+            };
+          } else {
+            const enemytype = ["rat", "slime"][Math.floor(Math.random() * 2)];
+            this.holes.generated[JSON.stringify(this.players[id].data.chunk)] = {
+              boss: false,
+              enemytype: enemytype,
+            };
+          }
+        }
+
+        this.beginCombat(id);
+      }
     }
   }
 
@@ -629,15 +615,19 @@ class Game {
       mz([chunkSize, chunkSize + 1], 0);
       mz([chunkSize - 1, chunkSize], 0);
       mz([chunkSize, chunkSize - 1], 0);
+    } else {
+      const holeSeed = seedrandom(this.seed + chunk.x + "|" + chunk.y);
+      const holex = Math.floor(holeSeed() * chunkSize);
+      const holey = Math.floor(holeSeed() * chunkSize);
+      mz([holex * 2 + 1, holey * 2 + 1], 3);
     }
-
     return maze;
   }
 
   beginCombat(playerid) {
     const arenaId = JSON.stringify(this.players[playerid].data.chunk);
     if (!this.arenas[arenaId]) {
-      this.arenas[arenaId] = new Arena.Arena(fps);
+      this.arenas[arenaId] = new Arena.Arena(fps, this.holes.generated[arenaId]);
       this.arenas[arenaId].killer = () => {
         delete this.arenas[arenaId];
       };

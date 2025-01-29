@@ -202,6 +202,13 @@ const drawPathTile = (tile, ctx) => {
   drawSprite(tile, assetsMap.terrain.pathtiles, ctx);
 };
 
+const drawHoleTile = (tile, ctx) => {
+  tile.animation = 0;
+  tile.rendered_position = subtractCoords({ x: tile.x + 0.5, y: tile.y + 0.5 }, canvasCenter);
+  tile.scale = tile.size;
+  drawSprite(tile, assetsMap.terrain.hole, ctx);
+};
+
 const drawTiles = (canvasState, offset, ctx) => {
   const map = canvasState.map;
   for (let row = 0; row < map.length; row++) {
@@ -312,6 +319,37 @@ const drawTiles = (canvasState, offset, ctx) => {
           size: thisTileSize,
         };
         drawPathTile(thisTile, ctx);
+      } else if (tileType === 3) {
+        const getSize = (dist, minDist, maxDist) => {
+          if (dist < minDist) {
+            return 1;
+          }
+          if (dist > maxDist) {
+            return 0;
+          }
+          return 1 - (dist - minDist) / (maxDist - minDist);
+        };
+
+        let tileDist = coordDist(tileCoord, canvasState.myplayerdata.position);
+
+        let maxSize = getSize(tileDist, 5, 8);
+
+        Object.values(canvasState.otherplayers).forEach((player) => {
+          tileDist = coordDist(tileCoord, player.data.position);
+          const thisSize = getSize(tileDist, 3, 5);
+          if (thisSize > maxSize) {
+            maxSize = thisSize;
+          }
+        });
+
+        const thisTile = {
+          x: col - (map[0].length - screenBlockWidth) / 2 + offset.x,
+          y: row - (map.length - screenBlockHeight) / 2 + offset.y,
+          id: tileidy * 4 + tileidx,
+          size: maxSize,
+        };
+
+        drawHoleTile(thisTile, ctx);
       }
     }
   }
@@ -499,7 +537,7 @@ const drawMaze = (canvasState, ctx) => {
     chunkBlockSize (int): The chunk's width/length in terms of game blocks (i.e 17)
     mode (String): Indicate which canvas to render
 */
-const getMapToRender = (playerObj, chunkBlockSize) => {
+const getMapToRender = (playerObj) => {
   let rendered_chunks = playerObj.rendered_chunks;
   if (playerObj.mode.type === "invisible-maze") rendered_chunks = playerObj.mode.packet.chunks;
   // Create a single 2d array containing all blocks in the rendered area
@@ -648,7 +686,7 @@ const convertGameToCanvasState = (gamePacket) => {
     players = gamePacket.game.players;
     myplayerdata = players[gamePacket.recipientid].data;
     delete players[gamePacket.recipientid];
-    map = getMapToRender(myplayerdata, gamePacket.game.chunkBlockSize);
+    map = getMapToRender(myplayerdata);
 
     return {
       incombat: incombat,

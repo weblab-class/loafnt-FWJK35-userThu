@@ -151,7 +151,7 @@ class Game {
           stats: {
             maxhealth: 100.0,
             maxstamina: 100.0,
-            mazesprintspeed: 8,
+            sprintspeed: 8,
             combatdamage: 1.0,
             armor: 100,
             xp: 0,
@@ -394,6 +394,13 @@ class Game {
     while (this.players[id].data.stats.xp >= this.players[id].data.stats.xpneeded) {
       this.players[id].data.stats.xp -= this.players[id].data.stats.xpneeded;
       this.players[id].data.stats.level += 1;
+
+      this.players[id].data.stats.maxhealth *= 1.1;
+      this.players[id].data.stats.maxstamina *= 1.1;
+      this.players[id].data.stats.sprintspeed *= 1.1;
+      this.players[id].data.stats.combatdamage *= 1.1;
+      this.players[id].data.stats.armor *= 1.1;
+
       this.players[id].data.stats.xpneeded *= 1.1;
     }
 
@@ -473,9 +480,6 @@ class Game {
             newhole.boss = true;
             newhole.difficulty = 1 + (this.holes.bossesbeat * 1) / 3;
           }
-          newhole.boss = false;
-          newhole.enemytype = "rat";
-          newhole.difficulty = 5;
           this.holes.generated[JSON.stringify(this.players[id].data.chunk)] = newhole;
         }
 

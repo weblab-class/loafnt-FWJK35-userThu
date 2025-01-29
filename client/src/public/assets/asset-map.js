@@ -127,7 +127,7 @@ let assetsMap = {
       id: "smallbullet",
       spriteSize: 8,
       imageSize: { width: 8, height: 8 },
-      blockSize: 1,
+      blockSize: 0.5,
       src: smallbullet,
       imgObj: null,
     },

@@ -40,11 +40,14 @@ const saveGame = (gameID, host) => {
       const parsedGameFile = JSON.parse(foundUser.gamefiles[host.slotKey]);
       // MUST: Clear the interval which is needed to call JSON.stringify()
       const gameToSave = common.gameMap[gameID];
-      clearInterval(gameToSave.interval);
-      gameToSave.arenas = {};
-      parsedGameFile.game = gameToSave;
-      foundUser.gamefiles[host.slotKey] = JSON.stringify(parsedGameFile);
-
+      if (gameToSave !== undefined) {
+        clearInterval(gameToSave.interval);
+        gameToSave.arenas = {};
+        parsedGameFile.game = gameToSave;
+        foundUser.gamefiles[host.slotKey] = JSON.stringify(parsedGameFile);
+      } else{
+        reject("Game not defined");
+      }
       foundUser.save().then((result) => {
         resolve({ seed: gameID, host: host });
       });

@@ -50,23 +50,38 @@ const LobbyPage = () => {
   return (
     <>
       <div className="lobby-page-background">
-        <div>
-          Have friends join this lobby with the code <span>{props.lobbycode}</span>
+        <div className="lobby-code">
+          <h1 id="lobby-code-text">game code: {props.lobbycode}</h1>
         </div>
-        <div>
-          {myLobby ? (
-            Array.from(lobbyPlayers.values()).map((player) => (
-              <div key={player.name}>{player.name}</div>
-            ))
-          ) : (
-            <div>Lobby not found!</div>
-          )}
+        <div className="box-container">
+          <div className="player-list-container">
+            <h2 id="players-text">players</h2>
+            <div className="player-list">
+              {myLobby ? 
+                (
+                  Array.from(lobbyPlayers.values()).map((player) => (
+                    <div id="player-name" key={player.name}>{player.name}</div>
+                  ))
+                ) : 
+                (
+                  <div id="lobby-error">Lobby not found!</div>
+                )
+              }
+            </div>
+            <div className="start-button">
+              {myLobby && user && myLobby.leader.user.googleid === user.googleid ? 
+                (<StartGame className="button" lobbycode={props.lobbycode} />) : (<></>)
+              }
+            </div>
+            
+          </div>
+          <div className="character-selection-container">
+            <h2 id="char-select-text">character selection</h2>
+          </div>
+          <div className="character-display-container">
+            <h2 id="char-display-text">Goob</h2>
+          </div>
         </div>
-        {myLobby && user && myLobby.leader.user.googleid === user.googleid ? (
-          <StartGame lobbycode={props.lobbycode} />
-        ) : (
-          <></>
-        )}
       </div>
     </>
   );

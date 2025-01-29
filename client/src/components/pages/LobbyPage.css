@@ -1,3 +1,121 @@
 .lobby-page-background {
-  background-color: darkorange;
+  background-color: #7F6E56;
+  font-family: 'Born2bSportyFS';
+  color: #EBCCB3;
+  height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lobby-code {
+  font-size: 72px;
+  width: 100vw;
+  height: 8%;
+}
+
+#lobby-code-text {
+  filter: drop-shadow(8px 8px #241D0D);
+  padding-left: 48px;
+}
+
+.box-container {
+  display: flex;
+  width: 100vw;
+  height: 92%;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-list-container,
+.character-selection-container,
+.character-display-container {
+  height: 70%;
+  margin: 0 48px;
+  background-color: #241D0D;
+  border: 80px solid black;
+  border-radius: 65px;
+  border-image-source: url("../../public/assets/border-test.png");
+  border-image-slice: 33%;
+  border-image-repeat: repeat;
+  text-align: center;
+}
+
+.player-list-container {
+  flex: 1;
+  margin-right: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.character-selection-container {
+  flex: 2;
+  margin: 0 16px;
+}
+
+.character-display-container {
+  flex: 1;
+  margin-left: 16px;
+}
+
+.player-list {
+  background-color: #56512F;
+  border-radius: 27px;
+  height: 90%;
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+  /* padding-top: 24px; */
+  font-size: 32px;
+  border: 32px solid black;
+  border-image-source: url("../../public/assets/border8px.png");
+  border-image-slice: 33%;
+  border-image-repeat: repeat;
+  text-align: center;
+}
+
+.start-button{
+  height: 10%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.start-game {
+  font-family: 'Born2bSportyFS';
+  font-size: 24px;
+  background: #776239;
+  width: 80%;
+  height: 100%;
+  border: 32px solid black;
+  border-radius: 27px;
+  border-image-source: url("../../public/assets/border8px.png");
+  border-image-slice: 33%;
+  border-image-repeat: repeat;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-transform: uppercase;
+}
+
+.start-game:hover {
+  background: #7F6E56;
+  filter: drop-shadow(4px 8px black);
+}
+
+#players-text,
+#char-select-text,
+#char-display-text {
+  filter: drop-shadow(8px 8px black);
+  font-size: 56px;
+}
+
+#players-text {
+  height: 10%;
+  margin-bottom: 8px;
+}
+
+#player-name {
+  filter: drop-shadow(4px 4px #241D0D);
 }

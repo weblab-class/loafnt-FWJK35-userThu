@@ -17,6 +17,21 @@
 /* TODO: REPLACE WITH YOUR OWN FONT! */
 @import url("https://fonts.googleapis.com/css?family=Roboto&display=swap");
 
+@font-face {
+  font-family: 'Supply Center';
+  src: local('Supply Center'), url('../../public/assets/fonts/Supply\ Center.otf') format('otf'); 
+}
+
+@font-face {
+  font-family: 'Born2bSportyFS';
+  src: local('Born2bSportyFS'), url('../../public/assets/fonts/Born2bSportyFS.otf') format('otf'); 
+}
+
+@font-face {
+  font-family: 'Dedicool';
+  src: local('Dedicool'), url('../../public/assets/fonts/Dedicool.ttf') format('ttf'); 
+}
+
 :root {
   --primary: #396dff;
   --primary--dim: #6987db;
@@ -31,11 +46,20 @@
   --l: 24px;
 }
 
+* {
+  margin: 0;
+  padding: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+  background: transparent;
+}
+
 body {
   margin: 0;
   padding: 0;
   font-family: "Roboto", sans-serif;
   font-weight: 300;
+  height: 100vh;
 }
 
 form {

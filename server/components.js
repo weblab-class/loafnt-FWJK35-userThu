@@ -16,7 +16,7 @@ const useWeapon = (arena, playerid) => {
                 thisPlayer.position
               )
             ),
-            4
+            8
           ),
           source: thisPlayer.id,
           damage: 10 * thisPlayer.stats.damagemodifier,
@@ -96,12 +96,12 @@ const useWeapon = (arena, playerid) => {
                 thisPlayer.position
               )
             ),
-            4
+            2
           ),
           source: thisPlayer.id,
           damage: 5 * thisPlayer.stats.damagemodifier,
           type: "bomb",
-          lifetime: 5,
+          lifetime: 2,
           onDeath: (myid) => {
             const explosionId = arena.spawnProjectile({
               position: arena.projectiles[myid].position,
@@ -155,6 +155,21 @@ const useUtility = (arena, playerid) => {
   const thisPlayer = arena.players[playerid];
   const utilities = {
     dash: () => {
+      const cost = 5;
+      if (help.getMagnitude(thisPlayer.inputdir) > 0 && thisPlayer.stats.stamina >= cost) {
+        thisPlayer.velocity = help.scaleCoord(thisPlayer.inputdir, thisPlayer.speed * 2);
+        thisPlayer.stats.stamina -= cost;
+      }
+    },
+    heal: () => {
+      const cost = 50;
+      if (help.getMagnitude(thisPlayer.inputdir) > 0 && thisPlayer.stats.stamina >= cost) {
+        thisPlayer.stats.health += thisPlayer.stats.maxhealth * 0.1;
+        thisPlayer.stats.health = Math.min(thisPlayer.stats.maxhealth, thisPlayer.stats.health);
+        thisPlayer.stats.stamina -= cost;
+      }
+    },
+    shield: () => {
       const cost = 5;
       if (help.getMagnitude(thisPlayer.inputdir) > 0 && thisPlayer.stats.stamina >= cost) {
         thisPlayer.velocity = help.scaleCoord(thisPlayer.inputdir, thisPlayer.speed * 2);

@@ -625,7 +625,6 @@ class Arena {
     });
     Object.values(this.projectiles).forEach((proj) => {
       if (proj.animation) {
-        console.log(proj);
         if (this.time >= proj.animation.nextframe) {
           proj.animation.frame += 1;
 

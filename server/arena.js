@@ -10,6 +10,7 @@ class Arena {
   time;
   fps;
   idcount;
+  gendata;
 
   killer;
 
@@ -22,8 +23,52 @@ class Arena {
     this.size = { width: 17, height: 17 };
     this.time = 0;
     this.idcount = 0;
-    this.spawnEnemy();
     console.log(gendata);
+    this.gendata = gendata;
+    if (gendata.boss) {
+      if (gendata.enemytype === "rat") {
+        const bossid = this.spawnEnemy({
+          position: { x: 0, y: 0 },
+          velocity: { x: 0, y: 0 },
+          maxhealth: 100 * gendata.difficulty,
+          type: "ratking",
+
+          animations: {
+            idle: { frames: [0, 1, 2], speed: 0.25, repeat: true },
+            attack1: { frames: [3, 4, 5], speed: 0.25, repeat: false },
+            attack2: { frames: [6, 7, 8], speed: 0.25, repeat: false },
+            attack3: { frames: [9, 10, 11], speed: 0.25, repeat: false },
+          },
+          animation: { seq: "idle", frame: 0, nextframe: 0 },
+
+          hitboxes: [
+            {
+              shape: "circle",
+              radius: 1.5,
+              center: { x: 0, y: 0 },
+              ownerid: 0,
+              onCollision: (collisionPoint, collisionEntity) => {
+                if (collisionEntity.class === "projectile") {
+                  //take damage if player bullet
+                  if (
+                    this.getEntity(collisionEntity.source) &&
+                    this.getEntity(collisionEntity.source).class === "player"
+                  ) {
+                    this.enemies[bossid].health -= collisionEntity.damage;
+                  }
+                }
+              },
+            },
+          ],
+          possibleattacks: [
+            { name: "shoot1per", duration: 2 },
+            { name: "shootring", duration: 2 },
+          ],
+          nextattack: { time: this.time + 1 * this.fps, type: "shoot1per" },
+        });
+      }
+    } else {
+    }
   }
 
   /*
@@ -411,50 +456,24 @@ class Arena {
         type: "boss",
       }
     */
-  spawnEnemy() {
+  spawnEnemy(enemy) {
     this.idcount++;
     const enemyId = this.idcount;
     this.enemies[enemyId] = {
       id: enemyId,
       class: "enemy",
-      position: { x: 0, y: 0 },
-      velocity: { x: 0, y: 0 },
-      radius: 2,
-      maxhealth: 100.0,
-      health: 100.0,
-      type: "boss",
-
-      animations: {
-        idle: { frames: [0, 1, 2], speed: 0.25, repeat: true },
-        spitting: { frames: [3, 4, 5], speed: 0.25, repeat: false },
-      },
-      animation: { seq: "idle", frame: 0, nextframe: 0 },
-
-      hitboxes: [
-        {
-          shape: "circle",
-          radius: 2,
-          center: { x: 0, y: 0 },
-          ownerid: enemyId,
-          onCollision: (collisionPoint, collisionEntity) => {
-            if (collisionEntity.class === "projectile") {
-              //take damage if player bullet
-              if (
-                this.getEntity(collisionEntity.source) &&
-                this.getEntity(collisionEntity.source).class === "player"
-              ) {
-                this.enemies[enemyId].health -= collisionEntity.damage; //TODO implemet like projectiles
-              }
-            }
-          },
-        },
-      ],
-      possibleattacks: [
-        { name: "shoot1per", duration: 2 },
-        { name: "shootring", duration: 2 },
-      ],
-      nextattack: { time: this.time + 1 * this.fps, type: "shoot1per" },
+      position: enemy.position,
+      velocity: enemy.velocity,
+      maxhealth: enemy.maxhealth,
+      health: enemy.maxhealth,
+      type: enemy.type,
+      animations: enemy.animations,
+      animation: enemy.animation,
+      hitboxes: enemy.hitboxes,
+      possibleattacks: enemy.possibleattacks,
+      nextattack: enemy.nextattack,
     };
+    return enemyId;
   }
 
   /*
@@ -513,9 +532,9 @@ class Arena {
     const attacks = {
       shoot1per: () => {
         thisEnemy.animation = {
-          seq: "spitting",
+          seq: "attack1",
           frame: 0,
-          nextframe: this.time + thisEnemy.animations["spitting"].speed * this.fps,
+          nextframe: this.time + thisEnemy.animations["attack1"].speed * this.fps,
         };
         //shoot a bullet at each player
         Object.values(this.players).forEach((player) => {
@@ -552,9 +571,9 @@ class Arena {
       //shoot a ring of bullets
       shootring: () => {
         thisEnemy.animation = {
-          seq: "spitting",
+          seq: "attack2",
           frame: 0,
-          nextframe: this.time + thisEnemy.animations["spitting"].speed * this.fps,
+          nextframe: this.time + thisEnemy.animations["attack2"].speed * this.fps,
         };
         //shoot a bullet at each player
         for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {

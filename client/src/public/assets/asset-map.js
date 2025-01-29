@@ -179,8 +179,6 @@ let assetsMap = {
       src: slimebomb,
       imgObj: null,
     },
-    
-    
   },
   terrain: {
     tree: {
@@ -213,7 +211,6 @@ let assetsMap = {
       src: hole,
       imgObj: null,
     },
-
   },
   UI: {
     fullheart: {

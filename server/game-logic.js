@@ -59,7 +59,7 @@ class Game {
       }
       this.arenas = {};
       this.explored = {};
-      this.holes = { won: 0, generated: {} };
+      this.holes = { won: 0, bossesbeat: 0, generated: {} };
       this.explored[JSON.stringify({ x: 0, y: 0 })] = Array(Math.ceil(chunkSize ** 2 / 32)).fill(0);
       this.setTileExplored({ x: -1, y: -1 }, { x: 0, y: 0 });
       this.setTileExplored({ x: 1, y: -1 }, { x: 0, y: 0 });
@@ -457,22 +457,22 @@ class Game {
       return;
     } else {
       if (this.getPlayerMapData(id, help.roundCoord(this.players[id].data.position)) === 3) {
-        console.log(this.holes);
         if (!this.holes.generated[JSON.stringify(this.players[id].data.chunk)]) {
           //generate boss hole
+          const enemytype = ["rat", "slime"][Math.floor(Math.random() * 2)];
+          const newhole = {
+            boss: false,
+            enemytype: enemytype,
+            difficulty: help.getMagnitude(this.players[id].data.chunk) / 5,
+          };
           if (this.holes.won % 2 === 0 && this.holes.won !== 0) {
-            const enemytype = ["rat", "slime"][Math.floor(Math.random() * 2)];
-            this.holes.generated[JSON.stringify(this.players[id].data.chunk)] = {
-              boss: true,
-              enemytype: enemytype,
-            };
-          } else {
-            const enemytype = ["rat", "slime"][Math.floor(Math.random() * 2)];
-            this.holes.generated[JSON.stringify(this.players[id].data.chunk)] = {
-              boss: false,
-              enemytype: enemytype,
-            };
+            newhole.boss = true;
+            newhole.difficulty = 1 + (this.holes.bossesbeat * 1) / 3;
           }
+          newhole.boss = true;
+          newhole.enemytype = "rat";
+
+          this.holes.generated[JSON.stringify(this.players[id].data.chunk)] = newhole;
         }
 
         this.beginCombat(id);

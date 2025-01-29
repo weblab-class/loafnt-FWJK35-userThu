@@ -111,18 +111,18 @@ class Game {
             unlocked: {
               weapons: {
                 singlebullet: true,
-                spraybullet: false,
-                launchbomb: false,
+                spraybullet: true,
+                launchbomb: true,
               },
               chargeups: {
                 timebased: true,
                 movebased: true,
-                stillbased: false,
+                stillbased: true,
               },
               utilities: {
                 dash: true,
-                heal: false,
-                shield: false,
+                heal: true,
+                shield: true,
               },
             },
             equipped: {

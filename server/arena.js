@@ -371,6 +371,32 @@ class Arena {
       player.rendered_position = player.position;
     });
 
+    //recharge player staminas
+    Object.values(this.players).forEach((player) => {
+      if (player.build.chargeup === "timebased") {
+        player.stats.stamina += (player.stats.maxstamina * 0.01) / this.fps;
+      }
+      const playerSpeed = help.getMagnitude(player.velocity);
+      if (player.build.chargeup === "movebased") {
+        //charge if moving
+        if (playerSpeed > 1) {
+          player.stats.stamina +=
+            (player.stats.maxstamina * 0.05 * (playerSpeed / player.speed)) / this.fps;
+        } else {
+          player.stats.stamina -= (player.stats.maxstamina * 0.2) / this.fps;
+        }
+      }
+      if (player.build.chargeup === "stillbased") {
+        if (playerSpeed < 1) {
+          player.stats.stamina += (player.stats.maxstamina * 0.3) / this.fps;
+        } else {
+          player.stats.stamina -= (player.stats.maxstamina * 0.3) / this.fps;
+        }
+      }
+      //clamp between 0 and max
+      player.stats.stamina = Math.max(0, Math.min(player.stats.stamina, player.stats.maxstamina));
+    });
+
     let hitboxes = [];
     //assign hitboxes for all enemies, players, projectiles, and terrain
     const assignHitboxes = (list) => {

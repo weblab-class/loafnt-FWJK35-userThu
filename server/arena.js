@@ -28,25 +28,76 @@ class Arena {
     this.gendata = gendata;
     this.onclear = gendata.onclear;
     if (gendata.boss) {
-      if (gendata.enemytype === "rat") {
-        const bossid = this.spawnEnemy({
-          position: { x: 0, y: 0 },
-          velocity: { x: 0, y: 0 },
-          maxhealth: 100 * gendata.difficulty,
-          type: "ratking",
+      const bossid = this.spawnEnemy({
+        position: { x: 0, y: 0 },
+        velocity: { x: 0, y: 0 },
+        maxhealth: 100 * gendata.difficulty,
+        difficulty: gendata.difficulty,
+        type: gendata.enemytype + "king",
+        animations:
+          gendata.enemytype === "rat"
+            ? {
+                idle: { frames: [0, 1, 2], speed: 0.25, repeat: true },
+                attack1: { frames: [3, 4, 5], speed: 0.25, repeat: false },
+                attack2: { frames: [6, 7, 8], speed: 0.25, repeat: false },
+                attack3: { frames: [9, 10, 11], speed: 0.25, repeat: false },
+              }
+            : {
+                idle: { frames: [0, 1], speed: 0.375, repeat: true },
+                attack1: { frames: [2, 3], speed: 0.375, repeat: false },
+                attack2: { frames: [4, 5], speed: 0.375, repeat: false },
+                attack3: { frames: [6, 7], speed: 0.375, repeat: false },
+              },
+        animation: { seq: "idle", frame: 0, nextframe: 0 },
 
+        hitboxes: [
+          {
+            shape: "circle",
+            radius: 1.5,
+            center: { x: 0, y: 0 },
+            ownerid: 0,
+            onCollision: (collisionPoint, collisionEntity) => {
+              if (collisionEntity.class === "projectile") {
+                //take damage if player bullet
+                if (
+                  this.getEntity(collisionEntity.source) &&
+                  this.getEntity(collisionEntity.source).class === "player"
+                ) {
+                  this.enemies[bossid].health -= collisionEntity.damage;
+                }
+              }
+            },
+          },
+        ],
+        possibleattacks: [
+          { name: "shoot1per", duration: 1 },
+          { name: "shootring", duration: 2 },
+        ],
+        nextattack: { time: this.time + 2 * this.fps, type: "shootring" },
+      });
+    } else {
+      //generate minions
+      for (let m = 0; m < gendata.difficulty * 2 + 1; m++) {
+        const spawnPos = help.scaleCoord(
+          help.getVectorFromAngle(-Math.PI / 4 - (Math.PI / 2) * (m / gendata.difficulty / 2)),
+          this.size.width / 2 - 3
+        );
+        const minionid = this.spawnEnemy({
+          position: spawnPos,
+          velocity: { x: 0, y: 0 },
+          maxhealth: 20 * gendata.difficulty,
+          difficulty: gendata.difficulty,
+          type: gendata.enemytype,
           animations: {
-            idle: { frames: [0, 1, 2], speed: 0.25, repeat: true },
-            attack1: { frames: [3, 4, 5], speed: 0.25, repeat: false },
-            attack2: { frames: [6, 7, 8], speed: 0.25, repeat: false },
-            attack3: { frames: [9, 10, 11], speed: 0.25, repeat: false },
+            idle: { frames: [0, 1], speed: 0.25, repeat: true },
+            attack1: { frames: [2, 3], speed: 0.25, repeat: false },
           },
           animation: { seq: "idle", frame: 0, nextframe: 0 },
 
           hitboxes: [
             {
               shape: "circle",
-              radius: 1.5,
+              radius: 0.8,
               center: { x: 0, y: 0 },
               ownerid: 0,
               onCollision: (collisionPoint, collisionEntity) => {
@@ -56,20 +107,30 @@ class Arena {
                     this.getEntity(collisionEntity.source) &&
                     this.getEntity(collisionEntity.source).class === "player"
                   ) {
-                    this.enemies[bossid].health -= collisionEntity.damage;
+                    this.enemies[minionid].health -= collisionEntity.damage;
                   }
+                }
+                if (collisionEntity.class === "enemy") {
+                  this.enemies[minionid].velocity = help.addCoords(
+                    this.enemies[minionid].velocity,
+                    help.scaleCoord(
+                      help.getNormalized(
+                        help.subtractCoords(this.enemies[minionid].position, collisionPoint)
+                      ),
+                      1
+                    )
+                  );
                 }
               },
             },
           ],
           possibleattacks: [
-            { name: "shoot1per", duration: 2 },
-            { name: "shootring", duration: 2 },
+            { name: "dashat", duration: 1 },
+            { name: "shootnearest", duration: 1.3 },
           ],
-          nextattack: { time: this.time + 1 * this.fps, type: "shoot1per" },
+          nextattack: { time: this.time + 1 * this.fps, type: "dashat" },
         });
       }
-    } else {
     }
   }
 
@@ -147,6 +208,7 @@ class Arena {
               }
             }
             if (collisionEntity.class === "enemy") {
+              thisPlayer.stats.health -= collisionEntity.difficulty * 5;
               thisPlayer.velocity = help.addCoords(
                 thisPlayer.velocity,
                 help.scaleCoord(
@@ -425,6 +487,39 @@ class Arena {
       player.rendered_position = player.position;
     });
 
+    //move enemies
+    Object.values(this.enemies).forEach((enemy) => {
+      //move enemy by velocity
+      enemy.position = help.addCoords(
+        enemy.position,
+        help.scaleCoord(enemy.velocity, 1 / this.fps)
+      );
+      //slow enemy
+      enemy.velocity = help.scaleCoord(
+        help.getNormalized(enemy.velocity),
+        help.getMagnitude(enemy.velocity) - 40 / this.fps
+      );
+
+      //confine enemy to arena
+
+      if (enemy.position.x < -this.size.width / 2) {
+        enemy.position.x = -this.size.width / 2;
+        enemy.velocity.x = 0;
+      }
+      if (enemy.position.x > this.size.width / 2) {
+        enemy.position.x = this.size.width / 2;
+        enemy.velocity.x = 0;
+      }
+      if (enemy.position.y < -this.size.height / 2) {
+        enemy.position.y = -this.size.height / 2;
+        enemy.velocity.y = 0;
+      }
+      if (enemy.position.y > this.size.height / 2) {
+        enemy.position.y = this.size.height / 2;
+        enemy.velocity.y = 0;
+      }
+    });
+
     //recharge player staminas
     Object.values(this.players).forEach((player) => {
       if (player.build.chargeup === "timebased") {
@@ -568,6 +663,7 @@ class Arena {
       position: enemy.position,
       velocity: enemy.velocity,
       maxhealth: enemy.maxhealth,
+      difficulty: enemy.difficulty,
       health: enemy.maxhealth,
       type: enemy.type,
       animations: enemy.animations,
@@ -654,11 +750,11 @@ class Arena {
             position: thisEnemy.position,
             velocity: help.scaleCoord(
               help.getNormalized(help.subtractCoords(player.position, thisEnemy.position)),
-              4
+              8
             ),
             source: thisEnemy.id,
-            damage: 10,
-            type: "bullet",
+            damage: thisEnemy.difficulty * 20,
+            type: thisEnemy.type.startsWith("rat") ? "acornbullet" : "slimebullet",
             lifetime: 5,
             onDeath: (myid) => {},
             dieOnCollision: true,
@@ -693,8 +789,8 @@ class Arena {
             position: thisEnemy.position,
             velocity: help.scaleCoord(help.getVectorFromAngle(angle), 4),
             source: thisEnemy.id,
-            damage: 10,
-            type: "bullet",
+            damage: thisEnemy.difficulty * 10,
+            type: thisEnemy.type.startsWith("rat") ? "acornbullet" : "slimebullet",
             lifetime: 5,
             onDeath: () => {},
             dieOnCollision: true,
@@ -705,6 +801,81 @@ class Arena {
                 center: { x: 0, y: 0 },
                 onCollision: (collisionPoint, collisionEntity) => {
                   if (collisionEntity.class === "player" || collisionEntity.class === "terrain") {
+                    this.deleteProjectile(bulletId);
+                  }
+                },
+              },
+            ],
+          });
+        }
+      },
+      dashat: () => {
+        let nearestPlayer;
+        let dist = this.size.width * 3;
+        Object.values(this.players).forEach((player) => {
+          const thisDist = help.getMagnitude(
+            help.subtractCoords(player.position, thisEnemy.position)
+          );
+          if (thisDist < dist) {
+            dist = thisDist;
+            nearestPlayer = player;
+          }
+        });
+        if (nearestPlayer) {
+          thisEnemy.animation = {
+            seq: "attack1",
+            frame: 0,
+            nextframe: this.time + thisEnemy.animations["attack1"].speed * this.fps,
+          };
+          thisEnemy.velocity = help.addCoords(
+            thisEnemy.velocity,
+            help.scaleCoord(
+              help.getNormalized(help.subtractCoords(nearestPlayer.position, thisEnemy.position)),
+              20
+            )
+          );
+        }
+      },
+      shootnearest: () => {
+        let nearestPlayer;
+        let dist = this.size.width * 3;
+        Object.values(this.players).forEach((player) => {
+          const thisDist = help.getMagnitude(
+            help.subtractCoords(player.position, thisEnemy.position)
+          );
+          if (thisDist < dist) {
+            dist = thisDist;
+            nearestPlayer = player;
+          }
+        });
+        if (nearestPlayer) {
+          thisEnemy.animation = {
+            seq: "attack1",
+            frame: 0,
+            nextframe: this.time + thisEnemy.animations["attack1"].speed * this.fps,
+          };
+          const bulletId = this.spawnProjectile({
+            position: thisEnemy.position,
+            velocity: help.scaleCoord(
+              help.getNormalized(help.subtractCoords(nearestPlayer.position, thisEnemy.position)),
+              8
+            ),
+            source: thisEnemy.id,
+            damage: thisEnemy.difficulty * 5,
+            type: thisEnemy.type.startsWith("rat") ? "acornbullet" : "slimebullet",
+            lifetime: 5,
+            onDeath: (myid) => {},
+            dieOnCollision: true,
+            hitboxes: [
+              {
+                shape: "circle",
+                radius: 0.4,
+                center: { x: 0, y: 0 },
+                onCollision: (collisionPoint, collisionEntity) => {
+                  if (collisionEntity.class === "player" || collisionEntity.class === "terrain") {
+                    if (this.projectiles[bulletId].dieOnCollision) {
+                      this.projectiles[bulletId].onDeath();
+                    }
                     this.deleteProjectile(bulletId);
                   }
                 },

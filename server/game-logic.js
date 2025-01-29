@@ -471,8 +471,9 @@ class Game {
             newhole.boss = true;
             newhole.difficulty = 1 + (this.holes.bossesbeat * 1) / 3;
           }
-          newhole.boss = true;
+          newhole.boss = false;
           newhole.enemytype = "rat";
+          newhole.difficulty = 5;
           this.holes.generated[JSON.stringify(this.players[id].data.chunk)] = newhole;
         }
 

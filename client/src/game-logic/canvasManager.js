@@ -1,6 +1,12 @@
 import help from "./helpers";
 
 let blockSize = 32;
+let unlocked = {};
+let unlockUpdate = () => {};
+const setUnlockUpdate = (func) => {
+  unlockUpdate = func;
+};
+export default setUnlockUpdate;
 
 // The size of the screen in terms of the game's blocks
 const screenMinBlocks = 17;
@@ -589,6 +595,11 @@ const convertGameToCanvasState = (gamePacket) => {
   let players;
   let map;
   let myarena;
+  let nowunlocked = gamePacket.game.players[gamePacket.recipientid].data.components.unlocked;
+  if (nowunlocked !== unlocked) {
+    unlockUpdate(nowunlocked);
+    unlocked = nowunlocked;
+  }
 
   Object.values(gamePacket.game.arenas).forEach((arena) => {
     Object.values(arena.players).forEach((player) => {

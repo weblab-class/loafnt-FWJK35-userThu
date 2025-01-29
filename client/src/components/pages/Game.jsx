@@ -5,16 +5,21 @@ import { useState, useEffect, useContext, useCallback } from "react";
 import { sendInput, setPressedKey, setOpenComponentSelect } from "../../game-logic/input";
 import { get, post } from "../../utilities";
 import "./Game.css";
+import setUnlockUpdate from "../../game-logic/canvasManager";
 
 const Game = () => {
   const [gameID, setGameID] = useState("");
   const { user, handleLogin, handleLogout } = useContext(UserContext);
   const [showComponents, setShowComponents] = useState(false);
+  const [unlocked, setUnlocked] = useState({});
 
   useEffect(() => {
     get("/api/mylobbycode", { gameID: gameID }).then((result) => {
       setGameID(result.code);
       console.log(`Game set ${result.code}`);
+    });
+    setUnlockUpdate((unlocks) => {
+      setUnlocked(unlocks);
     });
   }, []);
 
@@ -58,22 +63,7 @@ const Game = () => {
     <div className="overall">
       <Canvas gameID={gameID} />
       {showComponents ? (
-        <ComponentSelector
-          gameID={gameID}
-          userID={user?._id}
-          unlocked={{
-            weapons: {
-              singlebullet: true,
-              spraybullet: false,
-            },
-            chargeups: {
-              timebased: true,
-            },
-            utilities: {
-              dash: true,
-            },
-          }}
-        />
+        <ComponentSelector gameID={gameID} userID={user?._id} unlocked={unlocked} />
       ) : (
         <></>
       )}

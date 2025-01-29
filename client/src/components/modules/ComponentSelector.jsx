@@ -34,7 +34,13 @@ const ComponentSelector = (props) => {
       <div className="component-selector">
         {Object.keys(props.unlocked).map((classname) => (
           <div className="component-row" key={`${classname}-row`}>
-            {classname}
+            <ComponentButton
+              key={`${classname}-default`}
+              compType={classname}
+              compName="default"
+              onClick={() => {}}
+              unlocked={false}
+            />
             {Object.keys(props.unlocked[classname]).map((componentname) => (
               <ComponentButton
                 key={`${classname}.${componentname}-compchoice`}

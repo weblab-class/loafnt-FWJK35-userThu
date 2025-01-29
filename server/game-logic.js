@@ -55,6 +55,11 @@ class Game {
     }
     this.arenas = {};
     this.explored = {};
+    this.explored[JSON.stringify({ x: 0, y: 0 })] = Array(Math.ceil(chunkSize ** 2 / 32)).fill(0);
+    this.setTileExplored({ x: -1, y: -1 }, { x: 0, y: 0 });
+    this.setTileExplored({ x: 1, y: -1 }, { x: 0, y: 0 });
+    this.setTileExplored({ x: -1, y: 1 }, { x: 0, y: 0 });
+    this.setTileExplored({ x: 1, y: 1 }, { x: 0, y: 0 });
   }
 
   /*
@@ -81,12 +86,17 @@ class Game {
               weapons: {
                 singlebullet: true,
                 spraybullet: false,
+                launchbomb: false,
               },
               chargeups: {
                 timebased: true,
+                movebased: false,
+                stillbased: false,
               },
               utilities: {
                 dash: true,
+                heal: false,
+                shield: false,
               },
             },
             equipped: {

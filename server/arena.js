@@ -11,6 +11,7 @@ class Arena {
   fps;
   idcount;
   gendata;
+  onclear;
 
   killer;
 
@@ -25,6 +26,7 @@ class Arena {
     this.idcount = 0;
     console.log(gendata);
     this.gendata = gendata;
+    this.onclear = gendata.onclear;
     if (gendata.boss) {
       if (gendata.enemytype === "rat") {
         const bossid = this.spawnEnemy({
@@ -469,6 +471,22 @@ class Arena {
         this.deleteProjectile(projectile.id);
       }
     });
+
+    //kill dead enemies
+    Object.values(this.enemies).forEach((enemy) => {
+      if (enemy.health <= 0) {
+        this.deleteEnemy(enemy.id);
+      }
+    });
+
+    //win condition if all enemies dead
+    if (Object.values(this.enemies).length === 0) {
+      this.onclear();
+      //remove all players
+      Object.values(this.players).forEach((player) => {
+        this.removePlayer(player.userid);
+      });
+    }
   }
 
   /*
@@ -550,6 +568,12 @@ class Arena {
     if (this.projectiles[bulletId]) {
       this.projectiles[bulletId].onDeath();
       delete this.projectiles[bulletId];
+    }
+  }
+
+  deleteEnemy(enemyId) {
+    if (this.enemies[enemyId]) {
+      delete this.enemies[enemyId];
     }
   }
 

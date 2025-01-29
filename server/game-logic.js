@@ -51,12 +51,6 @@ class Game {
       this.chunkBlockSize = chunkSize * 2 + 1;
       this.seed = seed;
       this.players = {};
-      if (lobby) {
-        Array.from(lobby.players.values()).forEach((user) => {
-          this.spawnPlayer(user);
-        });
-        this.currLobby = lobby.code;
-      }
       this.arenas = {};
       this.explored = {};
       this.holes = { won: 0, bossesbeat: 0, generated: {} };
@@ -65,6 +59,12 @@ class Game {
       this.setTileExplored({ x: 1, y: -1 }, { x: 0, y: 0 });
       this.setTileExplored({ x: -1, y: 1 }, { x: 0, y: 0 });
       this.setTileExplored({ x: 1, y: 1 }, { x: 0, y: 0 });
+      if (lobby) {
+        Array.from(lobby.players.values()).forEach((user) => {
+          this.spawnPlayer(user);
+        });
+        this.currLobby = lobby.code;
+      }
     } else {
       this.convertJSONtoGame(lobby, jsonObj);
     }
@@ -473,7 +473,6 @@ class Game {
           }
           newhole.boss = true;
           newhole.enemytype = "rat";
-          console.log(newhole);
           this.holes.generated[JSON.stringify(this.players[id].data.chunk)] = newhole;
         }
 
@@ -619,7 +618,10 @@ class Game {
       mz([chunkSize, chunkSize - 1], 0);
     } else {
       //generate non-cleared holes
-      if (!this.holes.generated[JSON.stringify(chunk)]?.cleared) {
+      if (
+        !this.holes.generated[JSON.stringify(chunk)] ||
+        !this.holes.generated[JSON.stringify(chunk)].cleared
+      ) {
         const holeSeed = seedrandom(this.seed + chunk.x + "|" + chunk.y);
         const holex = Math.floor(holeSeed() * chunkSize);
         const holey = Math.floor(holeSeed() * chunkSize);
@@ -641,7 +643,12 @@ class Game {
         delete this.arenas[arenaId];
       };
     }
-    this.arenas[arenaId].addPlayer(this.players[playerid]);
+    this.arenas[arenaId].addPlayer(this.players[playerid], () => {
+      console.log("die");
+      this.players[playerid].data.position = { x: 0, y: 0 };
+      this.players[playerid].data.camera_center = { x: 0, y: 0 };
+      this.players[playerid].data.rendered_position = { x: 0, y: 0 };
+    });
   }
 
   leaveCombat(playerid) {

@@ -108,18 +108,13 @@ class Arena {
     return undefined;
   }
 
-  addPlayer(player) {
-    this.idcount++;
-    this.players[this.idcount] = {
-      id: this.idcount,
+  addPlayer(player, onDeath) {
+    const playerId = this.spawnPlayer({
       userid: player.user._id,
-      class: "player",
       position: { x: -2.0, y: -2.0 },
       velocity: { x: 0.0, y: 0.0 },
       acceleration: 80,
       deceleration: 20,
-      inputdir: { x: 0.0, y: 0.0 },
-      rendered_position: { x: 0.0, y: 0.0 },
       stats: {
         health: player.data.stats.maxhealth,
         maxhealth: player.data.stats.maxhealth,
@@ -128,14 +123,21 @@ class Arena {
         damagemodifier: player.data.stats.combatdamage,
         armor: player.data.stats.armor,
       },
-
       hitboxes: [
         {
           shape: "circle",
           radius: 0.5,
           center: { x: 0, y: 0 },
-          ownerid: this.idcount,
-          onCollision: (collisionPoint, collisionEntity) => {},
+          onCollision: (collisionPoint, collisionEntity) => {
+            if (collisionEntity.class === "projectile") {
+              if (
+                this.getEntity(collisionEntity.source) &&
+                this.getEntity(collisionEntity.source).class === "enemy"
+              ) {
+                this.players[playerId].stats.health -= collisionEntity.damage;
+              }
+            }
+          },
         },
       ],
       avatar_id: player.data.avatar_id,
@@ -145,8 +147,40 @@ class Arena {
         chargeup: player.data.components.equipped.chargeups,
         utility: player.data.components.equipped.utilities,
       },
+      onDeath: onDeath,
+    });
+  }
+
+  spawnPlayer(player) {
+    this.idcount++;
+    const playerId = this.idcount;
+    this.players[playerId] = {
+      id: playerId,
+      userid: player.userid,
+      class: "player",
+      position: player.position,
+      velocity: player.velocity,
+      acceleration: player.acceleration,
+      deceleration: player.deceleration,
+      inputdir: { x: 0.0, y: 0.0 },
+      rendered_position: { x: 0.0, y: 0.0 },
+      stats: player.stats,
+      hitboxes: player.hitboxes,
+      avatar_id: player.avatar_id,
+      speed: player.speed,
+      build: player.build,
+      onDeath: player.onDeath,
       targetid: 0,
     };
+    Object.values(this.players[playerId].hitboxes).forEach((hitbox) => {
+      hitbox.ownerid = playerId;
+    });
+    return playerId;
+  }
+
+  killPlayer(playerid) {
+    this.players[playerid].onDeath();
+    this.removePlayer(this.players[playerid].userid);
   }
 
   removePlayer(userid) {
@@ -479,6 +513,13 @@ class Arena {
       }
     });
 
+    //kill dead players
+    Object.values(this.players).forEach((player) => {
+      if (player.stats.health <= 0) {
+        this.killPlayer(player.id);
+      }
+    });
+
     //win condition if all enemies dead
     if (Object.values(this.enemies).length === 0) {
       this.onclear();
@@ -517,6 +558,9 @@ class Arena {
       possibleattacks: enemy.possibleattacks,
       nextattack: enemy.nextattack,
     };
+    Object.values(this.enemies[enemyId].hitboxes).forEach((hitbox) => {
+      hitbox.ownerid = enemyId;
+    });
     return enemyId;
   }
 

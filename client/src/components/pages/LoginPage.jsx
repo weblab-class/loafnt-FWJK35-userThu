@@ -45,7 +45,10 @@ const LoginPage = () => {
           (
             <>
               <div className="small-container">
+                <div className="title-container">
                 <h1 className="title">Evergreen Escape</h1>
+                </div>
+                
 
                 <div className="lobby">
                   {user ? (
@@ -82,7 +85,7 @@ const LoginPage = () => {
                         handleLogout();
                       }}
                     >
-                      Logout
+                      Log out
                     </button>
                   ) : (
                     <GoogleLogin onSuccess={handleLogin} onError={(err) => console.log(err)} />

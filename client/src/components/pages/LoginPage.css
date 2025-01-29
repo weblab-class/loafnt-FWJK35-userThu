@@ -15,56 +15,113 @@
   background-size: cover;
   /* background-position: 50%; */
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
-.lobby-controls {
-  display: flex;
-  border: 80px solid black;
-  border-radius: 67px;
-  background-color: #EBCCB3;
-  border-image-source: url("../../public/assets/border-test.png");
-  border-image-slice: 33%;
-  border-image-repeat: repeat;
-}
 
 .top-container {
+  flex: 1;
   display: flex;
   /* justify-content: space-between; */
   margin: 0;
   width: 100vw;
 }
 
+.title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 32px solid black;
+  border-radius: 27px;
+  border-image-source: url("../../public/assets/border8px.png");
+  border-image-slice: 33%;
+  border-image-repeat: repeat;
+  background-color: #7F6E56;
+  filter: drop-shadow(8px 8px #241D0D);
+  width: 50%;
+  margin-bottom: 1rem;
+}
+
 .title {
   font-family: "Supply Center";
-  font-size: 8vh;
+  font-size: 3.5vw;
   color: #EBCCB3;
-  margin-bottom: 48px;
   text-align: center;
+  filter: drop-shadow(8px 8px #241D0D);
 }
 
 .small-container {
+  flex: 3;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 16px;
-}
-
-.lobby {
-  
+  /* padding: 16px; */
 }
 
 .log-image {
-  content: url("../../assets/Log.png");
+  content: url("../../assets/pixel-trunk.png");
   height: 100vh;
 }
 
 .login-button {
-  width: min-content;
+  width: 15%;
   background-color: transparent;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+
 .logout-button {
-  background-color: orange;
+  background-color: #241D0D;
+  font-family: "Born2bSportyFS";
+  font-size: 2rem;
+  color: #EBCCB3;
+  width: 100%;
+  border: 32px solid black;
+  border-radius: 27px;
+  border-image-source: url("../../public/assets/border8px.png");
+  border-image-slice: 33%;
+  border-image-repeat: repeat;
+  filter: drop-shadow(8px 8px #241D0D);
+  text-transform: uppercase;
+}
+
+.logout-button:hover {
+  background-color: #EBCCB3;
+  color: #241D0D
+}
+
+.lobby {
+  width: 60%;
+}
+
+.lobby-controls {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+}
+
+.create-lobby {
+  font-family: 'Born2bSportyFS';
+  font-size: 2rem;
+  background-color: #776239;
+  color: #EBCCB3;
+  margin: 0 1rem;
+  border: 32px solid black;
+  border-radius: 27px;
+  border-image-source: url("../../public/assets/border8px.png");
+  border-image-slice: 33%;
+  border-image-repeat: repeat;
+  filter: drop-shadow(8px 8px #241D0D);
+  text-transform: uppercase;
+}
+
+.create-lobby:hover {
+  background-color: #EBCCB3;
+  color: #241D0D;
 }

@@ -46,7 +46,7 @@ const LoginPage = () => {
             <>
               <div className="small-container">
                 <div className="title-container">
-                <h1 className="title">Evergreen Escape</h1>
+                <h1 className="title">Evergreen<br />Escape</h1>
                 </div>
                 
 

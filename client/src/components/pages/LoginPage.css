@@ -38,13 +38,13 @@
   border-image-repeat: repeat;
   background-color: #7F6E56;
   filter: drop-shadow(8px 8px #241D0D);
-  width: 50%;
+  width: 32rem;
   margin-bottom: 1rem;
 }
 
 .title {
   font-family: "Supply Center";
-  font-size: 3.5vw;
+  font-size: 3rem;
   color: #EBCCB3;
   text-align: center;
   filter: drop-shadow(8px 8px #241D0D);
@@ -62,10 +62,11 @@
 .log-image {
   content: url("../../assets/pixel-trunk.png");
   height: 100vh;
+  width: 30vw;
 }
 
 .login-button {
-  width: 15%;
+  width: 10rem;
   background-color: transparent;
   margin-top: 1rem;
   display: flex;

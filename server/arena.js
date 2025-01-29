@@ -129,13 +129,31 @@ class Arena {
           radius: 0.5,
           center: { x: 0, y: 0 },
           onCollision: (collisionPoint, collisionEntity) => {
+            const thisPlayer = this.players[playerId];
             if (collisionEntity.class === "projectile") {
               if (
                 this.getEntity(collisionEntity.source) &&
                 this.getEntity(collisionEntity.source).class === "enemy"
               ) {
-                this.players[playerId].stats.health -= collisionEntity.damage;
+                thisPlayer.stats.health -= collisionEntity.damage;
+                //bounce player away from bullet
+                thisPlayer.velocity = help.addCoords(
+                  thisPlayer.velocity,
+                  help.scaleCoord(
+                    help.getNormalized(help.subtractCoords(thisPlayer.position, collisionPoint)),
+                    20
+                  )
+                );
               }
+            }
+            if (collisionEntity.class === "enemy") {
+              thisPlayer.velocity = help.addCoords(
+                thisPlayer.velocity,
+                help.scaleCoord(
+                  help.getNormalized(help.subtractCoords(thisPlayer.position, collisionPoint)),
+                  10
+                )
+              );
             }
           },
         },

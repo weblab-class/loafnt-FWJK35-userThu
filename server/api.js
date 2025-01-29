@@ -57,7 +57,7 @@ router.post("/storeuser", (req, res) => {
         const newUser = new User({
           name: req.user.name,
           googleid: req.user.googleid,
-          gamefiles: ["", "", "", "", ""] // gamefile is "{fileName: "Epic Game", game: JSON.stringify(gameObj)}""
+          gamefiles: ["", "", "", "", ""], // gamefile is "{fileName: "Epic Game", game: JSON.stringify(gameObj)}""
         });
         newUser.save().then((user) => {
           res.send(user);
@@ -69,7 +69,7 @@ router.post("/storeuser", (req, res) => {
 
 router.post("/newlobby", (req, res) => {
   if (req.user) {
-    const thislobby = lobbyManager.createNewLobby({slotKey: undefined, user: req.user});
+    const thislobby = lobbyManager.createNewLobby({ slotKey: undefined, user: req.user });
     res.send(thislobby);
   }
 });
@@ -130,7 +130,7 @@ router.get("/mylobbycode", (req, res) => {
 router.post("/activateplayer", (req, res) => {
   if (req.user) {
     socketManager.activatePlayer(req.user._id, req.body.gameID);
-    res.send({user: req.user._id, gameID: req.body.gameID});
+    res.send({ user: req.user._id, gameID: req.body.gameID });
   }
 });
 
@@ -151,7 +151,7 @@ router.post("/activateplayer", (req, res) => {
 */
 router.get("/gamefiles", (req, res) => {
   if (req.user) {
-    User.find({googleid: req.user.googleid}).then((foundUsers) => {
+    User.find({ googleid: req.user.googleid }).then((foundUsers) => {
       const foundUser = foundUsers[0];
       if (foundUser) {
         /*
@@ -168,11 +168,9 @@ router.get("/gamefiles", (req, res) => {
           } else {
             return "";
           }
-          
-        })
+        });
         res.send(gameFiles);
       } else {
-
       }
     });
   }
@@ -188,7 +186,7 @@ router.post("/gameslot", (req, res) => {
   if (req.user) {
     const lobby = lobbyManager.findLobbyByCode(req.body.lobbyID);
     lobby.leader.slotKey = req.body.slotKey;
-    res.send({lobbyID: req.body.lobbyID, slotKey: req.body.slotKey});
+    res.send({ lobbyID: req.body.lobbyID, slotKey: req.body.slotKey });
   }
 });
 
@@ -197,16 +195,16 @@ router.post("/gameslot", (req, res) => {
 */
 router.post("/initgameslot", (req, res) => {
   if (req.user) {
-    User.find({googleid: req.user.googleid}).then((foundUsers) => {
+    User.find({ googleid: req.user.googleid }).then((foundUsers) => {
       const foundUser = foundUsers[0];
       // NOTE: The game field is not populated until the user dismounts from Game.jsx
       foundUser.gamefiles[req.body.slotKey] = `{"name": "${req.body.gameName}", "game": null}`;
       foundUser.save().then((result) => {
-        res.send({slotKey: req.body.slotKey, gameFile: result.gamefiles[req.body.slotKey]});
+        res.send({ slotKey: req.body.slotKey, gameFile: result.gamefiles[req.body.slotKey] });
       });
     });
   }
-})
+});
 
 // anything else falls to this "not found" case
 router.all("*", (req, res) => {

@@ -13,29 +13,29 @@ const getRandomCode = (len) => {
 
 const loadGame = (host) => {
   returnPromise = new Promise((resolve, reject) => {
-    User.find({googleid: host.user.googleid}).then((foundUsers) => {
+    User.find({ googleid: host.user.googleid }).then((foundUsers) => {
       if (foundUsers) {
         const foundUser = foundUsers[0];
         let foundGameFiles = foundUser.gamefiles;
         // By this point, the User will have named the file at the specified slot
         // so the gameFile looks like "{name: val, game: null}"
         const gameFile = JSON.parse(foundGameFiles[host.slotKey]);
-        const gameJSON = (gameFile.game === null) ? undefined : gameFile.game;
+        const gameJSON = gameFile.game === null ? undefined : gameFile.game;
         // Clear Arena
-        resolve({game: gameJSON});
+        resolve({ game: gameJSON });
       } else {
         reject(`User with [googleid]: [${host.user.googleid}] not found.`);
       }
     });
-  }); 
+  });
   return returnPromise;
-}
+};
 
 const saveGame = (gameID, host) => {
   returnPromise = new Promise((resolve, reject) => {
     User.find({ googleid: host.user.googleid }).then((foundUsers) => {
       let foundUser = foundUsers[0];
-      
+
       // gamefile: {name: val, game: null}
       const parsedGameFile = JSON.parse(foundUser.gamefiles[host.slotKey]);
       // MUST: Clear the interval which is needed to call JSON.stringify()
@@ -45,7 +45,7 @@ const saveGame = (gameID, host) => {
         gameToSave.arenas = {};
         parsedGameFile.game = gameToSave;
         foundUser.gamefiles[host.slotKey] = JSON.stringify(parsedGameFile);
-      } else{
+      } else {
         reject("Game not defined");
       }
       foundUser.save().then((result) => {
@@ -71,7 +71,7 @@ class Lobby {
   code;
   players;
   playersObj;
-  leader; 
+  leader;
   started;
 
   constructor(lobbiesList, leader) {
@@ -90,7 +90,6 @@ class Lobby {
     this.players.delete(player.googleid);
     this.playersObj = Object.fromEntries(this.players);
     if (this.players.size === 0) {
-      //
       deleteLobby(this.code);
     }
   }

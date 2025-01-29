@@ -163,6 +163,7 @@ class Game {
         active: true,
       };
     } else {
+      console.log("active", user.name);
       this.players[user._id].active = true;
     }
   }
@@ -180,19 +181,18 @@ class Game {
     }
     // Assume it is an empty lobby
     let emptyLobby = true;
-    for (const player in this.players) {
-      if (player.active === true) {
+    Object.values(this.players).forEach((player) => {
+      if (player.active) {
         emptyLobby = false;
-        break;
       }
-    }
+    });
     if (emptyLobby) {
       lobbyManager.deleteLobby(this.currLobby);
     }
   }
 
   killSelf() {
-    lobbyManager.deleteLobby(this.seed);
+    lobbyManager.deleteLobby(this.currLobby);
   }
 
   /*
@@ -390,8 +390,10 @@ class Game {
     }
 
     this.setTileExplored(playerPos, playerChunk);
+    //level up
     while (this.players[id].data.stats.xp >= this.players[id].data.stats.xpneeded) {
       this.players[id].data.stats.xp -= this.players[id].data.stats.xpneeded;
+      this.players[id].data.stats.level += 1;
       this.players[id].data.stats.xpneeded *= 1.1;
     }
 
@@ -645,7 +647,6 @@ class Game {
       };
     }
     this.arenas[arenaId].addPlayer(this.players[playerid], () => {
-      console.log("die");
       this.players[playerid].data.position = { x: 0, y: 0 };
       this.players[playerid].data.camera_center = { x: 0, y: 0 };
       this.players[playerid].data.rendered_position = { x: 0, y: 0 };

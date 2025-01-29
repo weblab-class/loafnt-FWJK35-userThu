@@ -51,34 +51,39 @@ const sendGameState = (gameId) => {
 const startGame = (gameId) => {
   // Update the lobby associated with the game
   const lobby = LobbyManager.findLobbyByCode(gameId);
-  
+
   // emit "launchgame" event, players in lobby redirected to /game page
-  lobby.players.forEach((player) => {
-    const socket = getSocketFromUserID(player._id);
-    if (socket) {
-      getSocketFromUserID(player._id).emit("launchgame");
-    };
-  });
+  if (lobby) {
+    lobby.players.forEach((player) => {
+      const socket = getSocketFromUserID(player._id);
+      if (socket) {
+        getSocketFromUserID(player._id).emit("launchgame");
+      }
+    });
 
-  // Fetch the game at the host's specified game slot
-  let loadedGame;
-  LobbyManager.loadGame(lobby.leader).then((result) => {
-    loadedGame = result.game;
-    // // If it is an empty save file, create a new game
-    if (loadedGame === undefined) {
-      common.gameMap[gameId] = new Game.Game(gameId, LobbyManager.findLobbyByCode(gameId));
-    } else {
-      common.gameMap[gameId] = new Game.Game(null, LobbyManager.findLobbyByCode(gameId), loadedGame);
-    }
-    // Add a killer function for when the game calls killSelf()
-    common.gameMap[gameId].killer = () => {
-      delete common.gameMap[gameId];
-    };
+    // Fetch the game at the host's specified game slot
+    let loadedGame;
+    LobbyManager.loadGame(lobby.leader).then((result) => {
+      loadedGame = result.game;
+      // // If it is an empty save file, create a new game
+      if (!loadedGame) {
+        common.gameMap[gameId] = new Game.Game(gameId, LobbyManager.findLobbyByCode(gameId));
+      } else {
+        common.gameMap[gameId] = new Game.Game(
+          null,
+          LobbyManager.findLobbyByCode(gameId),
+          loadedGame
+        );
+      }
+      // Add a killer function for when the game calls killSelf()
+      common.gameMap[gameId].killer = () => {
+        delete common.gameMap[gameId];
+      };
 
-    runGame(gameId);
-  })
-  
-}
+      runGame(gameId);
+    });
+  }
+};
 
 // Called when server socket receives a request
 const runGame = (gameId) => {

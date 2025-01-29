@@ -54,7 +54,6 @@ router.post("/storeuser", (req, res) => {
         thisuser = foundUsers[0];
         res.send(thisuser);
       } else {
-        User.find();
         const newUser = new User({
           name: req.user.name,
           googleid: req.user.googleid,
@@ -162,6 +161,7 @@ router.get("/gamefiles", (req, res) => {
           A returning player's gamefiles looks like:
           ["{name: val, game: {...}}", ...]
         */
+
         const gameFiles = foundUser.gamefiles.map((gameFile) => {
           if (gameFile !== "") {
             return JSON.parse(gameFile);
@@ -171,6 +171,8 @@ router.get("/gamefiles", (req, res) => {
           
         })
         res.send(gameFiles);
+      } else {
+
       }
     });
   }

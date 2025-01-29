@@ -162,17 +162,47 @@ const useUtility = (arena, playerid) => {
       }
     },
     heal: () => {
-      const cost = 50;
+      const cost = 40;
       if (help.getMagnitude(thisPlayer.inputdir) > 0 && thisPlayer.stats.stamina >= cost) {
-        thisPlayer.stats.health += thisPlayer.stats.maxhealth * 0.1;
+        thisPlayer.stats.health += thisPlayer.stats.maxhealth * 0.2;
         thisPlayer.stats.health = Math.min(thisPlayer.stats.maxhealth, thisPlayer.stats.health);
+        const healId = arena.spawnProjectile({
+          position: thisPlayer.position,
+          velocity: { x: 0, y: 0 },
+          source: thisPlayer.id,
+          damage: 0,
+          type: "healparticle",
+          lifetime: 1,
+          onDeath: (myid) => {
+            thisPlayer.stats.shielded = false;
+          },
+          animations: {
+            idle: { frames: [0, 1, 2], speed: 0.15, repeat: true },
+          },
+          animation: { seq: "idle", frame: 0, nextframe: 0 },
+          dieOnCollision: true,
+          hitboxes: [],
+        });
         thisPlayer.stats.stamina -= cost;
       }
     },
     shield: () => {
       const cost = 5;
-      if (help.getMagnitude(thisPlayer.inputdir) > 0 && thisPlayer.stats.stamina >= cost) {
-        thisPlayer.velocity = help.scaleCoord(thisPlayer.inputdir, thisPlayer.speed * 2);
+      if (thisPlayer.stats.stamina >= cost && !thisPlayer.stats.shielded) {
+        thisPlayer.stats.shielded = true;
+        const shieldId = arena.spawnProjectile({
+          position: thisPlayer.position,
+          velocity: { x: 0, y: 0 },
+          source: thisPlayer.id,
+          damage: 0,
+          type: "invisible",
+          lifetime: 3,
+          onDeath: (myid) => {
+            thisPlayer.stats.shielded = false;
+          },
+          dieOnCollision: true,
+          hitboxes: [],
+        });
         thisPlayer.stats.stamina -= cost;
       }
     },

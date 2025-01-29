@@ -26,6 +26,8 @@ import slime from "./sprites/slime.png";
 import rat from "./sprites/rat.png";
 
 // attacks
+import invisible from "./invisible.png";
+
 import bullet from "./attacks/bullet.png";
 import smallbullet from "./attacks/small_bullet.png";
 import bomb from "./attacks/bomb.png";
@@ -33,6 +35,8 @@ import acornbullet from "./attacks/acorn_bullet.png";
 import acornbomb from "./attacks/acorn_bomb.png";
 import slimebullet from "./attacks/slimebullet.png";
 import slimebomb from "./attacks/slimebomb.png";
+
+import healparticle from "./heal_particles.png";
 
 // icons
 import singlebullet from "./icon/single_bullet.png";
@@ -46,6 +50,8 @@ import stillbased from "./icon/stand.png";
 import dash from "./icon/dash.png";
 import heal from "./icon/heal.png";
 import shield from "./icon/shield.png";
+
+import bubble from "./shield.png";
 
 import defaultweapon from "./icon/generic_weapon.png";
 import defaultchargeup from "./icon/generic_charging.png";
@@ -123,6 +129,14 @@ let assetsMap = {
     },
   },
   projectiles: {
+    invisible: {
+      id: "invisible",
+      spriteSize: 1,
+      imageSize: { width: 1, height: 1 },
+      blockSize: 0,
+      src: invisible,
+      imgObj: null,
+    },
     smallbullet: {
       id: "smallbullet",
       spriteSize: 8,
@@ -177,6 +191,14 @@ let assetsMap = {
       imageSize: { width: 96, height: 64 },
       blockSize: 2,
       src: slimebomb,
+      imgObj: null,
+    },
+    healparticle: {
+      id: "healparticle",
+      imageSize: { width: 48, height: 16 },
+      spriteSize: 16,
+      blockSize: 1,
+      src: healparticle,
       imgObj: null,
     },
   },
@@ -259,6 +281,14 @@ let assetsMap = {
       spriteSize: 24,
       blockSize: 1.5,
       src: componentframe,
+      imgObj: null,
+    },
+    bubble: {
+      id: "bubble",
+      imageSize: { width: 16, height: 16 },
+      spriteSize: 16,
+      blockSize: 1,
+      src: bubble,
       imgObj: null,
     },
   },

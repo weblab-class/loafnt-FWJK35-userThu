@@ -191,6 +191,7 @@ class Arena {
         maxstamina: player.data.stats.maxstamina,
         damagemodifier: player.data.stats.combatdamage,
         armor: player.data.stats.armor,
+        shielded: false,
       },
       hitboxes: [
         {
@@ -199,7 +200,10 @@ class Arena {
           center: { x: 0, y: 0 },
           onCollision: (collisionPoint, collisionEntity) => {
             const thisPlayer = this.players[playerId];
-            const armorRed = 100 / thisPlayer.stats.armor;
+            let armorRed = 100 / thisPlayer.stats.armor;
+            if (thisPlayer.stats.shielded) {
+              armorRed = 0;
+            }
             if (collisionEntity.class === "projectile") {
               if (
                 this.getEntity(collisionEntity.source) &&
@@ -212,7 +216,7 @@ class Arena {
                     thisPlayer.velocity,
                     help.scaleCoord(
                       help.getNormalized(help.subtractCoords(thisPlayer.position, collisionPoint)),
-                      20
+                      10
                     )
                   );
 
@@ -226,7 +230,7 @@ class Arena {
                 thisPlayer.velocity,
                 help.scaleCoord(
                   help.getNormalized(help.subtractCoords(thisPlayer.position, collisionPoint)),
-                  5
+                  2
                 )
               );
             }
@@ -536,23 +540,23 @@ class Arena {
     //recharge player staminas
     Object.values(this.players).forEach((player) => {
       if (player.build.chargeup === "timebased") {
-        player.stats.stamina += (player.stats.maxstamina * 0.01) / this.fps;
+        player.stats.stamina += (player.stats.maxstamina * 0.05) / this.fps;
       }
       const playerSpeed = help.getMagnitude(player.velocity);
       if (player.build.chargeup === "movebased") {
         //charge if moving
         if (playerSpeed > 1) {
           player.stats.stamina +=
-            (player.stats.maxstamina * 0.05 * (playerSpeed / player.speed)) / this.fps;
+            (player.stats.maxstamina * 0.1 * (playerSpeed / player.speed)) / this.fps;
         } else {
           player.stats.stamina -= (player.stats.maxstamina * 0.2) / this.fps;
         }
       }
       if (player.build.chargeup === "stillbased") {
         if (playerSpeed < 1) {
-          player.stats.stamina += (player.stats.maxstamina * 0.3) / this.fps;
+          player.stats.stamina += (player.stats.maxstamina * 0.4) / this.fps;
         } else {
-          player.stats.stamina -= (player.stats.maxstamina * 0.3) / this.fps;
+          player.stats.stamina -= (player.stats.maxstamina * 0.2) / this.fps;
         }
       }
       //clamp between 0 and max

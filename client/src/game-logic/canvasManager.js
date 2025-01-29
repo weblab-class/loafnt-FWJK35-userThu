@@ -46,7 +46,7 @@ NOTE: all sprites are assumed to be square lmao
 */
 const drawSprite = (sprite, asset, ctx) => {
   //translate rendered position so it is relative to top left
-  sprite.rendered_position = addCoords(sprite.rendered_position, canvasCenter);
+  let rendered_position = addCoords(sprite.rendered_position, canvasCenter);
   //get position in source image of current animation
   const spriteX = sprite.animation % (asset.imageSize.width / asset.spriteSize);
   const spriteY = Math.floor(sprite.animation / (asset.imageSize.width / asset.spriteSize));
@@ -57,13 +57,9 @@ const drawSprite = (sprite, asset, ctx) => {
     asset.spriteSize,
     asset.spriteSize,
     //center of sprite is rendered at position instead of top left
-    (sprite.rendered_position.x -
-      asset.blockSize / 2 +
-      (asset.blockSize * (1 - sprite.scale)) / 2) *
+    (rendered_position.x - asset.blockSize / 2 + (asset.blockSize * (1 - sprite.scale)) / 2) *
       blockSize,
-    (sprite.rendered_position.y -
-      asset.blockSize / 2 +
-      (asset.blockSize * (1 - sprite.scale)) / 2) *
+    (rendered_position.y - asset.blockSize / 2 + (asset.blockSize * (1 - sprite.scale)) / 2) *
       blockSize,
     sprite.scale * asset.blockSize * blockSize,
     sprite.scale * asset.blockSize * blockSize
@@ -110,6 +106,11 @@ const drawPlayer = (player, ctx) => {
       },
       ctx
     );
+    console.log(player.stats);
+    if (player.stats.shielded) {
+      console.log("shelf");
+      drawSprite(player, assetsMap.UI.bubble, ctx);
+    }
   }
 };
 

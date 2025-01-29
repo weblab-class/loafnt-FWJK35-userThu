@@ -1,30 +1,36 @@
 import Canvas from "../modules/Canvas";
+import ComponentSelector from "../modules/ComponentSelector";
 import { UserContext } from "../App";
 import { useState, useEffect, useContext, useCallback } from "react";
-import { sendInput, setPressedKey } from "../../game-logic/input";
+import { sendInput, setPressedKey, setOpenComponentSelect } from "../../game-logic/input";
 import { get, post } from "../../utilities";
 import "./Game.css";
-
-
 
 const Game = () => {
   const [gameID, setGameID] = useState("");
   const { user, handleLogin, handleLogout } = useContext(UserContext);
+  const [showComponents, setShowComponents] = useState(false);
 
   useEffect(() => {
-    get("/api/mylobbycode", {gameID: gameID}).then((result) => {
+    get("/api/mylobbycode", { gameID: gameID }).then((result) => {
       setGameID(result.code);
       console.log(`Game set ${result.code}`);
     });
   }, []);
 
   useEffect(() => {
+    setOpenComponentSelect(() => {
+      setShowComponents(!showComponents);
+    });
+  }, [showComponents]);
+
+  useEffect(() => {
     if (gameID !== "") {
-      post("/api/activateplayer", {gameID: gameID}).then((result) => {
+      post("/api/activateplayer", { gameID: gameID }).then((result) => {
         console.log(`User [${result.user}] is active on Game [${result.gameID}]`);
       });
     }
-  }, [gameID])
+  }, [gameID]);
 
   useEffect(() => {
     const processInput = (e) => {
@@ -51,6 +57,26 @@ const Game = () => {
   return (
     <div className="overall">
       <Canvas gameID={gameID} />
+      {showComponents ? (
+        <ComponentSelector
+          gameID={gameID}
+          userID={user?._id}
+          unlocked={{
+            weapons: {
+              singlebullet: true,
+              spraybullet: false,
+            },
+            chargeups: {
+              timebased: true,
+            },
+            utilities: {
+              dash: true,
+            },
+          }}
+        />
+      ) : (
+        <></>
+      )}
     </div>
   );
 };

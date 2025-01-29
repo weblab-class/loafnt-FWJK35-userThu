@@ -19,13 +19,6 @@ const cameraBoxSize = { width: 2, height: 2 };
 
 help.setChunkSize(chunkSize);
 
-const dummyPlayer1 = {
-  position: { x: 0, y: 0 },
-  chunk: { x: 0, y: 0 },
-  avatar_id: "witch_cat",
-  sprite_sheet: null,
-};
-
 /*
 Game Class - Attributes:
 seed (String): The GameID is used as the world seed
@@ -83,6 +76,25 @@ class Game {
           chunk: { x: 0, y: 0 },
           mode: { type: "normal", packet: null },
           speed: 5,
+          components: {
+            unlocked: {
+              weapons: {
+                singlebullet: true,
+                spraybullet: false,
+              },
+              chargeups: {
+                timebased: true,
+              },
+              utilities: {
+                dash: true,
+              },
+            },
+            equipped: {
+              weapons: "singlebullet",
+              chargeups: "timebased",
+              utilities: "dash",
+            },
+          },
           health: [1, 1, 1], // Each element in the array represents a heart, and how full it is
           rendered_chunks: [
             [
@@ -154,6 +166,16 @@ class Game {
   selectItem(userid, itemIdx) {
     if (this.players[userid]) {
       this.players[userid].data.inventory.selected = itemIdx - 1;
+    }
+  }
+
+  setComponent(userid, type, name) {
+    if (this.players[userid]) {
+      let comps = this.players[userid].data.components;
+      if (comps.unlocked[type][name]) {
+        comps.equipped[type] = name;
+      }
+      console.log(comps);
     }
   }
 

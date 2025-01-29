@@ -1,0 +1,29 @@
+.component-selector {
+  background-color: #543133;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  height: auto;
+  border: 5px solid black;
+}
+.component-row {
+  display: flex;
+  flex-direction: right;
+}
+
+.component-slot {
+  display: inline;
+  background-color: transparent;
+  background-size: contain;
+}
+
+.component-icon {
+  background-color: transparent;
+  background-size: cover;
+  display: inline;
+  width: 5vw;
+  height: 5vw;
+  border: 0px solid black;
+}

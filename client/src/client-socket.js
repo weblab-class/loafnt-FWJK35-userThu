@@ -34,4 +34,18 @@ const utility = (gameID, user_id) => {
   socket.emit("utility", { gameID: gameID, user_id: user_id });
 };
 
-export { socket, runGame, move, enterCombat, enterInvisibleMaze, inventorySelect, attack, utility };
+const component = (gameID, user_id, type, name) => {
+  socket.emit("component", { gameID: gameID, user_id: user_id, type: type, name: name });
+};
+
+export {
+  socket,
+  runGame,
+  move,
+  enterCombat,
+  enterInvisibleMaze,
+  inventorySelect,
+  attack,
+  utility,
+  component,
+};

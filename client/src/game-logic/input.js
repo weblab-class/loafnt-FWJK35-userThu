@@ -5,11 +5,13 @@ import {
   move,
   attack,
   utility,
+  component,
 } from "../client-socket";
 
 const pressedKeys = new Map();
-const singlePresses = new Set(["c", "i", " ", "shift"]);
+const singlePresses = new Set(["c", "i", " ", "shift", "e"]);
 const inventoryKeys = ["1", "2", "3", "4", "5", "6", "7", "8"];
+let openComponentSelect;
 
 const sendInput = (gameID, userID, deltaT) => {
   let xcomp = 0;
@@ -30,8 +32,6 @@ const sendInput = (gameID, userID, deltaT) => {
     xcomp *= Math.SQRT1_2;
     ycomp *= Math.SQRT1_2;
   }
-  xcomp *= deltaT;
-  ycomp *= deltaT;
 
   if (pressedKeys.get("i")) {
     enterInvisibleMaze(gameID, userID);
@@ -49,6 +49,12 @@ const sendInput = (gameID, userID, deltaT) => {
     utility(gameID, userID);
   }
 
+  if (pressedKeys.get("e")) {
+    if (openComponentSelect) {
+      openComponentSelect();
+    }
+  }
+
   inventoryKeys.forEach((key) => {
     if (pressedKeys.get(key)) {
       inventorySelect(gameID, userID, Number(key));
@@ -62,6 +68,10 @@ const sendInput = (gameID, userID, deltaT) => {
   });
 };
 
+const selectComponent = (gameID, userID, type, name) => {
+  component(gameID, userID, type, name);
+};
+
 const setPressedKey = (e) => {
   if (e.type === "keydown" && !e.repeat) {
     pressedKeys.set(e.key.toLowerCase(), true);
@@ -71,4 +81,9 @@ const setPressedKey = (e) => {
   }
 };
 
-export { sendInput, setPressedKey };
+const setOpenComponentSelect = (openFunc) => {
+  openComponentSelect = openFunc;
+};
+
+export { sendInput, setPressedKey, selectComponent, pressedKeys, setOpenComponentSelect };
+export default selectComponent;

@@ -34,7 +34,11 @@ const getMagnitude = (vector) => {
 };
 
 const getNormalized = (vector) => {
-  return scaleCoord(vector, 1 / getMagnitude(vector));
+  let mag = getMagnitude(vector);
+  if (mag === 0) {
+    return { x: 0, y: 0 };
+  }
+  return scaleCoord(vector, 1 / mag);
 };
 
 const getVectorFromAngle = (angle) => {

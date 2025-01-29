@@ -19,13 +19,6 @@ const cameraBoxSize = { width: 2, height: 2 };
 
 help.setChunkSize(chunkSize);
 
-const dummyPlayer1 = {
-  position: { x: 0, y: 0 },
-  chunk: { x: 0, y: 0 },
-  avatar_id: "witch_cat",
-  sprite_sheet: null,
-};
-
 /*
 Game Class - Attributes:
 seed (String): The GameID is used as the world seed
@@ -62,6 +55,11 @@ class Game {
     }
     this.arenas = {};
     this.explored = {};
+    this.explored[JSON.stringify({ x: 0, y: 0 })] = Array(Math.ceil(chunkSize ** 2 / 32)).fill(0);
+    this.setTileExplored({ x: -1, y: -1 }, { x: 0, y: 0 });
+    this.setTileExplored({ x: 1, y: -1 }, { x: 0, y: 0 });
+    this.setTileExplored({ x: -1, y: 1 }, { x: 0, y: 0 });
+    this.setTileExplored({ x: 1, y: 1 }, { x: 0, y: 0 });
   }
 
   /*
@@ -83,6 +81,30 @@ class Game {
           chunk: { x: 0, y: 0 },
           mode: { type: "normal", packet: null },
           speed: 5,
+          components: {
+            unlocked: {
+              weapons: {
+                singlebullet: true,
+                spraybullet: false,
+                launchbomb: false,
+              },
+              chargeups: {
+                timebased: true,
+                movebased: true,
+                stillbased: false,
+              },
+              utilities: {
+                dash: true,
+                heal: false,
+                shield: false,
+              },
+            },
+            equipped: {
+              weapons: "singlebullet",
+              chargeups: "timebased",
+              utilities: "dash",
+            },
+          },
           health: [1, 1, 1], // Each element in the array represents a heart, and how full it is
           rendered_chunks: [
             [
@@ -154,6 +176,16 @@ class Game {
   selectItem(userid, itemIdx) {
     if (this.players[userid]) {
       this.players[userid].data.inventory.selected = itemIdx - 1;
+    }
+  }
+
+  setComponent(userid, type, name) {
+    if (this.players[userid]) {
+      let comps = this.players[userid].data.components;
+      if (comps.unlocked[type][name]) {
+        comps.equipped[type] = name;
+      }
+      console.log(comps);
     }
   }
 
@@ -273,15 +305,18 @@ class Game {
       return chunk <= compressedRight && chunk >= compressedLeft;
     };
 
-    const newPosXY = help.addCoords(playerPos, help.scaleCoord(dir, this.players[id].data.speed));
+    const newPosXY = help.addCoords(
+      playerPos,
+      help.scaleCoord(dir, this.players[id].data.speed / fps)
+    );
     const newPosX = help.addCoords(
       playerPos,
-      help.scaleCoord({ x: dir.x, y: 0 }, this.players[id].data.speed)
+      help.scaleCoord({ x: dir.x, y: 0 }, this.players[id].data.speed / fps)
     );
 
     const newPosY = help.addCoords(
       playerPos,
-      help.scaleCoord({ x: 0, y: dir.y }, this.players[id].data.speed)
+      help.scaleCoord({ x: 0, y: dir.y }, this.players[id].data.speed / fps)
     );
 
     const checkNoCollisions = (newPos) => {

@@ -169,6 +169,11 @@ module.exports = {
           common.gameMap[input.gameID].useUtility(input.user_id);
         }
       });
+      socket.on("component", (input) => {
+        if (common.gameMap[input.gameID]) {
+          common.gameMap[input.gameID].setComponent(input.user_id, input.type, input.name);
+        }
+      });
     });
   },
 

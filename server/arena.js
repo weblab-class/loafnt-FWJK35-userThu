@@ -67,6 +67,10 @@ class Arena {
       userid: userid,
       class: "player",
       position: { x: 0.0, y: 0.0 },
+      velocity: { x: 0.0, y: 0.0 },
+      acceleration: 80,
+      deceleration: 20,
+      inputdir: { x: 0.0, y: 0.0 },
       rendered_position: { x: 0.0, y: 0.0 },
       health: 100.0,
       maxhealth: 100.0,
@@ -124,41 +128,9 @@ class Arena {
     return id;
   }
 
-  movePlayer(userid, inputDir) {
+  movePlayer(userid, inputdir) {
     const id = this.getIdOfUser(userid);
-    this.players[id].position = help.addCoords(
-      this.players[id].position,
-      help.scaleCoord(inputDir, this.players[id].speed)
-    );
-    //confine player to arena
-    if (this.players[id].position.x < -this.size.width / 2) {
-      this.players[id].position.x = -this.size.width / 2;
-    }
-    if (this.players[id].position.x > this.size.width / 2) {
-      this.players[id].position.x = this.size.width / 2;
-    }
-    if (this.players[id].position.y < -this.size.height / 2) {
-      this.players[id].position.y = -this.size.height / 2;
-    }
-    if (this.players[id].position.y > this.size.height / 2) {
-      this.players[id].position.y = this.size.height / 2;
-    }
-
-    //target nearest enemy
-    let nearestDist = this.size.width * 2;
-    this.players[id].targetid = 0;
-
-    Object.values(this.enemies).forEach((enemy) => {
-      const thisEnemyDist = help.getMagnitude(
-        help.subtractCoords(this.players[id].position, enemy.position)
-      );
-      if (thisEnemyDist < nearestDist) {
-        this.players[id].targetid = enemy.id;
-        nearestDist = thisEnemyDist;
-      }
-    });
-
-    this.players[id].rendered_position = this.players[id].position;
+    this.players[id].inputdir = inputdir;
   }
 
   attack(userid) {
@@ -168,6 +140,7 @@ class Arena {
 
   useUtility(userid) {
     const id = this.getIdOfUser(userid);
+    Component.useUtility(this, id);
   }
 
   checkCollisions(hitboxes) {
@@ -265,6 +238,89 @@ class Arena {
       proj.position = help.addCoords(proj.position, help.scaleCoord(proj.velocity, 1 / this.fps));
     });
 
+    //move all players
+    Object.values(this.players).forEach((player) => {
+      //accelerate in direction of input
+
+      if (help.getMagnitude(player.inputdir) > 0) {
+        //accelerate in direction
+        if (help.getMagnitude(player.velocity) < player.speed) {
+          player.velocity = help.addCoords(
+            player.velocity,
+            help.scaleCoord(player.inputdir, player.acceleration / this.fps)
+          );
+        }
+        //redirect velocity
+        else {
+          player.velocity = help.scaleCoord(
+            help.getNormalized(help.addCoords(player.velocity, player.inputdir)),
+            help.getMagnitude(player.velocity)
+          );
+        }
+
+        //if going too fast, decelerate
+        if (help.getMagnitude(player.velocity) > player.speed) {
+          player.velocity = help.scaleCoord(
+            help.getNormalized(player.velocity),
+            Math.max(
+              help.getMagnitude(player.velocity) - player.deceleration / this.fps,
+              player.speed
+            )
+          );
+        }
+      } else {
+        if (help.getMagnitude(player.velocity) > (player.deceleration * 2) / this.fps) {
+          player.velocity = help.scaleCoord(
+            help.getNormalized(player.velocity),
+            help.getMagnitude(player.velocity) - player.acceleration / this.fps
+          );
+        } else {
+          player.velocity = { x: 0, y: 0 };
+        }
+      }
+      console.log(help.getMagnitude(player.velocity));
+
+      //move player by velocity
+      player.position = help.addCoords(
+        player.position,
+        help.scaleCoord(player.velocity, 1 / this.fps)
+      );
+      //confine player to arena
+
+      if (player.position.x < -this.size.width / 2) {
+        player.position.x = -this.size.width / 2;
+        player.velocity.x = 0;
+      }
+      if (player.position.x > this.size.width / 2) {
+        player.position.x = this.size.width / 2;
+        player.velocity.x = 0;
+      }
+      if (player.position.y < -this.size.height / 2) {
+        player.position.y = -this.size.height / 2;
+        player.velocity.y = 0;
+      }
+      if (player.position.y > this.size.height / 2) {
+        player.position.y = this.size.height / 2;
+        player.velocity.y = 0;
+      }
+
+      //target nearest enemy
+      let nearestDist = this.size.width * 2;
+      player.targetid = 0;
+
+      Object.values(this.enemies).forEach((enemy) => {
+        const thisEnemyDist = help.getMagnitude(
+          help.subtractCoords(player.position, enemy.position)
+        );
+        if (thisEnemyDist < nearestDist) {
+          player.targetid = enemy.id;
+          nearestDist = thisEnemyDist;
+        }
+      });
+
+      player.rendered_position = player.position;
+    });
+
     let hitboxes = [];
     //assign hitboxes for all enemies, players, projectiles, and terrain
     const assignHitboxes = (list) => {
@@ -357,6 +413,7 @@ class Arena {
       id: enemyId,
       class: "enemy",
       position: { x: 0, y: 0 },
+      velocity: { x: 0, y: 0 },
       radius: 2,
       maxhealth: 100.0,
       health: 100.0,

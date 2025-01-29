@@ -86,7 +86,7 @@
   border-image-source: url("../../public/assets/border8px.png");
   border-image-slice: 33%;
   border-image-repeat: repeat;
-  filter: drop-shadow(8px 8px #241D0D);
+  filter: drop-shadow(8px 8px black);
   text-transform: uppercase;
 }
 
@@ -204,4 +204,31 @@
 
 .creategame-button:hover {
   background-color: #EBCCB3;
+}
+
+.joinlobby-input {
+  font-family: 'Dedicool';
+  background-color:white;
+  padding: 1rem;
+  color:#241D0D;
+  margin: 1rem;
+  text-transform: uppercase;
+}
+
+.joinlobby-button {
+  margin: 0.5rem;
+  border: 16px solid black;
+  font-family: 'Dedicool';
+  color: #EBCCB3;
+  background-color: #241D0D;
+  border-radius: 14px;
+  border-image-source: url("../../public/assets/border8px.png");
+  border-image-slice: 33%;
+  border-image-repeat: repeat;
+  filter: drop-shadow(4px 4px black);
+}
+
+.joinlobby-button:hover {
+  background-color: #EBCCB3;
+  color:#241D0D;
 }

@@ -42,6 +42,9 @@
   border-image-slice: 33%;
   border-image-repeat: repeat;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .player-list-container {
@@ -66,16 +69,18 @@
   background-color: #56512F;
   border-radius: 27px;
   height: 90%;
+  width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: start;
   margin: 8px 0;
   /* padding-top: 24px; */
-  font-size: 32px;
+  font-size: 3rem;
   border: 32px solid black;
   border-image-source: url("../../public/assets/border8px.png");
   border-image-slice: 33%;
   border-image-repeat: repeat;
   text-align: center;
+  flex-direction: column;
 }
 
 .start-button{
@@ -122,4 +127,6 @@
 
 #player-name {
   filter: drop-shadow(4px 4px #241D0D);
+  width: 100%;
+  height:fit-content;
 }

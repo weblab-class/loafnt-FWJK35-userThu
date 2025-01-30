@@ -808,7 +808,7 @@ class Arena {
                 center: { x: 0, y: 0 },
                 onCollision: (collisionPoint, collisionEntity) => {
                   if (collisionEntity.class === "player" || collisionEntity.class === "terrain") {
-                    this.projectiles[bulletId].onDeath();
+                    this.projectiles[bulletId].onDeath(bulletId);
                     this.deleteProjectile(bulletId);
                   }
                 },
@@ -914,7 +914,7 @@ class Arena {
                 center: { x: 0, y: 0 },
                 onCollision: (collisionPoint, collisionEntity) => {
                   if (collisionEntity.class === "player" || collisionEntity.class === "terrain") {
-                    this.projectiles[bulletId].onDeath();
+                    this.projectiles[bulletId].onDeath(bulletId);
                     this.deleteProjectile(bulletId);
                   }
                 },

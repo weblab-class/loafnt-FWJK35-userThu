@@ -31,9 +31,7 @@ const useWeapon = (arena, playerid) => {
               center: { x: 0, y: 0 },
               onCollision: (collisionPoint, collisionEntity) => {
                 if (collisionEntity.class === "enemy" || collisionEntity.class === "terrain") {
-                  if (arena.projectiles[bulletId].dieOnCollision) {
-                    arena.projectiles[bulletId].onDeath();
-                  }
+                  arena.projectiles[bulletId].onDeath();
                   arena.deleteProjectile(bulletId);
                 }
               },
@@ -84,7 +82,8 @@ const useWeapon = (arena, playerid) => {
         thisPlayer.stats.stamina -= cost;
       }
     },
-    launchbomb: () => { //TODO check this out
+    launchbomb: () => {
+      //TODO check this out
       const cost = 20;
       if (thisPlayer.stats.stamina >= cost) {
         const bulletId = arena.spawnProjectile({

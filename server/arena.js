@@ -28,7 +28,7 @@ class Arena {
     this.gendata = gendata;
     this.onclear = gendata.onclear;
     if (gendata.boss) {
-      const bossid = this.spawnEnemy({ 
+      const bossid = this.spawnEnemy({
         position: { x: 0, y: 0 },
         velocity: { x: 0, y: 0 },
         maxhealth: 100 * gendata.difficulty,
@@ -73,7 +73,8 @@ class Arena {
             },
           },
         ],
-        possibleattacks: [//TODO check this out
+        possibleattacks: [
+          //TODO check this out
           { name: "shoot1per", duration: 1 },
           { name: "shootring", duration: 2 },
         ],
@@ -777,7 +778,8 @@ class Arena {
   performAttack(enemyid, attackname) {
     const thisEnemy = this.enemies[enemyid];
     const attacks = {
-      shoot1per: () => { //TODO check this out
+      shoot1per: () => {
+        //TODO check this out
         thisEnemy.animation = {
           seq: "attack1",
           frame: 0,
@@ -804,9 +806,7 @@ class Arena {
                 center: { x: 0, y: 0 },
                 onCollision: (collisionPoint, collisionEntity) => {
                   if (collisionEntity.class === "player" || collisionEntity.class === "terrain") {
-                    if (this.projectiles[bulletId].dieOnCollision) {
-                      this.projectiles[bulletId].onDeath();
-                    }
+                    this.projectiles[bulletId].onDeath();
                     this.deleteProjectile(bulletId);
                   }
                 },
@@ -912,9 +912,7 @@ class Arena {
                 center: { x: 0, y: 0 },
                 onCollision: (collisionPoint, collisionEntity) => {
                   if (collisionEntity.class === "player" || collisionEntity.class === "terrain") {
-                    if (this.projectiles[bulletId].dieOnCollision) {
-                      this.projectiles[bulletId].onDeath();
-                    }
+                    this.projectiles[bulletId].onDeath();
                     this.deleteProjectile(bulletId);
                   }
                 },

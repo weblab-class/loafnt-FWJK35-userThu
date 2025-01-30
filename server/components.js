@@ -6,7 +6,7 @@ const useWeapon = (arena, playerid) => {
   const attacks = {
     singlebullet: () => {
       const cost = 20;
-      if (thisPlayer.stats.stamina >= cost) {
+      if (thisPlayer.stats.stamina >= cost && thisPlayer.targetid !== 0) {
         const bulletId = arena.spawnProjectile({
           position: thisPlayer.position,
           velocity: help.scaleCoord(
@@ -43,7 +43,7 @@ const useWeapon = (arena, playerid) => {
     },
     spraybullet: () => {
       const cost = 20;
-      if (thisPlayer.stats.stamina >= cost) {
+      if (thisPlayer.stats.stamina >= cost && thisPlayer.targetid !== 0) {
         for (let a = -2; a < 3; a++) {
           const bulletId = arena.spawnProjectile({
             position: thisPlayer.position,
@@ -85,7 +85,7 @@ const useWeapon = (arena, playerid) => {
     launchbomb: () => {
       //TODO check this out
       const cost = 20;
-      if (thisPlayer.stats.stamina >= cost) {
+      if (thisPlayer.stats.stamina >= cost && thisPlayer.targetid !== 0) {
         const bulletId = arena.spawnProjectile({
           position: thisPlayer.position,
           velocity: help.scaleCoord(

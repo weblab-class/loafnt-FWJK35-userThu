@@ -81,7 +81,19 @@ class Game {
     this.holes = jsonObj.holes;
     if (lobby) {
       Array.from(lobby.players.values()).forEach((user) => {
-        this.players[user._id].active = true;
+        let spawned = false;
+        Object.values(this.players).forEach((reassignedPlayer) => {
+          if (reassignedPlayer.user.googleid === user.googleid) {
+            delete this.players[reassignedPlayer.user._id];
+            this.players[user._id] = Object.assign({}, reassignedPlayer);
+            this.players[user._id].user._id = user._id;
+            this.players[user._id].active = true;
+            spawned = true;
+          }
+        });
+        if (!spawned) {
+          this.spawnPlayer(user);
+        }
       });
       this.currLobby = lobby.code;
     }
@@ -656,11 +668,11 @@ class Game {
     let bossLoc;
     for (const hole of Object.values(this.holes.generated)) {
       if (hole.boss && !hole.cleared) {
-        bossLoc = hole.location
+        bossLoc = hole.location;
         break;
       }
-    };
-    
+    }
+
     for (const id of Object.keys(this.players)) {
       this.players[id].data.bossLoc = bossLoc;
     }

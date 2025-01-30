@@ -764,7 +764,9 @@ class Arena {
 
   deleteProjectile(bulletId) {
     if (this.projectiles[bulletId]) {
-      this.projectiles[bulletId].onDeath(bulletId);
+      if (this.projectiles[bulletId].onDeath) {
+        this.projectiles[bulletId].onDeath(bulletId);
+      }
       delete this.projectiles[bulletId];
     }
   }
